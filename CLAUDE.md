@@ -150,14 +150,21 @@ Un actionneur par **fonction** (signalisation, vannes, vérins).
 
 ### Étape 1 — Découper ✅ fait
 ### Étape 2 — Générer du HTML statique ✅ fait
+### Étape 3 — Mettre en ligne ✅ fait
 Voir « État actuel » ci-dessus.
 
-### Étape 3 — Mettre en ligne (priorité)
-Dépôt GitHub → Cloudflare Pages (gratuit) → domaine iosetup.com (acheté chez OVH).
-Chaque envoi de fichier reconstruit et publie le site automatiquement (`node src/build.js`
-en build command, `dist` en dossier de sortie).
-**Nécessite : le compte GitHub et l'accès au domaine chez OVH** (DNS à pointer vers
-Cloudflare Pages) — pas encore fait, à récupérer avant de continuer.
+**Site en ligne sur https://iosetup.com et https://www.iosetup.com** (SSL actif).
+Chaîne de déploiement :
+- Dépôt GitHub public : [github.com/Geral2523/iosetup](https://github.com/Geral2523/iosetup),
+  accès de l'app Cloudflare restreint à ce seul dépôt.
+- Cloudflare Pages, projet `iosetup` — build command `node src/build.js`, dossier de
+  sortie `dist`. Chaque push sur `main` republie automatiquement le site.
+- DNS de iosetup.com basculé chez Cloudflare (nameservers `roman`/`rosalyn.ns.cloudflare.com`,
+  remplaçant les DNS OVH). Domaine personnalisé + `www` configurés sur le projet Pages.
+- Fallback toujours disponible : `iosetup.pages.dev`.
+
+Comptes utilisés : GitHub `Geral2523`, Cloudflare `05.honnete.survol@icloud.com` (créé pour
+ce projet), domaine toujours enregistré chez OVH (seul le DNS a été délégué à Cloudflare).
 
 ### Étape 4 — Référencement
 `sitemap.xml` + inscription à la Google Search Console. Sans ça, Google met des mois.
