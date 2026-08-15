@@ -1,0 +1,195 @@
+# iosetup.com — guides d'intégration IO-Link
+
+## Le projet
+
+Site de référence en français sur l'**intégration des équipements industriels** :
+comment raccorder un capteur ou un actionneur à un automate, de bout en bout.
+
+Chaque guide couvre le parcours complet :
+caractéristiques → câblage avec brochage → réglages sur l'appareil →
+procédure dans TIA Portal → structure des données process (lue dans l'IODD) →
+code en CONT (Ladder) et en SCL → **les pièges de mise en service**.
+
+**Public :** techniciens de maintenance industrielle, automaticiens, intégrateurs,
+étudiants BTS MS / CRSA / Bac Pro MELEC.
+
+**L'angle différenciant :** l'information existe, mais elle est éparpillée entre
+notices constructeur, portails de support et forums — et surtout, personne ne
+publie les pièges. Brochages non standard, contradictions entre documents officiels
+d'un même fabricant, limites fonctionnelles cachées. C'est ça, la valeur du site.
+
+**Domaine acheté :** iosetup.com
+
+---
+
+## État actuel
+
+**Étapes 1 (découpage) et 2 (pages statiques) terminées.**
+
+```
+data/appareils/<marque>-<ref>.json     une fiche appareil (5 fichiers)
+data/familles/<id>.json                une famille IODD (keyence-fr)
+data/procedures/<id>.json              une procédure d'intégration (4 fichiers)
+data/taxonomie.json                    automates, catégories, sous-types, marques, modes, maîtres
+iodd/                                  les 4 fichiers IODD bruts
+src/render.js                          logique de rendu partagée (Node + navigateur) : construction
+                                        d'un guide, title/description SEO, liens de famille
+src/styles.css                         CSS partagé entre la maquette et les pages statiques
+src/template.html                      la maquette interactive (SPA), DB injectée au build
+src/build.js                           génère dist/ : maquette + une page statique par guide
+dist/                                  le site généré (à régénérer, jamais édité à la main)
+legacy/maquette-site-automatisme.html  l'ancien fichier monolithique, gardé en référence
+```
+
+Pour prévisualiser : `node src/build.js` puis servir `dist/` (ex. `python3 -m http.server`
+depuis `dist/` — ouvrir en `file://` direct ne réexécute pas forcément le JS partout).
+
+**Schéma d'URL (une page statique par appareil × mode de raccordement, pas par appareil) :**
+`/<automate>/<categorie>/<type>/<marque>/<id-appareil>/<mode>/`
+ex. `dist/siemens/capteur/niveau/keyence/fr-s01/analogique/index.html`.
+Chaque page a son `<title>` et sa `<meta description>` construits depuis les données
+(voir `metaFor()` dans `render.js`), un lien vers les autres modes du même appareil, et
+un lien vers les appareils de la même famille IODD (voir `familySiblings()`).
+
+Vérifié : rendu de `dist/index.html` identique bit à bit à l'ancienne maquette (hash +
+longueur, 8 pages) ; les 8 pages statiques répondent 200, sans `undefined`/`NaN` ; les
+liens croisés (autres modes, même famille) résolvent et sont réciproques ; les onglets
+CONT/SCL fonctionnent sur la maquette et sur les pages statiques.
+
+**Bug corrigé au passage :** la fonction d'onglet s'appelait `lang()`, qui entre en
+conflit avec la propriété DOM `element.lang` dans le contexte d'un `onclick` inline —
+l'onglet SCL ne s'affichait donc jamais, y compris dans l'ancienne maquette. Renommée
+en `showLang()` partout (render.js, template.html, build.js).
+
+Ajouter un capteur de la famille `keyence-fr` = créer un fichier dans `data/appareils/`,
+aucune ligne de code à toucher — la page statique et les liens de famille sont générés
+automatiquement.
+
+Le site couvre **8 pages** sans erreur, pour 4 appareils :
+
+| Appareil | Marque | Type | Modes de raccordement |
+|---|---|---|---|
+| LDH292 | ifm | Humidité + température | IO-Link |
+| FR-S01 | KEYENCE | Niveau radar courte portée | IO-Link · analogique · TOR |
+| FR-LM20 | KEYENCE | Niveau radar longue portée | IO-Link |
+| FR-LS20 | KEYENCE | Niveau radar sanitaire | IO-Link |
+| SIRIUS 8WD46 | Siemens | Colonne de signalisation | IO-Link · conventionnel 24 V |
+
+Fichiers IODD sources dans `iodd/` (ifm LDH292 + les trois KEYENCE de la gamme FR).
+
+---
+
+## Navigation
+
+Entonnoir en 7 étapes, plus une barre de recherche qui court-circuite tout :
+
+```
+Accueil → Automate → Catégorie → Sous-type → Marque → Modèle → Mode de raccordement → Guide
+```
+
+La recherche est **le vrai point d'entrée** : la majorité des visiteurs arriveront
+de Google directement sur une page finale, en tapant une référence.
+Chaque page guide doit donc avoir sa propre adresse et son propre titre.
+
+---
+
+## Les cinq leçons de structure
+
+Chacune vient d'un appareil qui a cassé le modèle. **Ne pas les perdre.**
+
+### 1. Le mode de raccordement est un axe à part entière
+Un même capteur en IO-Link, en 4-20 mA ou en tout ou rien n'a **rien de commun**
+côté TIA Portal. En analogique il n'y a ni maître, ni GSDML, ni IODD — juste une
+carte d'entrées analogiques et un NORM_X / SCALE_X.
+→ Révélé par le KEYENCE FR-S01.
+
+### 2. Le brochage n'est JAMAIS générique
+L'ifm LDH292 : M12 4 broches, C/Q en broche 4.
+Le KEYENCE FR-S01 : M12 8 broches, IO-Link en broche 6 (fil rose).
+→ Le brochage est une donnée par appareil, jamais un texte réutilisé.
+
+**Corollaire important :** l'IODD sert aux **données process et aux paramètres**,
+**jamais au câblage**. Les trois IODD KEYENCE déclarent toutes un M12 4 broches
+avec un fil noir — ce sont les couleurs standard DIN EN 60947-5-2, du remplissage
+générique. Le câble réel n'a aucun fil noir. Pour le câblage : notice constructeur.
+
+### 3. Le bon grain est la FAMILLE IODD, pas l'appareil
+Les trois IODD KEYENCE de la gamme FR (DeviceID 2040, 2041, 2042) ont une
+structure de données process **rigoureusement identique** — 96 bits, 12 octets,
+25 éléments aux mêmes offsets. Deux libellés diffèrent seulement :
+« niveau cumulé » (courte portée) devient « valeur de conversion de débit »
+(longue portée).
+→ La famille est définie une fois dans `DB.famillesIodd`, les appareils y
+réfèrent via `familleIodd` + `variante`. Ajouter un capteur de la gamme =
+quelques lignes de données, zéro ligne de code.
+
+### 4. Le sens des données change tout
+Un capteur remonte des données (ProcessDataIn). Un actionneur en reçoit
+(ProcessDataOut). Pour la colonne 8WD46, il n'y a pas de trame d'octets à décoder :
+Siemens fournit un bloc fonction `Control_IOLink8WD46` qu'on appelle.
+→ Champ `sens: 'sortie'` et bloc `commande` au lieu du bloc `donnees`.
+
+### 5. La taxonomie dépend de la catégorie
+Un capteur se classe par **grandeur mesurée** (température, niveau, pression).
+Un actionneur par **fonction** (signalisation, vannes, vérins).
+→ `DB.sousTypes` est un objet indexé par catégorie, pas une liste unique.
+
+---
+
+## Trois procédures d'intégration, pas une
+
+- **`iolink-profinet`** — maître IO-Link + GSDML, configuration dans TIA
+- **`analogique-ai`** — carte d'entrées analogiques, NORM_X / SCALE_X, aucun IO-Link
+- **`iolink-s7pct`** — passe par **S7 Port Configuration Tool**, un logiciel séparé
+  à installer, avec son propre catalogue et son propre « charger dans les appareils »
+- **`tor-di`** — sorties de commutation sur carte d'entrées TOR
+
+---
+
+## Ce qu'il faut faire maintenant
+
+### Étape 1 — Découper ✅ fait
+### Étape 2 — Générer du HTML statique ✅ fait
+Voir « État actuel » ci-dessus.
+
+### Étape 3 — Mettre en ligne (priorité)
+Dépôt GitHub → Cloudflare Pages (gratuit) → domaine iosetup.com (acheté chez OVH).
+Chaque envoi de fichier reconstruit et publie le site automatiquement (`node src/build.js`
+en build command, `dist` en dossier de sortie).
+**Nécessite : le compte GitHub et l'accès au domaine chez OVH** (DNS à pointer vers
+Cloudflare Pages) — pas encore fait, à récupérer avant de continuer.
+
+### Étape 4 — Référencement
+`sitemap.xml` + inscription à la Google Search Console. Sans ça, Google met des mois.
+
+### Étape 5 — Un script de vérification
+Générer toutes les pages hors navigateur et signaler celles qui plantent.
+À 4 appareils on trouve à l'œil, à 300 non.
+*(Un bug de routage a déjà été trouvé exactement comme ça.)*
+
+---
+
+## Notes de travail
+
+- **L'esthétique vient à la fin** — mais la lisibilité mobile n'est pas de
+  l'esthétique : le lecteur type est debout devant une machine, sur un téléphone,
+  parfois à 22 h. C'est de la fonction, et Google en tient compte.
+- **Ne jamais utiliser de matériel, de code ou de captures appartenant à
+  l'employeur.** Refaire les projets TIA de zéro, sans référence machine ni nom
+  de client.
+- **Marquer ce qui n'est pas vérifié.** Le code est généré depuis la documentation,
+  pas testé sur installation. Les pages le signalent explicitement — garder cette
+  honnêteté, c'est ce qui fera la réputation du site.
+- **Différence entre fabricants à documenter :** ifm publie tout en accès libre,
+  IODD comprise, sur l'IODDfinder. KEYENCE distribue les siennes depuis son propre
+  site. C'est une information utile au lecteur au moment de choisir un capteur, et
+  personne ne la publie.
+
+---
+
+## Prochaines sources déjà repérées
+
+- Gamme KEYENCE FR complète (les IODD FR-L et FR-LS sont déjà dans `/iodd/`)
+- Fabricants à couvrir ensuite : SICK, Balluff, Turck
+- Mode analogique de la longue portée KEYENCE (non encore documenté sur le site)
+- Données process IO-Link du FR-S01 : présentes dans l'IODD, déjà intégrées

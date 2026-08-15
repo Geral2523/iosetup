@@ -1,0 +1,13 @@
+{
+  "nom": "IO-Link en sortie, via S7 Port Configuration Tool",
+  "etapes": [
+    { "t": "Installer S7-PCT", "d": "Le S7 Port Configuration Tool est un logiciel séparé, téléchargeable chez Siemens. Redémarrer TIA Portal après l’installation, sinon l’outil n’apparaît pas." },
+    { "t": "Configurer la CPU et la périphérie décentralisée", "d": "Ajouter la CPU, puis la station ET 200SP dans la vue réseau, et l’affecter comme périphérique du système PROFINET." },
+    { "t": "Ajouter le module maître IO-Link", "d": "Depuis le catalogue matériel : modules de communication → maître IO-Link → CM 4xIO-Link. Il se place dans le rack de l’ET 200SP." },
+    { "t": "Ouvrir S7-PCT depuis TIA", "d": "Clic droit sur le module maître dans la vue appareil, puis « Démarrer l’outil d’appareil ». S7-PCT s’ouvre avec son propre catalogue." },
+    { "t": "Affecter l’appareil à un port", "d": "Dans le catalogue S7-PCT : IO Link V1.1 → Siemens AG → SIRIUS signaling columns → le modèle exact. Glisser sur le port voulu." },
+    { "t": "Paramétrer en acyclique", "d": "Sous « Parameters », régler le mode de signal, le nombre de niveaux, puis pour chaque segment l’effet lumineux, la couleur par défaut, la luminosité et les quotients RVB." },
+    { "t": "Charger dans les appareils", "d": "Clic droit sur le maître → « Charger avec les appareils ». La configuration part vers le maître ET vers l’appareil. Étape distincte du chargement du programme CPU." },
+    { "t": "Relever la plage d’adresses de sortie", "d": "S7-PCT indique les sorties numériques attribuées. C’est le mot source des données process optiques à raccorder dans le programme." }
+  ]
+}

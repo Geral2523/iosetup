@@ -1,0 +1,88 @@
+{
+  "id": "8wd46", "ref": "8WD4615-5JH47", "marque": "siemens-c", "marqueNom": "Siemens",
+  "categorie": "actionneur", "type": "signalisation", "techno": "Colonne LED configurable", "top": true,
+  "nom": "Colonne de signalisation SIRIUS 8WD46, 15 segments avec sirène",
+  "resume": "Premier actionneur du site : l’automate écrit vers l’appareil au lieu de le lire.",
+  "source": "Exemple d’application Siemens 109818146 V1.0 (04/2023) · Manuel des colonnes SIRIUS 8WD4 · Fiches revendeurs pour les variantes",
+  "specs": [
+    ["Fonction", "Signalisation visuelle et sonore de l’état machine"],
+    ["Segments LED", "9 ou 15 selon la référence — 8WD4613 (9) · 8WD4615 (15)"],
+    ["Acoustique", "Avec ou sans, selon la référence. Type de signal et volume réglables jusqu’à 105 dB"],
+    ["Couleurs disponibles", "Rouge · vert · bleu · jaune · jaune clair · turquoise · violet · blanc · plus une couleur RVB personnalisée"],
+    ["Effets lumineux", "Fixe · clignotant 1, 2 ou 3 Hz · flash simple, double ou triple · rotatif"],
+    ["Raccordement", "IO-Link ou câblage conventionnel 24 V, au choix selon la référence"],
+    ["Connectique", "M12, 4 broches"],
+    ["Protection", "IP66 et IP69K — utilisable en intérieur comme en extérieur"],
+    ["Durée de vie LED", "50 000 heures de fonctionnement"],
+    ["Montage", "Sans outil spécial, verrouillage à baïonnette entre modules"],
+    ["Maître testé", "CM 4xIO-Link ST sur ET 200SP — IO-Link maître V1.1"],
+    ["Câble validé", "6GT2891-4LH50-0AX0, M12 4 broches"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Le paramétrage ne se fait ni sur l’appareil ni dans TIA Portal, mais dans S7-PCT, en acyclique. C’est un troisième outil, avec son propre arbre de paramètres et son propre chargement.",
+    "etapes": [
+      ["Mode de signal", "Autoscale — tous les segments activés s’affichent dans la même proportion"],
+      ["Nombre de niveaux", "Jusqu’à 5 en mode Autoscale"],
+      ["Effet lumineux par segment", "Valeur par défaut, écrasable ensuite depuis le programme"],
+      ["Couleur par défaut par segment", "Rouge, jaune clair, bleu, vert, blanc dans l’exemple Siemens"],
+      ["Quotients R, V, B", "Pour définir une couleur personnalisée, activée par la valeur 0 côté programme"],
+      ["Luminosité par segment", "Maximum dans l’exemple"]
+    ],
+    "apres": "Le chargement se fait par « Charger avec les appareils » depuis S7-PCT. C’est une opération distincte du chargement du programme dans la CPU : oublier cette étape est une source classique de « ça ne fait rien »."
+  },
+  "pieges": [
+    { "t": "15 segments physiques, 5 pilotables", "d": "En mode Autoscale, cinq niveaux maximum. Au-delà, il faut le « Signaling column mode » — que le bloc fonction fourni par Siemens ne gère pas. Acheter 15 segments ne donne pas 15 couleurs commandables." },
+    { "t": "Trois chargements distincts", "d": "Le programme va dans la CPU, le nom d’appareil PROFINET dans l’ET 200SP, et la configuration IO-Link dans le maître et l’appareil via S7-PCT. En oublier un donne une colonne muette sans message d’erreur." },
+    { "t": "S7-PCT doit être installé avant d’ouvrir TIA", "d": "Sans redémarrage de TIA Portal après l’installation, l’entrée « Démarrer l’outil d’appareil » n’apparaît pas au clic droit." },
+    { "t": "Deux versions incompatibles à l’usage", "d": "La version conventionnelle 24 V se paramètre à l’avance par une interface USB, une seule fois. La version IO-Link se reconfigure à tout moment depuis le programme ou en ligne. Le choix se fait à l’achat, pas après." },
+    { "t": "Couleur personnalisée en deux temps", "d": "Les valeurs RVB se règlent dans S7-PCT, mais la couleur ne s’active qu’en envoyant la valeur 0 depuis le programme pour le segment concerné. Régler le RVB sans envoyer 0 ne produit rien." },
+    { "t": "Combinaisons interdites par la norme", "d": "Le concept de signalisation Siemens précise que rouge et vert allumés simultanément est un état invalide. Ce n’est pas une limite technique, c’est une règle de sécurité à respecter côté programme." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "sens": "sortie",
+      "connecteur": "M12, 4 broches", "maitre": null, "procedure": "iolink-s7pct",
+      "cable": "Câble IO-Link M12 4 broches — référence Siemens 6GT2891-4LH50-0AX0",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Brun", "fn": "L+ — alimentation 24 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Non utilisé" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "C/Q — communication IO-Link" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" }
+      ],
+      "bornier": [
+        ["1", "C/Q de la colonne 8WD46"],
+        ["9", "L+ de la colonne 8WD46"],
+        ["13", "L− de la colonne 8WD46"]
+      ],
+      "commande": {
+        "bloc": "Control_IOLink8WD46",
+        "blocNote": "Siemens fournit ce bloc fonction dans un projet TIA téléchargeable avec l’exemple d’application 109818146. Il gère la communication IO-Link : on ne code pas la trame d’octets, on appelle le bloc.",
+        "entrees": [
+          ["hwID", "HW_IO", "Identifiant matériel du maître IO-Link, pris dans les constantes système"],
+          ["port", "INT", "Numéro de port sur lequel la colonne est raccordée"],
+          ["moduleInterface", "typeSignalStack8WD46", "Couleur et effet de chacun des 5 segments"]
+        ],
+        "sorties": [
+          ["stackConnectPeriphery", "—", "À raccorder au mot source des données process optiques, relevé dans S7-PCT"],
+          ["done · busy · error · status", "—", "État de la communication"],
+          ["diagDeviceFB", "—", "Diagnostic de l’appareil"]
+        ],
+        "couleurs": [["0", "Couleur personnalisée (RVB réglé dans S7-PCT)"], ["1", "Rouge"], ["2", "Vert"], ["3", "Bleu"],
+          ["4", "Jaune"], ["5", "Jaune clair"], ["6", "Turquoise"], ["7", "Violet"], ["8", "Blanc"]],
+        "effets": [["0", "Éteint"], ["1", "Fixe"], ["2", "Clignotant 3 Hz"], ["3", "Clignotant 2 Hz"], ["4", "Clignotant 1 Hz"],
+          ["5", "Flash simple"], ["6", "Flash double"], ["7", "Flash triple"], ["8", "Rotatif"]]
+      }
+    },
+    "conventionnel": {
+      "sens": "sortie",
+      "connecteur": "Bornier ou M12 selon l’élément de raccordement", "maitre": null, "procedure": "tor-di",
+      "cable": "Câblage 24 V classique",
+      "pinout": [
+        { "n": "—", "coul": "BN", "hex": "#6B4326", "nom": "Brun", "fn": "24 V DC" },
+        { "n": "—", "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "0 V" },
+        { "n": "—", "coul": "--", "hex": "#8A9299", "nom": "Signal", "fn": "Un fil par segment commandé" }
+      ],
+      "noteMode": "En version conventionnelle, les paramètres — couleurs, effets, luminosité — sont figés à l’avance par une interface USB. Le programme ne fait qu’allumer ou éteindre des segments. Moins souple, mais aucun maître IO-Link nécessaire."
+    }
+  }
+}

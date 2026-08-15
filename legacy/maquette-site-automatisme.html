@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intégration — guides d'automatisme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --panel:#D6D9D2; --panel-2:#C6CAC2; --card:#FBFBFA; --card-2:#F1F2EE;
+  --ink:#141A20; --ink-2:#3D4954; --ink-3:#77838E;
+  --rail:#98A1A7; --line:#B9BEB7;
+  --signal:#E2570F; --signal-deep:#A83D06;
+  --live:#2C7A44; --bu:#1668B3;
+  --disp:'IBM Plex Sans Condensed',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--panel);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:var(--disp);letter-spacing:.015em;margin:0}
+code,.mono,.m{font-family:var(--mono)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+header{background:var(--ink);color:var(--card);border-bottom:3px solid var(--signal);position:sticky;top:0;z-index:50}
+.hbar{display:flex;align-items:center;gap:20px;padding:14px 0;flex-wrap:wrap}
+.logo{font-family:var(--disp);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;white-space:nowrap;border:0;background:none;color:var(--card);padding:0}
+.logo span{color:var(--signal)}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;padding:9px 12px 9px 34px;border:1px solid #39434D;border-radius:2px;background:#1E262E;color:var(--card);font-family:var(--mono);font-size:13px}
+.search input::placeholder{color:#6E7A85}
+.search input:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:transparent}
+.search svg{position:absolute;left:11px;top:11px;width:14px;height:14px;stroke:#6E7A85;fill:none;stroke-width:2}
+.results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:2px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.results button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;background:none;cursor:pointer;font-family:var(--body);font-size:14px;color:var(--ink);border-bottom:1px solid var(--card-2)}
+.results button:last-child{border-bottom:0}
+.results button:hover{background:var(--card-2)}
+.results .ref{font-family:var(--mono);font-weight:600}
+.results .sub{color:var(--ink-3);font-size:12px}
+
+.crumbs{background:var(--panel-2);border-bottom:1px solid var(--line)}
+.crumbs .wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:9px;padding-bottom:9px;font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+.crumbs button{border:0;background:none;padding:0;cursor:pointer;color:var(--ink-2);font:inherit;text-transform:inherit}
+.crumbs button:hover{color:var(--signal)}
+.crumbs .sep{color:var(--rail)}
+.crumbs .now{color:var(--ink);font-weight:600}
+
+main{padding:34px 0 70px}
+.step{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--signal);font-weight:600;display:block;margin-bottom:7px}
+.title{font-size:clamp(24px,4vw,36px);font-weight:700;text-transform:uppercase;line-height:1.05}
+.lede{color:var(--ink-2);max-width:64ch;margin:11px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:26px}
+.tile{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--rail);border-radius:2px;padding:16px;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:border-left-color .12s,transform .12s}
+.tile:hover:not([disabled]){border-left-color:var(--signal);transform:translateX(2px)}
+.tile h3{font-size:17px;font-weight:600;text-transform:uppercase}
+.tile p{margin:5px 0 0;font-size:13px;color:var(--ink-3);line-height:1.45}
+.tile .badge{display:inline-block;margin-top:9px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--card-2);color:var(--ink-2);padding:2px 6px;border-radius:2px}
+.tile.top{border-left-color:var(--signal)}
+.tile.top .badge{background:var(--signal);color:#fff}
+.tile[disabled]{opacity:.42;cursor:not-allowed}
+
+.guide{background:var(--card);border:1px solid var(--line);border-radius:2px;margin-top:24px}
+.guide-head{padding:26px 28px;border-bottom:1px solid var(--line);background:var(--card-2)}
+.chain{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.chip{font-family:var(--mono);font-size:11px;background:var(--ink);color:var(--card);padding:4px 9px;border-radius:2px}
+.chip.alt{background:none;color:var(--ink-2);border:1px solid var(--line)}
+.chip.mode{background:var(--signal)}
+section.blk{padding:26px 28px;border-bottom:1px solid var(--line)}
+section.blk:last-child{border-bottom:0}
+.blk > h2{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:15px;display:flex;align-items:baseline;gap:9px}
+.blk > h2::before{content:attr(data-n);font-family:var(--mono);color:var(--signal);font-size:12px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--card-2);vertical-align:top}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:500}
+td.num{font-family:var(--mono)}
+tr:last-child td,tr:last-child th{border-bottom:0}
+
+.frame-caption{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-bottom:9px;letter-spacing:.05em}
+.bytes{display:grid;border:2px solid var(--ink);border-radius:2px;overflow:hidden}
+.byte{height:62px;border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10.5px;font-weight:600;text-align:center;line-height:1.25}
+.byte:last-child{border-right:0}
+.byte.nil{background:repeating-linear-gradient(45deg,var(--card-2),var(--card-2) 5px,#E4E6E1 5px,#E4E6E1 10px);color:var(--ink-3)}
+.ruler{display:grid;margin-top:5px}
+.tick{font-family:var(--mono);font-size:10px;color:var(--ink-3);text-align:center;border-top:1px solid var(--rail);padding-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12.5px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+.pins{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.pins svg{flex:0 0 150px}
+.pins table{flex:1;min-width:270px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid var(--ink-3);margin-right:7px;vertical-align:-1px}
+
+.note{border-left:4px solid var(--rail);background:var(--card-2);padding:13px 16px;margin:15px 0 0;font-size:13.5px;border-radius:0 2px 2px 0}
+.note.warn{border-left-color:var(--signal);background:#FDF0E7}
+.note.info{border-left-color:var(--bu);background:#EAF2FA}
+.note b{font-family:var(--disp);text-transform:uppercase;font-size:12px;letter-spacing:.07em;display:block;margin-bottom:3px}
+.note.warn b{color:var(--signal-deep)}
+.note.info b{color:#12558F}
+pre{background:var(--ink);color:#DCE3E9;padding:16px;border-radius:2px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55;margin:0}
+pre .c{color:#7A8A97}
+pre .k{color:#F5A26A}
+pre .n{color:#8FC7F0}
+pre.lad{background:#F7F8F5;color:var(--ink);border:1px solid var(--line);font-size:12px}
+pre.lad .r{color:var(--signal);font-weight:600}
+pre.lad .c{color:var(--ink-3)}
+
+.tabs{display:flex;margin-bottom:14px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.tab{border:0;background:none;padding:8px 15px;cursor:pointer;font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--signal);border-bottom-color:var(--signal);font-weight:600}
+.tab[disabled]{opacity:.4;cursor:not-allowed}
+.lang{display:none}
+.lang.on{display:block}
+
+.model-note{margin-top:34px;padding:18px 20px;border:1px dashed var(--rail);border-radius:2px;font-size:13px;color:var(--ink-2);background:rgba(255,255,255,.35)}
+.model-note b{font-family:var(--disp);text-transform:uppercase;letter-spacing:.06em;font-size:12px;display:block;margin-bottom:5px;color:var(--ink)}
+.back{border:0;background:none;font-family:var(--mono);font-size:12px;color:var(--ink-2);cursor:pointer;padding:0;margin-bottom:16px;text-transform:uppercase;letter-spacing:.06em}
+.back:hover{color:var(--signal)}
+@media (max-width:620px){.byte{height:54px;font-size:9px}section.blk,.guide-head{padding:20px 17px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hbar">
+    <button class="logo" onclick="go('home')">Inté<span>gration</span></button>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="Chercher une référence — ex. LDH292, FR-S01" autocomplete="off"
+             oninput="search(this.value)" onblur="setTimeout(hide,160)">
+      <div id="res"></div>
+    </div>
+  </div>
+</header>
+
+<nav class="crumbs" id="crumbs" hidden><div class="wrap" id="crumbsIn"></div></nav>
+<main class="wrap" id="app"></main>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   BASE DE DONNÉES
+   Une page = procédure (selon le mode) + données de l'appareil.
+   ══════════════════════════════════════════════════════════ */
+
+const DB = {
+
+automates:[
+  {id:'siemens',nom:'Siemens',note:'S7-1200 / S7-1500 / ET 200SP',actif:true},
+  {id:'schneider',nom:'Schneider',note:'M241 / M251 / M262',actif:false},
+  {id:'rockwell',nom:'Rockwell',note:'CompactLogix / ControlLogix',actif:false},
+  {id:'beckhoff',nom:'Beckhoff',note:'CX / TwinCAT',actif:false}
+],
+
+categories:[
+  {id:'capteur',nom:'Capteurs',note:'Mesure et détection',actif:true},
+  {id:'actionneur',nom:'Actionneurs',note:'Signalisation, vannes, vérins',actif:true},
+  {id:'camera',nom:'Caméras',note:'Vision industrielle',actif:false},
+  {id:'variateur',nom:'Variateurs',note:'Entraînement moteur',actif:false},
+  {id:'ihm',nom:'IHM',note:'Pupitres et supervision',actif:false}
+],
+
+/* Deuxième niveau : dépend de la catégorie.
+   Un capteur se classe par grandeur mesurée, un actionneur par fonction.
+   C'est la colonne lumineuse 8WD46 qui a révélé qu'une seule liste ne suffisait pas. */
+sousTypes:{
+ capteur:[
+  {id:'temperature',nom:'Température',note:'Sondes, transmetteurs, ambiance',actif:true},
+  {id:'niveau',nom:'Niveau',note:'Radar, ultrason, capacitif',actif:true},
+  {id:'presence',nom:'Présence',note:'Inductif, capacitif, photoélectrique',actif:false},
+  {id:'pression',nom:'Pression',note:'Relative et absolue',actif:false},
+  {id:'debit',nom:'Débit',note:'Liquides et gaz',actif:false}
+ ],
+ actionneur:[
+  {id:'signalisation',nom:'Signalisation',note:'Colonnes lumineuses, avertisseurs sonores',actif:true},
+  {id:'vanne',nom:'Vannes',note:'Îlots pneumatiques, distributeurs',actif:false},
+  {id:'verin',nom:'Vérins',note:'Électriques et pneumatiques',actif:false},
+  {id:'moteur',nom:'Départs moteur',note:'Démarreurs, contacteurs communicants',actif:false}
+ ],
+ camera:[],variateur:[],ihm:[]
+},
+
+marques:[
+  {id:'ifm',nom:'ifm electronic',note:'Documentation en accès libre',actif:true},
+  {id:'keyence',nom:'KEYENCE',note:'Radar 60 GHz, afficheur intégré',actif:true},
+  {id:'siemens-c',nom:'Siemens',note:'SIRIUS — signalisation et commande',actif:true},
+  {id:'sick',nom:'SICK',note:'',actif:false},
+  {id:'balluff',nom:'Balluff',note:'',actif:false}
+],
+
+/* ── LE CHOIX QUI MANQUAIT : comment l'appareil est raccordé ── */
+modes:[
+  {id:'iolink',nom:'IO-Link',note:'Via un maître IO-Link — données numériques, paramétrage à distance'},
+  {id:'analogique',nom:'Analogique',note:'Boucle 4-20 mA sur carte d\u2019entrées analogiques'},
+  {id:'tor',nom:'Tout ou rien',note:'Sorties de commutation sur carte d\u2019entrées TOR'},
+  {id:'conventionnel',nom:'Câblage 24 V',note:'Un fil par segment, paramétrage préalable par USB'}
+],
+
+maitres:[
+  {id:'al1102',marque:'ifm',ref:'AL1102',protocole:'PROFINET',ports:8,classe:'A',
+   ip:'IP65 / IP66 / IP67',specIolink:'1.0 à 1.1.2',courantSortie:'300 mA',courantTotal:'3,6 A'}
+],
+
+/* Procédures : écrites une fois, réutilisées par tous les appareils du même mode */
+procedures:{
+ 'iolink-profinet':{
+   nom:'IO-Link via un maître PROFINET',
+   etapes:[
+     {t:'Télécharger le GSDML du maître',d:'Le constructeur du maître fournit le fichier GSD qui décrit l\u2019appareil, ses paramètres et ses données process.'},
+     {t:'Installer le GSDML dans TIA Portal',d:'Gérer les fichiers de description des appareils, puis pointer le dossier. Le projet doit être fermé, sinon TIA refuse.'},
+     {t:'Insérer le maître dans le projet',d:'Le maître apparaît dans le catalogue après installation. Le glisser dans la vue réseau et l\u2019affecter au système PROFINET de la CPU.'},
+     {t:'Déclarer les ports',d:'Glisser le module correspondant au nombre de ports sur le slot 1 du maître. La configuration devient accessible via le slot 1.1.'},
+     {t:'Récupérer et installer l\u2019IODD du capteur',d:'L\u2019IODD décrit le capteur : paramètres, données process, plages. Source officielle : IODDfinder. Prendre la version correspondant au firmware.'},
+     {t:'Configurer le port',d:'Mode IO-Link, révision attendue, temps de cycle, validation du device par DeviceID. Un port mal configuré ne remonte rien.'},
+     {t:'Relever la plage d\u2019adresses',d:'TIA attribue automatiquement une plage d\u2019entrées au port. C\u2019est la base de tout l\u2019adressage dans le programme.'}
+   ]},
+ 'iolink-s7pct':{
+   nom:'IO-Link en sortie, via S7 Port Configuration Tool',
+   etapes:[
+     {t:'Installer S7-PCT',d:'Le S7 Port Configuration Tool est un logiciel séparé, téléchargeable chez Siemens. Redémarrer TIA Portal après l\u2019installation, sinon l\u2019outil n\u2019apparaît pas.'},
+     {t:'Configurer la CPU et la périphérie décentralisée',d:'Ajouter la CPU, puis la station ET 200SP dans la vue réseau, et l\u2019affecter comme périphérique du système PROFINET.'},
+     {t:'Ajouter le module maître IO-Link',d:'Depuis le catalogue matériel : modules de communication → maître IO-Link → CM 4xIO-Link. Il se place dans le rack de l\u2019ET 200SP.'},
+     {t:'Ouvrir S7-PCT depuis TIA',d:'Clic droit sur le module maître dans la vue appareil, puis « Démarrer l\u2019outil d\u2019appareil ». S7-PCT s\u2019ouvre avec son propre catalogue.'},
+     {t:'Affecter l\u2019appareil à un port',d:'Dans le catalogue S7-PCT : IO Link V1.1 → Siemens AG → SIRIUS signaling columns → le modèle exact. Glisser sur le port voulu.'},
+     {t:'Paramétrer en acyclique',d:'Sous « Parameters », régler le mode de signal, le nombre de niveaux, puis pour chaque segment l\u2019effet lumineux, la couleur par défaut, la luminosité et les quotients RVB.'},
+     {t:'Charger dans les appareils',d:'Clic droit sur le maître → « Charger avec les appareils ». La configuration part vers le maître ET vers l\u2019appareil. Étape distincte du chargement du programme CPU.'},
+     {t:'Relever la plage d\u2019adresses de sortie',d:'S7-PCT indique les sorties numériques attribuées. C\u2019est le mot source des données process optiques à raccorder dans le programme.'}
+   ]},
+ 'analogique-ai':{
+   nom:'Boucle de courant sur carte d\u2019entrées analogiques',
+   etapes:[
+     {t:'Choisir la carte d\u2019entrées analogiques',d:'Un module AI acceptant le courant — par exemple AI 8xU/I HS sur S7-1500, ou les entrées analogiques intégrées d\u2019une CPU compacte 1512C.'},
+     {t:'Câbler la boucle de courant',d:'Deux fils vers l\u2019entrée courant du module. Respecter la résistance de charge maximale annoncée par le capteur, sinon la boucle décroche en haut d\u2019échelle.'},
+     {t:'Déclarer le module dans la configuration matérielle',d:'Insérer le module dans le rack, puis choisir le type de mesure « Courant (transducteur à 4 fils) » et la plage 4…20 mA dans ses propriétés.'},
+     {t:'Relever l\u2019adresse d\u2019entrée',d:'TIA attribue un mot d\u2019entrée par voie. C\u2019est cette adresse qui sera lue dans le programme.'},
+     {t:'Mettre à l\u2019échelle',d:'Sur S7-1500, la plage 4…20 mA correspond à une valeur brute de 0 à 27648. NORM_X ramène à 0,0…1,0 puis SCALE_X convertit vers la grandeur physique.'},
+     {t:'Traiter les dépassements',d:'Sous 4 mA et au-delà de 20 mA, le module remonte des valeurs de dépassement. Les filtrer avant affichage, sinon la supervision affiche n\u2019importe quoi.'}
+   ]},
+ 'tor-di':{
+   nom:'Sorties de commutation sur carte d\u2019entrées TOR',
+   etapes:[
+     {t:'Vérifier la logique PNP / NPN',d:'Les modules d\u2019entrées TOR Siemens standard attendent du PNP (source). Sur ce capteur, le choix se fait dans l\u2019assistant de premier démarrage et ne se change plus ensuite sans réinitialisation.'},
+     {t:'Choisir la carte d\u2019entrées',d:'Module DI 24 V DC. Vérifier le courant absorbé par voie et la compatibilité avec la tension résiduelle du capteur.'},
+     {t:'Câbler les sorties de commande',d:'Un fil par sortie utilisée vers une voie du module. Isoler individuellement toutes les sorties non utilisées.'},
+     {t:'Régler les seuils sur le capteur',d:'Les seuils de commutation ne se règlent pas dans TIA : ils se saisissent sur l\u2019afficheur du capteur, ou par IO-Link.'},
+     {t:'Déclarer le module et relever les adresses',d:'Chaque sortie devient un bit d\u2019entrée dans le programme. Rien à convertir.'}
+   ]}
+},
+
+/* ── Familles IODD : une IODD couvre plusieurs appareils ──
+   Découvert en comparant les trois fichiers KEYENCE : structure
+   rigoureusement identique, à deux libellés près. ── */
+famillesIodd:{
+ 'keyence-fr':{
+  nom:'KEYENCE série FR',
+  trame:{octets:12,bits:96},
+  donnees:[
+   {cle:'val',nom:'Valeur actuelle',bitOffset:64,bits:32,type:'INT 32',octets:[0,1,2,3],
+    min:-199999,max:99999,gradient:null,unite:'selon réglage',couleur:'#1668B3'},
+   {cle:'cum',nom:'@VAL2@',bitOffset:32,bits:32,type:'INT 32',octets:[4,5,6,7],
+    min:-199999999,max:99999999,gradient:null,unite:'selon réglage',couleur:'#E2570F'},
+   {cle:'dg1',nom:'Diagnostics',bitOffset:24,bits:8,type:'8 × BOOL',octets:[8],couleur:'#2C7A44'},
+   {cle:'dg2',nom:'Erreurs',bitOffset:16,bits:8,type:'8 × BOOL',octets:[9],couleur:'#1F5F35'},
+   {cle:'sta',nom:'Stabilité + couleur',bitOffset:8,bits:8,type:'2 × UINT 4',octets:[10],couleur:'#6E4FA0'},
+   {cle:'out',nom:'État des sorties',bitOffset:0,bits:5,type:'5 × BOOL',octets:[11],couleur:'#A8830B'}
+  ],
+  bitsDiag:[
+   ['8','31','LOW — niveau sous la plage de mesure'],
+   ['8','30','HIGH — niveau au-dessus de la plage'],
+   ['8','29','Tracking — suivi en cours, valeur maintenue'],
+   ['8','28','@BIT28@'],
+   ['8','27','Stabilité dégradée — alerte de maintenance'],
+   ['8','26','Mesure impossible'],
+   ['8','25','Erreur d\u2019apprentissage'],
+   ['8','24','Interférence — autre source 60 GHz à proximité'],
+   ['9','23','Erreur de tête de capteur'],
+   ['9','22 → 18','Surintensité sur les sorties 5 à 1'],
+   ['9','17','Erreur EEPROM'],
+   ['9','16','Erreur système'],
+   ['10','15 → 12','Stabilité — 0 (détection impossible) à 4 (signal franc)'],
+   ['10','11 → 8','Couleur de l\u2019indicateur — 0 éteint · 1 vert · 2 jaune · 3 rouge · 4 rouge clignotant'],
+   ['11','4 → 0','État des sorties de commande 5 à 1']
+  ],
+  avertissementIodd:{
+   t:'Le brochage déclaré dans l\u2019IODD est générique',
+   d:'Les trois IODD de la gamme annoncent un M12 4 broches avec C/Q en broche 4, fil noir. Ce sont les couleurs standard DIN EN 60947-5-2, pas celles du câble réel — le faisceau ne contient aucun fil noir. Règle générale : l\u2019IODD sert aux données process et aux paramètres, jamais au câblage. Pour le câblage, c\u2019est la notice constructeur.'
+  },
+  sansGradient:{
+   t:'La valeur actuelle n\u2019a pas de facteur d\u2019échelle',
+   d:'Contrairement au LDH292 où le gradient est figé à 0,1, l\u2019IODD ne définit ici aucune conversion. La plage brute va de −199999 à 99999, et sa signification dépend des réglages « unité de distance » et « position du point décimal » saisis sur l\u2019afficheur du capteur. La même valeur brute peut valoir 1234 mm ou 1,234 m. Le programme automate doit connaître le paramétrage physique de l\u2019appareil.'
+  }
+ }
+},
+
+appareils:[
+
+/* ─────────────── ifm LDH292 ─────────────── */
+{
+ id:'ldh292',ref:'LDH292',marque:'ifm',marqueNom:'ifm electronic',
+ categorie:'capteur',type:'temperature',techno:'Capacitif',top:true,
+ nom:'Capteur d\u2019humidité et de température de l\u2019air',
+ resume:'Deux valeurs process sur un seul port IO-Link. Conçu pour l\u2019armoire électrique.',
+ source:'Fiche technique ifm 13.04.2023 · Notice 09/2020 · IODD rév. 1.1 du 27.11.2020',
+ specs:[
+  ['Grandeurs mesurées','Humidité relative + température'],
+  ['Plage humidité','0 … 100 % RH — précision 3 % (20 à 80 %), résolution 0,1'],
+  ['Plage température','−40 … +80 °C — précision ±0,3 K, résolution 0,1'],
+  ['Principe','Capacitif'],
+  ['Alimentation','18 … 30 V DC — 13 mA'],
+  ['Interface','IO-Link 1.1 — COM2 (38,4 kBaud)'],
+  ['Port maître requis','Classe A'],
+  ['Temps de cycle mini','4,5 ms'],
+  ['DeviceID','1337'],
+  ['Protection','IP 20 — sonde seule IP 57'],
+  ['Montage','Rail DIN TH35, vertical, raccordement en haut'],
+  ['Raccordement','1 × M12 codage A, 4 broches']
+ ],
+ reglagesAppareil:null,
+ pieges:[
+  {t:'Mode SIO : non',d:'Le capteur ne fonctionne qu\u2019en IO-Link, sans repli en mode standard. Port en DI ou désactivé : il ne remonte rien, et le diagnostic ne le dit pas clairement.'},
+  {t:'Inversion d\u2019octets Siemens',d:'La description d\u2019interface ifm signale que les automates Siemens permutent poids fort et poids faible en adressage par octet. Humidité à 44 800 au lieu de 435 : c\u2019est ça.'},
+  {t:'IP 20 contre IP 67',d:'Le maître va au bord de la machine, pas le capteur. Le LDH292 est un appareil d\u2019armoire.'},
+  {t:'Mesure jusqu\u2019à 100 %, utilisation jusqu\u2019à 90 %',d:'Plage de mesure et plage d\u2019utilisation ne sont pas les mêmes. Au-delà de 90 % RH ambiants, on sort des conditions d\u2019emploi.'},
+  {t:'Air turbulent interdit',d:'Gaines d\u2019aspiration et point de rosée : mesures erronées. Ne pas recouvrir le capteur.'}
+ ],
+ raccordements:{
+  iolink:{
+   connecteur:'M12 codage A — 4 broches',maitre:'al1102',procedure:'iolink-profinet',
+   cable:'Non blindé, 3 à 5 conducteurs, 20 m maximum',
+   pinout:[
+    {n:1,coul:'BN',hex:'#6B4326',nom:'Brun',fn:'L+ — alimentation 18…30 V DC'},
+    {n:2,coul:'WH',hex:'#FFFFFF',nom:'Blanc',fn:'Non utilisé'},
+    {n:4,coul:'BK',hex:'#1A1A1A',nom:'Noir',fn:'C/Q — communication IO-Link'},
+    {n:3,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'L− — 0 V'}
+   ],
+   trame:{octets:8,bits:64},
+   donnees:[
+    {cle:'hum',nom:'Humidité',bitOffset:48,bits:16,type:'INT',octets:[0,1],min:0,max:1000,gradient:.1,unite:'% RH',couleur:'#1668B3'},
+    {cle:'tmp',nom:'Température',bitOffset:16,bits:16,type:'INT',octets:[4,5],min:-400,max:850,gradient:.1,unite:'°C',couleur:'#E2570F'},
+    {cle:'sta',nom:'Device status',bitOffset:4,bits:4,type:'UINT',octets:[7],min:0,max:4,couleur:'#2C7A44'}
+   ],
+   valeursSpeciales:[
+    ['−32760','UL — sous la plage de mesure','Température'],
+    ['32760','OL — au-dessus de la plage','Température'],
+    ['−32762','cr.UL — dépassement critique bas','Température'],
+    ['32762','cr.OL — dépassement critique haut','Température'],
+    ['32764','NoData — pas de donnée valide','Humidité et température']
+   ],
+   deviceStatus:[['0','Appareil OK'],['1','Maintenance requise'],['2','Hors spécification'],['3','Contrôle fonctionnel'],['4','Défaillance']]
+  }
+ }
+},
+
+/* ─────────────── KEYENCE FR-S01 ─────────────── */
+{
+ id:'fr-s01',ref:'FR-S01',marque:'keyence',marqueNom:'KEYENCE',
+ categorie:'capteur',type:'niveau',techno:'Radar 60 GHz',top:true,
+ nom:'Capteur de niveau radar courte portée, affichage intégré',
+ resume:'Trois modes de raccordement pour un seul capteur, et un assistant de réglage obligatoire au premier démarrage.',
+ source:'Fiche technique KEYENCE France 13.08.2026 · Manuel d\u2019instructions MFR09FR · Manuel d\u2019utilisation série FR M04FR (10/2025)',
+ specs:[
+  ['Grandeur mesurée','Niveau de liquide ou de poudre — sans contact'],
+  ['Technologie','Radar, bande 58 … 63 GHz'],
+  ['Plage de mesure','Jusqu\u2019à 1,5 m — plage d\u2019affichage jusqu\u2019à 2 m'],
+  ['Permittivité relative cible','2 minimum'],
+  ['Résolution','1 mm'],
+  ['Précision','&lt; 0,1 m : ±20 mm · 0,1 à 0,3 m : ±5 mm · 0,3 à 1,5 m : ±1 mm'],
+  ['Temps de réponse','0,4 s · 1,5 s · 4 s (défaut) · 10 s'],
+  ['Pression réservoir','−0,1 à +1 MPa'],
+  ['Matériaux','Lentille PTFE · garniture FKM · joint SUS304 · boîtier PBT PAR'],
+  ['Raccord process','G3/4 (20 A) — couple de serrage 30 N·m'],
+  ['Alimentation','24 V DC +25 % / −20 % — 80 mA max'],
+  ['Sorties de commande','5 max — collecteur ouvert NPN/PNP, 30 V DC, 50 mA par sortie'],
+  ['Sortie analogique','0-20 mA ou 4-20 mA — charge max 260 Ω'],
+  ['IO-Link','v1.1 / COM2 — sur la sortie IO2'],
+  ['Connectique','1 × M12 mâle, 8 broches'],
+  ['Température ambiante','−20 à +55 °C (pas de gel)'],
+  ['Protection','IP67 (CEI 60529)']
+ ],
+ reglagesAppareil:{
+  intro:'Contrairement au LDH292, ce capteur n\u2019est pas exploitable à la sortie du carton : un assistant de configuration s\u2019impose au premier démarrage, et certains choix sont irréversibles.',
+  etapes:[
+   ['Langue','Anglais · Japonais · Chinois · Allemand — pas de français'],
+   ['PNP / NPN','⚠️ Ne se modifie plus ensuite sans réinitialisation complète'],
+   ['Sorties de commande','0 à 5 — détermine combien de fils sont exploitables'],
+   ['Entrée externe','ON / OFF — limite à 4 sorties si activée'],
+   ['Cible de détection','À base d\u2019eau (εr ≥ 3) · à base d\u2019huile (εr &lt; 3) · poudre'],
+   ['Unité de distance','mm · m · inch · feet'],
+   ['Distance du fond','Distance capteur → fond du réservoir = le 0 %'],
+   ['Distance au sommet','Distance capteur → surface haute = le 100 %'],
+   ['Seuils 1 à 5','Points de basculement des sorties de commande'],
+   ['Logique de sortie','N.O. / N.F. par sortie'],
+   ['Ordre des indicateurs','Couleurs de l\u2019anneau lumineux selon le niveau']
+  ],
+  apres:'Une fois l\u2019assistant terminé, KEYENCE recommande d\u2019exécuter la « fonction d\u2019adaptation » : le capteur diagnostique les échos parasites, propose de masquer les fausses crêtes et optimise seul ses réglages de suivi.'
+ },
+ pieges:[
+  {t:'IO-Link n\u2019est PAS sur la broche 4',d:'Connecteur M12 8 broches propriétaire : la communication IO-Link passe par la broche 6 (fil rose, sortie de commande 2). La règle habituelle « C/Q = broche 4 » ne s\u2019applique pas.'},
+  {t:'Longueur de câble : 30 m, mais 20 m en IO-Link',d:'La limite change selon le mode de raccordement. Dépassement = détection instable, sans message d\u2019erreur explicite.'},
+  {t:'PNP/NPN irréversible sans réinitialisation',d:'Choisi dans l\u2019assistant de premier démarrage. Le menu permet ensuite de le consulter, pas de le changer. Une erreur ici se paie par une réinitialisation complète du paramétrage.'},
+  {t:'Zone morte côté proche',d:'Distances minimales recommandées entre la surface de référence et le niveau haut : 100 mm pour un liquide aqueux, 120 mm pour un liquide huileux, 170 mm pour une poudre. En dessous, la détection décroche.'},
+  {t:'La bande 60 GHz interfère',d:'Deux capteurs FR installés côte à côte génèrent une erreur « Interférence ». Idem à proximité de WiFi, fours micro-ondes, chauffage industriel HF ou matériel médical haute fréquence.'},
+  {t:'Mousse et turbulence faussent la mesure',d:'Une mousse épaisse atténue le signal. Ne pas installer à l\u2019orifice d\u2019entrée ni là où le liquide fait des vagues ou adhère à la lentille.'},
+  {t:'Cible de détection mal choisie = mesure fausse',d:'Le réglage eau / huile / poudre modifie automatiquement les zones de masquage. Un mauvais choix empêche la détection correcte de la surface.'},
+  {t:'Pas d\u2019usage antidéflagrant',d:'Le FR-S01 n\u2019est pas un produit ATEX. Pour une zone à risque, il faut la version FR-LEX20 avec barrière.'}
+ ],
+ raccordements:{
+
+  iolink:{
+   connecteur:'M12 mâle, 8 broches — 4 conducteurs utilisés',maitre:null,procedure:'iolink-profinet',
+   cable:'Câble compatible IO-Link — 20 m maximum en IO-Link',
+   pinout:[
+    {n:2,coul:'BN',hex:'#6B4326',nom:'Marron',fn:'Alimentation 24 V DC',actif:true},
+    {n:6,coul:'PK',hex:'#E08AAE',nom:'Rose',fn:'Sortie de commande 2 → C/Q, communication IO-Link',actif:true},
+    {n:7,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V',actif:true}
+   ],
+   pinoutComplement:[
+    ['1','Blanc','Sortie analogique — inutilisée en IO-Link'],
+    ['3','Vert','Sortie de commande 3'],['4','Jaune','Sortie de commande 4'],
+    ['5','Gris','Sortie de commande 1'],['8','Rouge','Sortie de commande 5 / entrée externe']
+   ],
+   iodd:{fichier:'KEYENCE-FR-S-20240108-IODD1_1.xml',version:'V1.1',date:'08.01.2024',
+         vendorId:'509 (Keyence)',deviceId:'2040',variantes:'FR-S01 et FR-SA1C',
+         revision:'IO-Link V1.1',dataStorage:true},
+   familleIodd:'keyence-fr',
+   variante:{val2:'Niveau cumulé',bit28:'Temps de niveau cumulé invalide'}
+  },
+
+  analogique:{
+   connecteur:'M12 mâle, 8 broches',maitre:null,procedure:'analogique-ai',
+   cable:'30 m maximum',
+   pinout:[
+    {n:2,coul:'BN',hex:'#6B4326',nom:'Marron',fn:'Alimentation 24 V DC'},
+    {n:1,coul:'WH',hex:'#FFFFFF',nom:'Blanc',fn:'Sortie analogique 0-20 / 4-20 mA'},
+    {n:7,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V'}
+   ],
+   analog:{
+    plage:'4 … 20 mA (commutable en 0 … 20 mA par réglage)',
+    charge:'260 Ω maximum',
+    tempsReponse:'0,2 s après détermination de la sortie de commande (réponse à 90 %)',
+    precisionZero:'±0,1 mA au point zéro (4 mA)',
+    precisionPE:'±0,2 mA en pleine échelle (20 mA)',
+    resolution:'1 mm',
+    exemple:[
+     ['Réservoir vide — 0 %','0 mm','4 mA'],
+     ['Niveau intermédiaire','400 mm','10,4 mA'],
+     ['Réservoir plein — 100 %','1000 mm','20 mA']
+    ],
+    hors:'Au-delà de la limite haute, la sortie peut monter jusqu\u2019à 20,5 mA. Sous la limite basse, elle descend jusqu\u2019à 3,8 mA en mode 4-20 mA. En cas de perte de détection, le comportement est paramétrable : 3,5 mA, 21,5 mA, maintien de la valeur précédente, ou valeur fixe.'
+   }
+  },
+
+  tor:{
+   connecteur:'M12 mâle, 8 broches',maitre:null,procedure:'tor-di',
+   cable:'30 m maximum',
+   pinout:[
+    {n:2,coul:'BN',hex:'#6B4326',nom:'Marron',fn:'Alimentation 24 V DC'},
+    {n:5,coul:'GY',hex:'#8A9299',nom:'Gris',fn:'Sortie de commande 1'},
+    {n:6,coul:'PK',hex:'#E08AAE',nom:'Rose',fn:'Sortie de commande 2'},
+    {n:7,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V'}
+   ],
+   pinoutComplement:[
+    ['3','Vert','Sortie de commande 3'],['4','Jaune','Sortie de commande 4'],
+    ['8','Rouge','Sortie de commande 5 / entrée externe'],['1','Blanc','Sortie analogique']
+   ],
+   tor:{
+    type:'Collecteur ouvert NPN/PNP commutable',
+    limites:'30 V DC max · 50 mA max par sortie · tension résiduelle 1,4 V max à 50 mA',
+    logique:'N.O. / N.F. commutable par sortie',
+    modes:[
+     ['Standard','La sortie bascule quand le niveau franchit le seuil. Sens de l\u2019hystérésis réglable.'],
+     ['Zone','La sortie bascule quand le niveau sort d\u2019une plage. Deux limites, une seule sortie.'],
+     ['Erreur','Sortie active en cas de défaut interne du capteur.'],
+     ['Alerte de stabilité','Sortie active quand la qualité du signal chute — utile en maintenance conditionnelle.'],
+     ['Niveau cumulé','Sortie sur variation cumulée anormale du niveau sur une période.']
+    ]
+   }
+  }
+ }
+},
+
+/* ─────────────── KEYENCE FR-LM20 (longue portée) ─────────────── */
+{
+ id:'fr-lm20',ref:'FR-LM20',marque:'keyence',marqueNom:'KEYENCE',
+ categorie:'capteur',type:'niveau',techno:'Radar 60 GHz',
+ nom:'Capteur de niveau radar longue portée, modèle standard',
+ resume:'Même famille IODD que le FR-S01 : structure de données identique, jusqu\u2019à 20 m de portée.',
+ source:'Manuel d\u2019utilisation série FR M04FR (10/2025) · IODD KEYENCE-FR-L V1.1 du 08.01.2024',
+ specs:[
+  ['Grandeur mesurée','Niveau de liquide ou de poudre — sans contact'],
+  ['Technologie','Radar, bande 58 … 63 GHz'],
+  ['Plage de mesure','Jusqu\u2019à 20 m — version « L » : 15 m'],
+  ['Plage d\u2019affichage','Jusqu\u2019à 25 m'],
+  ['Permittivité relative cible','2 minimum'],
+  ['Résolution','1 mm'],
+  ['Précision','&lt; 0,1 m : ±10 mm · 0,1 à 10 m : ±1 mm · 10 à 20 m : ±2 mm'],
+  ['Temps de réponse','0,4 s · 1,5 s · 4 s (défaut) · 10 s'],
+  ['Pression réservoir','−0,1 à +1 MPa'],
+  ['Matériaux','Lentille PTFE · revêtement FKM · extrémité SUS304 · corps PPS PET PAR'],
+  ['Raccord process','G1-1/2 (40 A)'],
+  ['Alimentation','24 V DC +25 % / −20 % — 106 mA max'],
+  ['Sorties de commande','5 max — NPN/PNP, 30 V DC, 50 mA par sortie'],
+  ['Sortie analogique','0-20 ou 4-20 mA — charge max 260 Ω'],
+  ['IO-Link','v1.1 / COM2 — sur la sortie IO2'],
+  ['Connectique','1 × M12 mâle, 8 broches'],
+  ['Température ambiante','−20 à +50 °C (affichage intégré) · tête séparée jusqu\u2019à +60 °C'],
+  ['Protection','IP67 (CEI 60529) · boîtier Type 4X (NEMA 250)'],
+  ['Poids','Environ 600 g']
+ ],
+ reglagesAppareil:{
+  intro:'Même assistant de premier démarrage que le FR-S01, avec en plus la mise à l\u2019échelle par forme de réservoir — une fonction réservée à la longue portée.',
+  etapes:[
+   ['Langue','Anglais · Japonais · Chinois · Allemand'],
+   ['PNP / NPN','⚠️ Ne se modifie plus ensuite sans réinitialisation complète'],
+   ['Sorties de commande','0 à 5'],
+   ['Cible de détection','À base d\u2019eau · à base d\u2019huile · poudre'],
+   ['Unité de distance','mm · m · inch · feet'],
+   ['Mise à l\u2019échelle','OFF / ON — convertit le niveau en volume ou en poids'],
+   ['Forme du réservoir','Droit · sphérique · cylindre horizontal · base conique · base pyramidale · base inclinée · multipoint manuel (2 à 32 points)'],
+   ['Unité et décimales','mL, L, hL, m³, g, kg, t, %, gal, ft³, bbl, lb… et position du point décimal'],
+   ['Capacité du réservoir','0 à 99999 dans l\u2019unité choisie'],
+   ['Distances fond et sommet','Définissent le 0 % et le 100 %'],
+   ['Seuils et logique de sortie','Points de basculement, N.O. / N.F.']
+  ],
+  apres:'La mise à l\u2019échelle par forme de réservoir n\u2019existe pas sur la courte portée. C\u2019est elle qui permet d\u2019afficher directement des litres plutôt que des millimètres — le calcul de volume est fait par le capteur, pas par l\u2019automate.'
+ },
+ pieges:[
+  {t:'Zone morte côté proche',d:'Distances minimales entre la surface de référence et le niveau haut : 50 mm pour un liquide aqueux en longue portée, 120 mm pour un liquide huileux, 170 mm pour une poudre.'},
+  {t:'Le faisceau s\u2019élargit avec la distance',d:'À 20 m, la zone de détection atteint environ ø 1100 mm pour un liquide aqueux et ø 4250 mm pour un liquide huileux ou une poudre. Prévoir l\u2019absence d\u2019obstacle métallique dans ce cône.'},
+  {t:'Installation sur buse',d:'Longueur 150 mm maximum, diamètre intérieur 47,8 mm minimum, bords ébavurés. Une buse trop longue ou trop étroite génère des échos parasites.'},
+  {t:'Orientation de l\u2019onde polarisée',d:'Repérée par une marque sur la bague hexagonale. Installer la paroi parallèle à cette direction stabilise la détection. Tourner le corps ne change pas l\u2019orientation de l\u2019onde.'},
+  {t:'La bande 60 GHz interfère',d:'Deux capteurs FR côte à côte génèrent une erreur « Interférence », remontée en cyclique sur le bit 24. Idem près du WiFi ou d\u2019un chauffage industriel HF.'},
+  {t:'Mousse et turbulence',d:'Une mousse épaisse atténue le signal. Selon la taille des bulles, c\u2019est la surface de la mousse ou celle du liquide qui est détectée.'},
+  {t:'Pas d\u2019usage antidéflagrant',d:'Pour une zone à risque, il faut la version FR-LEX20 avec barrière de sécurité intrinsèque — qui n\u2019a pas d\u2019IO-Link, mais du HART.'}
+ ],
+ raccordements:{
+  iolink:{
+   connecteur:'M12 mâle, 8 broches — 4 conducteurs utilisés',maitre:null,procedure:'iolink-profinet',
+   cable:'Câble compatible IO-Link — 20 m maximum en IO-Link',
+   pinout:[
+    {n:2,coul:'BN',hex:'#6B4326',nom:'Marron',fn:'Alimentation 24 V DC'},
+    {n:6,coul:'PK',hex:'#E08AAE',nom:'Rose',fn:'Sortie de commande 2 → C/Q, communication IO-Link'},
+    {n:7,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V'}
+   ],
+   pinoutComplement:[
+    ['1','Blanc','Sortie analogique — inutilisée en IO-Link'],
+    ['3','Vert','Sortie de commande 3'],['4','Jaune','Sortie de commande 4'],
+    ['5','Gris','Sortie de commande 1'],['8','Rouge','Sortie de commande 5']
+   ],
+   iodd:{fichier:'KEYENCE-FR-L-20240108-IODD1_1.xml',version:'V1.1',date:'08.01.2024',
+         vendorId:'509 (Keyence)',deviceId:'2041',variantes:'Gamme FR-L (FR-LM / FR-LP)',
+         dataStorage:true},
+   familleIodd:'keyence-fr',
+   variante:{val2:'Valeur de conversion de débit',bit28:'Valeur de conversion de débit invalide'}
+  }
+ }
+},
+
+/* ─────────────── KEYENCE FR-LS20 (sanitaire) ─────────────── */
+{
+ id:'fr-ls20',ref:'FR-LS20',marque:'keyence',marqueNom:'KEYENCE',
+ categorie:'capteur',type:'niveau',techno:'Radar 60 GHz',
+ nom:'Capteur de niveau radar longue portée, modèle sanitaire',
+ resume:'Version inox à virole pour l\u2019agroalimentaire et la pharma. Même IODD, mêmes 12 octets.',
+ source:'Manuel d\u2019utilisation série FR M04FR (10/2025) · IODD KEYENCE-FR-LS V1.1 du 08.01.2024',
+ specs:[
+  ['Grandeur mesurée','Niveau de liquide ou de poudre — sans contact'],
+  ['Technologie','Radar, bande 58 … 63 GHz'],
+  ['Plage de mesure','Jusqu\u2019à 20 m — version « L » : 15 m'],
+  ['Résolution','1 mm'],
+  ['Précision','&lt; 0,1 m : ±10 mm · 0,1 à 10 m : ±1 mm · 10 à 20 m : ±2 mm'],
+  ['Pression réservoir','−0,1 à +1 MPa'],
+  ['Matériaux au contact','Lentille PTFE · joint de virole EPDM · virole SUS316L · corps SUS304'],
+  ['Raccord process','Virole 2S ou 2,5S selon accessoire'],
+  ['Conformité','Norme sanitaire 3-A — sous réserve du montage et de l\u2019état de surface Ra ≤ 0,8 µm'],
+  ['Nettoyage','SIP possible : 1 h maximum, ambiante ≤ 40 °C, interne ≤ 130 °C, hors tension'],
+  ['Alimentation','24 V DC +25 % / −20 % — 106 mA max'],
+  ['IO-Link','v1.1 / COM2 — sur la sortie IO2'],
+  ['Connectique','1 × M12 mâle, 8 broches'],
+  ['Température ambiante','−20 à +60 °C'],
+  ['Température du raccord','−20 à +100 °C'],
+  ['Protection','IP67 (CEI 60529) et IP69K (ISO 20653)'],
+  ['Poids','Environ 900 g']
+ ],
+ reglagesAppareil:null,
+ pieges:[
+  {t:'Le corps ne tourne pas',d:'Contrairement aux autres modèles de la gamme, le boîtier du modèle sanitaire est fixe. L\u2019orientation de l\u2019affichage se règle au moment de la fixation sur la virole, pas après.'},
+  {t:'Montage vertical obligatoire',d:'Pour respecter les normes EHEDG et 3-A, l\u2019installation doit permettre l\u2019auto-drainage. Soudure polie à Ra ≤ 0,8 µm sur la surface au contact du produit.'},
+  {t:'Nettoyer avant la première utilisation',d:'Le modèle sanitaire doit être nettoyé avant sa mise en service.'},
+  {t:'Contraintes de virole',d:'Pour la conformité 3-A, la longueur de virole ne doit pas dépasser 101,6 mm (OP-88889) ou 127 mm (OP-89245). Pour l\u2019EHEDG, utiliser un raccord ISO 2852.'},
+  {t:'La bande 60 GHz interfère',d:'Deux capteurs FR côte à côte génèrent une erreur « Interférence », remontée en cyclique sur le bit 24.'}
+ ],
+ raccordements:{
+  iolink:{
+   connecteur:'M12 mâle, 8 broches — 4 conducteurs utilisés',maitre:null,procedure:'iolink-profinet',
+   cable:'Câble compatible IO-Link — 20 m maximum en IO-Link',
+   pinout:[
+    {n:2,coul:'BN',hex:'#6B4326',nom:'Marron',fn:'Alimentation 24 V DC'},
+    {n:6,coul:'PK',hex:'#E08AAE',nom:'Rose',fn:'Sortie de commande 2 → C/Q, communication IO-Link'},
+    {n:7,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V'}
+   ],
+   pinoutComplement:[
+    ['1','Blanc','Sortie analogique — inutilisée en IO-Link'],
+    ['3','Vert','Sortie de commande 3'],['4','Jaune','Sortie de commande 4'],
+    ['5','Gris','Sortie de commande 1'],['8','Rouge','Sortie de commande 5']
+   ],
+   iodd:{fichier:'KEYENCE-FR-LS-20240108-IODD1_1.xml',version:'V1.1',date:'08.01.2024',
+         vendorId:'509 (Keyence)',deviceId:'2042',variantes:'FR-LS20',dataStorage:true},
+   familleIodd:'keyence-fr',
+   variante:{val2:'Valeur de conversion de débit',bit28:'Valeur de conversion de débit invalide'}
+  }
+ }
+},
+/* ─────────────── Siemens SIRIUS 8WD46 (actionneur, données en sortie) ─────────────── */
+{
+ id:'8wd46',ref:'8WD4615-5JH47',marque:'siemens-c',marqueNom:'Siemens',
+ categorie:'actionneur',type:'signalisation',techno:'Colonne LED configurable',top:true,
+ nom:'Colonne de signalisation SIRIUS 8WD46, 15 segments avec sirène',
+ resume:'Premier actionneur du site : l\u2019automate écrit vers l\u2019appareil au lieu de le lire.',
+ source:'Exemple d\u2019application Siemens 109818146 V1.0 (04/2023) · Manuel des colonnes SIRIUS 8WD4 · Fiches revendeurs pour les variantes',
+ specs:[
+  ['Fonction','Signalisation visuelle et sonore de l\u2019état machine'],
+  ['Segments LED','9 ou 15 selon la référence — 8WD4613 (9) · 8WD4615 (15)'],
+  ['Acoustique','Avec ou sans, selon la référence. Type de signal et volume réglables jusqu\u2019à 105 dB'],
+  ['Couleurs disponibles','Rouge · vert · bleu · jaune · jaune clair · turquoise · violet · blanc · plus une couleur RVB personnalisée'],
+  ['Effets lumineux','Fixe · clignotant 1, 2 ou 3 Hz · flash simple, double ou triple · rotatif'],
+  ['Raccordement','IO-Link ou câblage conventionnel 24 V, au choix selon la référence'],
+  ['Connectique','M12, 4 broches'],
+  ['Protection','IP66 et IP69K — utilisable en intérieur comme en extérieur'],
+  ['Durée de vie LED','50 000 heures de fonctionnement'],
+  ['Montage','Sans outil spécial, verrouillage à baïonnette entre modules'],
+  ['Maître testé','CM 4xIO-Link ST sur ET 200SP — IO-Link maître V1.1'],
+  ['Câble validé','6GT2891-4LH50-0AX0, M12 4 broches']
+ ],
+ reglagesAppareil:{
+  intro:'Le paramétrage ne se fait ni sur l\u2019appareil ni dans TIA Portal, mais dans S7-PCT, en acyclique. C\u2019est un troisième outil, avec son propre arbre de paramètres et son propre chargement.',
+  etapes:[
+   ['Mode de signal','Autoscale — tous les segments activés s\u2019affichent dans la même proportion'],
+   ['Nombre de niveaux','Jusqu\u2019à 5 en mode Autoscale'],
+   ['Effet lumineux par segment','Valeur par défaut, écrasable ensuite depuis le programme'],
+   ['Couleur par défaut par segment','Rouge, jaune clair, bleu, vert, blanc dans l\u2019exemple Siemens'],
+   ['Quotients R, V, B','Pour définir une couleur personnalisée, activée par la valeur 0 côté programme'],
+   ['Luminosité par segment','Maximum dans l\u2019exemple']
+  ],
+  apres:'Le chargement se fait par « Charger avec les appareils » depuis S7-PCT. C\u2019est une opération distincte du chargement du programme dans la CPU : oublier cette étape est une source classique de « ça ne fait rien ».'
+ },
+ pieges:[
+  {t:'15 segments physiques, 5 pilotables',d:'En mode Autoscale, cinq niveaux maximum. Au-delà, il faut le « Signaling column mode » — que le bloc fonction fourni par Siemens ne gère pas. Acheter 15 segments ne donne pas 15 couleurs commandables.'},
+  {t:'Trois chargements distincts',d:'Le programme va dans la CPU, le nom d\u2019appareil PROFINET dans l\u2019ET 200SP, et la configuration IO-Link dans le maître et l\u2019appareil via S7-PCT. En oublier un donne une colonne muette sans message d\u2019erreur.'},
+  {t:'S7-PCT doit être installé avant d\u2019ouvrir TIA',d:'Sans redémarrage de TIA Portal après l\u2019installation, l\u2019entrée « Démarrer l\u2019outil d\u2019appareil » n\u2019apparaît pas au clic droit.'},
+  {t:'Deux versions incompatibles à l\u2019usage',d:'La version conventionnelle 24 V se paramètre à l\u2019avance par une interface USB, une seule fois. La version IO-Link se reconfigure à tout moment depuis le programme ou en ligne. Le choix se fait à l\u2019achat, pas après.'},
+  {t:'Couleur personnalisée en deux temps',d:'Les valeurs RVB se règlent dans S7-PCT, mais la couleur ne s\u2019active qu\u2019en envoyant la valeur 0 depuis le programme pour le segment concerné. Régler le RVB sans envoyer 0 ne produit rien.'},
+  {t:'Combinaisons interdites par la norme',d:'Le concept de signalisation Siemens précise que rouge et vert allumés simultanément est un état invalide. Ce n\u2019est pas une limite technique, c\u2019est une règle de sécurité à respecter côté programme.'}
+ ],
+ raccordements:{
+  iolink:{
+   sens:'sortie',
+   connecteur:'M12, 4 broches',maitre:null,procedure:'iolink-s7pct',
+   cable:'Câble IO-Link M12 4 broches — référence Siemens 6GT2891-4LH50-0AX0',
+   pinout:[
+    {n:1,coul:'BN',hex:'#6B4326',nom:'Brun',fn:'L+ — alimentation 24 V DC'},
+    {n:2,coul:'WH',hex:'#FFFFFF',nom:'Blanc',fn:'Non utilisé'},
+    {n:4,coul:'BK',hex:'#1A1A1A',nom:'Noir',fn:'C/Q — communication IO-Link'},
+    {n:3,coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'L− — 0 V'}
+   ],
+   bornier:[
+    ['1','C/Q de la colonne 8WD46'],
+    ['9','L+ de la colonne 8WD46'],
+    ['13','L− de la colonne 8WD46']
+   ],
+   commande:{
+    bloc:'Control_IOLink8WD46',
+    blocNote:'Siemens fournit ce bloc fonction dans un projet TIA téléchargeable avec l\u2019exemple d\u2019application 109818146. Il gère la communication IO-Link : on ne code pas la trame d\u2019octets, on appelle le bloc.',
+    entrees:[
+     ['hwID','HW_IO','Identifiant matériel du maître IO-Link, pris dans les constantes système'],
+     ['port','INT','Numéro de port sur lequel la colonne est raccordée'],
+     ['moduleInterface','typeSignalStack8WD46','Couleur et effet de chacun des 5 segments']
+    ],
+    sorties:[
+     ['stackConnectPeriphery','—','À raccorder au mot source des données process optiques, relevé dans S7-PCT'],
+     ['done · busy · error · status','—','État de la communication'],
+     ['diagDeviceFB','—','Diagnostic de l\u2019appareil']
+    ],
+    couleurs:[['0','Couleur personnalisée (RVB réglé dans S7-PCT)'],['1','Rouge'],['2','Vert'],['3','Bleu'],
+              ['4','Jaune'],['5','Jaune clair'],['6','Turquoise'],['7','Violet'],['8','Blanc']],
+    effets:[['0','Éteint'],['1','Fixe'],['2','Clignotant 3 Hz'],['3','Clignotant 2 Hz'],['4','Clignotant 1 Hz'],
+            ['5','Flash simple'],['6','Flash double'],['7','Flash triple'],['8','Rotatif']]
+   }
+  },
+  conventionnel:{
+   sens:'sortie',
+   connecteur:'Bornier ou M12 selon l\u2019élément de raccordement',maitre:null,procedure:'tor-di',
+   cable:'Câblage 24 V classique',
+   pinout:[
+    {n:'—',coul:'BN',hex:'#6B4326',nom:'Brun',fn:'24 V DC'},
+    {n:'—',coul:'BU',hex:'#1668B3',nom:'Bleu',fn:'0 V'},
+    {n:'—',coul:'--',hex:'#8A9299',nom:'Signal',fn:'Un fil par segment commandé'}
+   ],
+   noteMode:'En version conventionnelle, les paramètres — couleurs, effets, luminosité — sont figés à l\u2019avance par une interface USB. Le programme ne fait qu\u2019allumer ou éteindre des segments. Moins souple, mais aucun maître IO-Link nécessaire.'
+  }
+ }
+}
+]};
+
+/* ══════════════════════════════════════════════════════════
+   NAVIGATION
+   ══════════════════════════════════════════════════════════ */
+let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const find=(c,id)=>DB[c].find(x=>x.id===id)||{};
+const sousTypes=cat=>DB.sousTypes[cat]||[];
+const findType=id=>{for(const k in DB.sousTypes){const t=DB.sousTypes[k].find(x=>x.id===id);if(t)return t}return{}};
+const dev=id=>DB.appareils.find(x=>x.id===id);
+
+function go(v,val){
+  if(v==='home')S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+  if(v==='categorie')S.automate=val;
+  if(v==='type')S.categorie=val;
+  if(v==='marque')S.type=val;
+  if(v==='modele')S.marque=val;
+  if(v==='mode')S.modele=val;
+  if(v==='guide')S.mode=val;
+  window.scrollTo(0,0);render(v);
+}
+const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
+      goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
+const back=v=>`<button class="back" onclick="go('${v}')">← Retour</button>`;
+
+function crumbs(items){
+  const c=$('crumbs');
+  if(!items.length){c.hidden=true;return}
+  c.hidden=false;
+  $('crumbsIn').innerHTML=items.map((it,i)=>
+    (i?'<span class="sep">›</span>':'')+
+    (it.vue?`<button onclick="go('${it.vue}')">${esc(it.txt)}</button>`:`<span class="now">${esc(it.txt)}</span>`)
+  ).join('');
+}
+function tiles(list,fn,topId){
+  return `<div class="grid">${list.map(x=>{
+    const on=x.actif!==false, top=topId&&x.id===topId;
+    return `<button class="tile${top?' top':''}" ${on?`onclick="${fn}('${x.id}')"`:'disabled'}>
+      <h3>${esc(x.nom)}</h3>${x.note?`<p>${esc(x.note)}</p>`:''}
+      <span class="badge">${top?'Le plus consulté':(on?'Disponible':'Bientôt')}</span></button>`;
+  }).join('')}</div>`;
+}
+const head=(s,t,l)=>`<span class="step">${esc(s)}</span><h1 class="title">${esc(t)}</h1>${l?`<p class="lede">${esc(l)}</p>`:''}`;
+
+function render(v){
+  const app=$('app'), a=find('automates',S.automate), c=find('categories',S.categorie),
+        t=findType(S.type), m=find('marques',S.marque);
+
+  if(v==='home'){
+    crumbs([]);
+    app.innerHTML=head('Étape 1 sur 7','Quel automate ?',
+      'Le guide descend jusqu\u2019au matériel exact et jusqu\u2019à son mode de raccordement : câblage, réglages sur l\u2019appareil, intégration TIA Portal, programmation.')
+      +tiles(DB.automates,'goCat')+modelNote();return;
+  }
+  if(v==='categorie'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}]);
+    app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')+tiles(DB.categories,'goType');return;
+  }
+  if(v==='type'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}]);
+    const estCapteur=S.categorie==='capteur';
+    app.innerHTML=back('categorie')+head('Étape 3 sur 7',
+      estCapteur?'Quelle grandeur mesurée ?':'Quelle fonction ?',
+      estCapteur
+        ?'On classe par ce qui est mesuré, pas par la technologie — un niveau se mesure au radar, à l\u2019ultrason ou en capacitif.'
+        :'Un actionneur ne mesure rien : on le classe par ce qu\u2019il fait.')
+      +tiles(sousTypes(S.categorie),'goMarque');return;
+  }
+  if(v==='marque'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}]);
+    const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c'}[S.type];
+    app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(DB.marques,'goModele',top);return;
+  }
+  if(v==='modele'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom,vue:'marque'},{txt:m.nom}]);
+    const l=DB.appareils.filter(d=>d.marque===S.marque&&d.type===S.type&&d.categorie===S.categorie)
+      .map(d=>({id:d.id,nom:d.ref,note:d.nom+' — '+d.techno,actif:true}));
+    app.innerHTML=back('marque')+head('Étape 5 sur 7','Quel modèle ?','')
+      +(l.length?tiles(l,'goMode',l[0].id):`<div class="note"><b>Aucun appareil</b>Cette combinaison n\u2019est pas encore documentée.</div>`);return;
+  }
+  if(v==='mode'){
+    const d=dev(S.modele);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},
+            {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref}]);
+    const dispo=DB.modes.filter(x=>d.raccordements[x.id]).map(x=>({...x,actif:true}));
+    const absents=DB.modes.filter(x=>!d.raccordements[x.id]).map(x=>({...x,actif:false,note:'Non supporté par cet appareil'}));
+    app.innerHTML=back('modele')+head('Étape 6 sur 7','Comment le raccordez-vous ?',
+      'C\u2019est ce choix qui détermine la procédure. Un même capteur en IO-Link ou en 4-20 mA n\u2019a rien de commun côté TIA Portal.')
+      +tiles(dispo.concat(absents),'goGuide',dispo[0]&&dispo[0].id);return;
+  }
+  if(v==='guide')guide();
+}
+
+function modelNote(){
+  return `<div class="model-note"><b>Comment cette maquette fonctionne</b>
+  Aucune page n\u2019est écrite à la main. Chaque guide est assemblé à partir de quatre sources :
+  la <strong>procédure du mode de raccordement</strong> (écrite une seule fois et partagée par tous les
+  appareils), les <strong>caractéristiques de l\u2019appareil</strong>, son <strong>brochage</strong> — qui n\u2019est
+  jamais générique — et, en IO-Link, la <strong>structure des données process</strong> lue dans son IODD.
+  Le schéma d\u2019octets, la table de brochage et le code sont générés depuis ces données.</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE GUIDE
+   ══════════════════════════════════════════════════════════ */
+
+/* Fusionne la famille IODD dans le raccordement de l'appareil.
+   C'est ce qui permet d'ajouter un capteur de la même gamme
+   en quelques lignes de données, sans dupliquer la trame. */
+function rac(d,mode){
+  const r=d.raccordements[mode];
+  if(!r||!r.familleIodd) return r;
+  const F=DB.famillesIodd[r.familleIodd], v=r.variante||{};
+  const sub=t=>String(t).replace('@VAL2@',v.val2||'—').replace('@BIT28@',v.bit28||'—');
+  return Object.assign({},r,{
+    famille:F.nom,
+    trame:F.trame,
+    donnees:F.donnees.map(x=>Object.assign({},x,{nom:sub(x.nom)})),
+    bitsDiag:F.bitsDiag.map(b=>[b[0],b[1],sub(b[2])]),
+    avertissementIodd:F.avertissementIodd,
+    sansGradient:F.sansGradient
+  });
+}
+
+function guide(){
+  const d=dev(S.modele), r=rac(d,S.mode), md=DB.modes.find(x=>x.id===S.mode),
+        proc=DB.procedures[r.procedure], mt=r.maitre?DB.maitres.find(x=>x.id===r.maitre):null,
+        a=S.automate?find('automates',S.automate):find('automates','siemens');
+  let n=0;const num=()=>String(++n).padStart(2,'0');
+  const P=[];
+
+  P.push(`<div class="guide-head">
+    <span class="step">Guide d\u2019intégration</span>
+    <h1 class="title">${esc(d.ref)} — raccordement ${esc(md.nom)}</h1>
+    <p class="lede">${esc(d.nom)}. ${esc(d.resume)}</p>
+    <div class="chain">
+      <span class="chip">${esc(d.marqueNom)} ${esc(d.ref)}</span>
+      ${mt?`<span class="chip">${esc(mt.marque)} ${esc(mt.ref)}</span>`:''}
+      <span class="chip mode">${esc(md.nom)}</span>
+      <span class="chip alt">${esc(a.nom)}</span>
+      <span class="chip alt">${esc(d.techno)}</span>
+      ${r.sens==='sortie'?'<span class="chip alt" style="border-color:var(--signal);color:var(--signal-deep)">Données en sortie</span>':''}
+    </div></div>`);
+
+  /* 1 — caractéristiques */
+  P.push(`<section class="blk"><h2 data-n="${num()}">Caractéristiques de l\u2019appareil</h2>
+   <table><tbody>${d.specs.map(s=>`<tr><th style="width:33%">${s[0]}</th><td>${s[1]}</td></tr>`).join('')}</tbody></table>
+   ${mt?`<div class="note"><b>Compatibilité</b>Le ${esc(mt.ref)} dispose de ${mt.ports} ports classe ${esc(mt.classe)} et gère IO-Link ${esc(mt.specIolink)} — compatible.</div>`:''}
+   </section>`);
+
+  /* 2 — câblage */
+  P.push(`<section class="blk"><h2 data-n="${num()}">Câblage</h2>
+   <p style="margin:0 0 14px;color:var(--ink-2);font-size:13.5px">${esc(r.connecteur)} — ${esc(r.cable)}</p>
+   <div class="pins">${connSvg(r)}
+   <table><thead><tr><th>Broche</th><th>Fil</th><th>Fonction</th></tr></thead><tbody>
+   ${r.pinout.map(p=>`<tr><td class="num">${p.n}</td>
+     <td><span class="dot" style="background:${p.hex}"></span><span class="m">${p.coul}</span> ${p.nom}</td>
+     <td>${esc(p.fn)}</td></tr>`).join('')}</tbody></table></div>
+   ${r.bornier?`<div class="note info"><b>Côté maître IO-Link</b>
+     Affectation des bornes sur la BaseUnit du module : ${r.bornier.map(b=>`<span class="mono">${b[0]}</span> ${esc(b[1])}`).join(' · ')}</div>`:''}
+   ${r.noteMode?`<div class="note info"><b>Version conventionnelle</b>${esc(r.noteMode)}</div>`:''}
+   ${S.mode==='iolink'?`<div class="note info"><b>Une liaison IO-Link n\u2019utilise que 4 conducteurs</b>
+     L\u2019alimentation, le 0 V, la ligne de communication C/Q, et un quatrième non utilisé en classe A.
+     Peu importe que le connecteur en compte 8 : les autres fils restent inutilisés et doivent être isolés individuellement.</div>`:''}
+   ${r.pinoutComplement?`<div class="note info"><b>Autres broches du connecteur</b>
+     ${r.pinoutComplement.map(x=>`<span class="m">${x[0]}</span> ${x[1]} — ${esc(x[2])}`).join(' · ')}
+     <br>Isoler individuellement tous les fils non utilisés.</div>`:''}
+   ${S.mode==='iolink'&&d.id==='fr-s01'?`<div class="note warn"><b>La règle « IO-Link = broche 4 » ne s\u2019applique pas ici</b>
+     Connecteur 8 broches propriétaire : la communication passe par la <span class="m">broche 6</span>, fil rose.
+     Vérifiez toujours le brochage du fabricant plutôt que de vous fier à l\u2019habitude.</div>`:''}
+   </section>`);
+
+  /* 3 — réglages sur l'appareil */
+  if(d.reglagesAppareil){
+    const g=d.reglagesAppareil;
+    P.push(`<section class="blk"><h2 data-n="${num()}">Réglages sur l\u2019appareil</h2>
+     <p style="margin:0 0 14px;color:var(--ink-2);font-size:13.5px">${esc(g.intro)}</p>
+     <table><thead><tr><th style="width:32%">Étape de l\u2019assistant</th><th>Options</th></tr></thead>
+     <tbody>${g.etapes.map(e=>`<tr><th>${e[0]}</th><td>${e[1]}</td></tr>`).join('')}</tbody></table>
+     <div class="note info"><b>Après l\u2019assistant</b>${esc(g.apres)}</div></section>`);
+  }
+
+  /* 4 — procédure TIA */
+  P.push(`<section class="blk"><h2 data-n="${num()}">Intégration dans TIA Portal</h2>
+   <p style="margin:0 0 14px;color:var(--ink-2);font-size:13.5px">Procédure « ${esc(proc.nom)} » — commune à tous les appareils raccordés de cette façon.</p>
+   <table><tbody>${proc.etapes.map((e,i)=>`<tr>
+     <th style="width:36%"><span style="color:var(--signal)">${String(i+1).padStart(2,'0')}</span> ${esc(e.t)}</th>
+     <td>${esc(e.d)}</td></tr>`).join('')}</tbody></table></section>`);
+
+  /* 5 — données selon le mode */
+  if(r.commande) P.push(blocCommande(r,num));
+  if(S.mode==='iolink'&&r.donnees) P.push(blocIolink(r,num));
+  if(S.mode==='analogique') P.push(blocAnalog(r,num));
+  if(S.mode==='tor') P.push(blocTor(r,num));
+
+  /* 6 — programmation */
+  if(S.mode==='iolink'&&r.donnees&&!r.commande) P.push(r.familleIodd==='keyence-fr'
+    ?blocProg(codeSclFRS(d,r),codeLadFRS(d,r),num)
+    :blocProg(codeSclIolink(d,r),codeLadIolink(d,r),num));
+  if(S.mode==='analogique') P.push(blocProg(codeSclAnalog(d),codeLadAnalog(d),num));
+
+  /* 7 — pièges + sources */
+  P.push(`<section class="blk"><h2 data-n="${num()}">Les pièges</h2>
+   <table><tbody>${d.pieges.map(p=>`<tr><th style="width:33%">${esc(p.t)}</th><td>${esc(p.d)}</td></tr>`).join('')}</tbody></table></section>`);
+  P.push(`<section class="blk"><h2 data-n="${num()}">Sources</h2>
+   <p class="mono" style="margin:0;font-size:12.5px;color:var(--ink-2)">${esc(d.source)}</p></section>`);
+
+  crumbs([{txt:'Automate',vue:'home'},{txt:dev(S.modele).ref,vue:'mode'},{txt:md.nom}]);
+  $('app').innerHTML=back('mode')+`<article class="guide">${P.join('')}</article>`+modelNote();
+}
+
+/* ── connecteur dessiné selon le nombre de broches ── */
+function connSvg(r){
+  const huit=/8/.test(r.connecteur);
+  if(!huit){
+    const c={};r.pinout.forEach(p=>c[p.n]=p.hex);
+    return `<svg viewBox="0 0 120 120" aria-label="Brochage M12 4 broches"><circle cx="60" cy="60" r="44" fill="none" stroke="#141A20" stroke-width="2.5"/>
+    <circle cx="60" cy="38" r="7" fill="${c[1]||'#fff'}" stroke="#141A20" stroke-width="1.5"/>
+    <circle cx="38" cy="60" r="7" fill="${c[2]||'#fff'}" stroke="#141A20" stroke-width="1.5"/>
+    <circle cx="82" cy="60" r="7" fill="${c[4]||'#fff'}" stroke="#141A20" stroke-width="1.5"/>
+    <circle cx="60" cy="82" r="7" fill="${c[3]||'#fff'}" stroke="#141A20" stroke-width="1.5"/>
+    <text x="60" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="12">1</text>
+    <text x="20" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="12">2</text>
+    <text x="100" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="12">4</text>
+    <text x="60" y="110" text-anchor="middle" font-family="IBM Plex Mono" font-size="12">3</text></svg>`;
+  }
+  const c={};r.pinout.forEach(p=>c[p.n]=p.hex);
+  const pos=[[60,32],[38,44],[38,70],[60,84],[82,70],[82,44],[60,58],[46,58]];
+  const lbl=[[60,16],[22,44],[22,76],[60,104],[100,76],[100,44],[74,58],[32,58]];
+  let s=`<svg viewBox="0 0 120 120" aria-label="Brochage M12 8 broches"><circle cx="60" cy="60" r="46" fill="none" stroke="#141A20" stroke-width="2.5"/>`;
+  for(let i=0;i<8;i++){
+    s+=`<circle cx="${pos[i][0]}" cy="${pos[i][1]}" r="6" fill="${c[i+1]||'#EDEEEA'}" stroke="#141A20" stroke-width="1.4"/>`;
+    s+=`<text x="${lbl[i][0]}" y="${lbl[i][1]+4}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10">${i+1}</text>`;
+  }
+  return s+'</svg>';
+}
+
+/* ── bloc données process IO-Link ── */
+function blocIolink(r,num){
+  const N=r.trame.octets, cols=`grid-template-columns:repeat(${N},1fr)`;
+  const cells=Array.from({length:N},()=>null);
+  r.donnees.forEach(x=>x.octets.forEach((o,i)=>{
+    cells[o]={coul:x.couleur,txt:x.octets.length>1?`${x.nom}<br>${i===0?'MSB':(i===x.octets.length-1?'LSB':'·')}`:x.nom};
+  }));
+  const strip=cells.map(c=>c
+    ?`<div class="byte" style="background:${c.coul};color:#fff">${c.txt}</div>`
+    :`<div class="byte nil">—</div>`).join('');
+
+  let h=`<section class="blk"><h2 data-n="${num()}">Structure des données process</h2>`;
+  if(r.iodd){
+    h+=`<table style="margin-bottom:18px"><tbody>
+      <tr><th style="width:33%">Fichier IODD</th><td class="mono">${esc(r.iodd.fichier)}</td></tr>
+      <tr><th>Version · date</th><td>${esc(r.iodd.version)} — ${esc(r.iodd.date)}</td></tr>
+      <tr><th>VendorID · DeviceID</th><td class="mono">${esc(r.iodd.vendorId)} · ${esc(r.iodd.deviceId)}</td></tr>
+      <tr><th>Variantes couvertes</th><td>${esc(r.iodd.variantes)}</td></tr>
+      ${r.famille?`<tr><th>Famille IODD</th><td>${esc(r.famille)} — structure de données process commune à toute la gamme</td></tr>`:''}
+      <tr><th>Data Storage</th><td>${r.iodd.dataStorage
+        ?'✅ Pris en charge — le maître sauvegarde le paramétrage. Un capteur remplacé est reconfiguré automatiquement.'
+        :'Non pris en charge'}</td></tr>
+      </tbody></table>`;
+  }
+  if(r.avertissementIodd)
+    h+=`<div class="note warn"><b>${esc(r.avertissementIodd.t)}</b>${esc(r.avertissementIodd.d)}</div>`;
+
+  h+=`<div class="frame-caption" style="margin-top:18px">${r.trame.bits} bits — ${N} octets${
+      cells.includes(null)?' — les zones hachurées ne sont pas utilisées':''}</div>
+   <div class="bytes" style="${cols}">${strip}</div>
+   <div class="ruler" style="${cols}">${Array.from({length:N},(_,i)=>`<div class="tick">${i}</div>`).join('')}</div>
+   <div class="legend">${r.donnees.map(x=>
+     `<span><i style="background:${x.couleur}"></i>${esc(x.nom)} — octet${x.octets.length>1?'s':''} ${
+      x.octets.length>1?x.octets[0]+'-'+x.octets[x.octets.length-1]:x.octets[0]}</span>`).join('')}
+     ${cells.includes(null)?'<span><i style="background:var(--card-2);border:1px solid var(--line)"></i>Inutilisé</span>':''}</div>
+
+   <table style="margin-top:20px"><thead><tr><th>Donnée</th><th>Offset bit</th><th>Longueur</th><th>Type</th><th>Plage brute</th><th>Conversion</th></tr></thead>
+   <tbody>${r.donnees.map(x=>`<tr><td>${esc(x.nom)}</td><td class="num">${x.bitOffset}</td>
+     <td class="num">${x.bits} bits</td><td class="num">${esc(x.type)}</td>
+     <td class="num">${x.min!==undefined?x.min+' … '+x.max:'—'}</td>
+     <td class="num">${x.gradient?'÷ 10 → '+x.unite:(x.unite?esc(x.unite):'bits d\u2019état')}</td></tr>`).join('')}</tbody></table>`;
+
+  if(r.sansGradient)
+    h+=`<div class="note warn"><b>${esc(r.sansGradient.t)}</b>${esc(r.sansGradient.d)}</div>`;
+  else
+    h+=`<div class="note info"><b>Exemple de lecture</b>Valeur brute 435 sur les octets 0-1 → <span class="m">43,5 % RH</span>. Valeur brute −85 sur les octets 4-5 → <span class="m">−8,5 °C</span>.</div>`;
+
+  if(r.bitsDiag){
+    h+=`<h2 data-n="${num()}" style="margin-top:28px">Bits de diagnostic</h2>
+     <p style="margin:0 0 12px;color:var(--ink-2);font-size:13.5px">
+     Tout ce que le capteur affiche à l\u2019écran remonte en cyclique. Aucune lecture acyclique n\u2019est
+     nécessaire pour construire une supervision complète.</p>
+     <table><thead><tr><th style="width:70px">Octet</th><th style="width:90px">Bit</th><th>Signification</th></tr></thead>
+     <tbody>${r.bitsDiag.map(b=>`<tr><td class="num">${b[0]}</td><td class="num">${b[1]}</td><td>${esc(b[2])}</td></tr>`).join('')}</tbody></table>`;
+  }
+  if(r.valeursSpeciales){
+    h+=`<h2 data-n="${num()}" style="margin-top:28px">Valeurs spéciales à filtrer</h2>
+     <table><thead><tr><th>Valeur brute</th><th>Signification</th><th>Concerne</th></tr></thead>
+     <tbody>${r.valeursSpeciales.map(v=>`<tr><td class="num">${v[0]}</td><td>${esc(v[1])}</td><td>${esc(v[2])}</td></tr>`).join('')}</tbody></table>`;
+  }
+  if(r.deviceStatus){
+    h+=`<h2 data-n="${num()}" style="margin-top:28px">Device status</h2>
+     <table><tbody>${r.deviceStatus.map(v=>`<tr><th style="width:90px" class="num">${v[0]}</th><td>${esc(v[1])}</td></tr>`).join('')}</tbody></table>
+     <div class="note info"><b>Maintenance conditionnelle</b>Copie du paramètre index 36 dans le canal cyclique : exploitable sans lecture acyclique.</div>`;
+  }
+  return h+'</section>';
+}
+
+
+/* ── bloc commande : appareils dont les données process sont en SORTIE ── */
+function blocCommande(r,num){
+  const C=r.commande;
+  let h=`<section class="blk"><h2 data-n="${num()}">Piloter l\u2019appareil</h2>
+   <div class="note info"><b>Sens des données : sortie</b>
+     Contrairement à un capteur, l\u2019automate <strong>écrit</strong> vers cet appareil.
+     Il n\u2019y a pas de trame d\u2019octets à décoder : Siemens fournit un bloc fonction qui
+     encapsule la communication IO-Link.</div>
+   <table style="margin-top:16px"><tbody>
+     <tr><th style="width:33%">Bloc fonction</th><td class="mono">${esc(C.bloc)}</td></tr>
+     <tr><th>Où le trouver</th><td>${esc(C.blocNote)}</td></tr>
+   </tbody></table>
+   <h2 data-n="${num()}" style="margin-top:26px">Interface du bloc</h2>
+   <table><thead><tr><th style="width:26%">Entrée</th><th style="width:22%">Type</th><th>Rôle</th></tr></thead>
+   <tbody>${C.entrees.map(e=>`<tr><td class="mono">${esc(e[0])}</td><td class="mono">${esc(e[1])}</td><td>${esc(e[2])}</td></tr>`).join('')}</tbody></table>
+   <table style="margin-top:12px"><thead><tr><th style="width:26%">Sortie</th><th style="width:22%"></th><th>Rôle</th></tr></thead>
+   <tbody>${C.sorties.map(e=>`<tr><td class="mono">${esc(e[0])}</td><td class="mono">${esc(e[1])}</td><td>${esc(e[2])}</td></tr>`).join('')}</tbody></table>
+   <h2 data-n="${num()}" style="margin-top:26px">Valeurs à envoyer</h2>
+   <p style="margin:0 0 12px;color:var(--ink-2);font-size:13.5px">
+     Pour chacun des cinq segments, un DInt de couleur et un DInt d\u2019effet.</p>
+   <div class="pins">
+   <table style="min-width:230px"><thead><tr><th>Couleur</th><th>Signification</th></tr></thead>
+   <tbody>${C.couleurs.map(v=>`<tr><td class="num">${v[0]}</td><td>${esc(v[1])}</td></tr>`).join('')}</tbody></table>
+   <table style="min-width:230px"><thead><tr><th>Effet</th><th>Signification</th></tr></thead>
+   <tbody>${C.effets.map(v=>`<tr><td class="num">${v[0]}</td><td>${esc(v[1])}</td></tr>`).join('')}</tbody></table>
+   </div>
+   <div class="note warn"><b>Cinq segments maximum en mode Autoscale</b>
+     Les segments 1 à 5 se règlent par <span class="mono">colorSegmentN</span> et
+     <span class="mono">effectSegmentN</span>. Mettre l\u2019effet à 0 éteint le segment.
+     Pour utiliser moins de couleurs, on ne renseigne que les premiers segments et on laisse
+     les autres à 0.</div>
+   </section>`;
+  return h;
+}
+
+/* ── bloc analogique ── */
+function blocAnalog(r,num){
+  const A=r.analog;
+  return `<section class="blk"><h2 data-n="${num()}">La boucle de courant</h2>
+   <table><tbody>
+    <tr><th style="width:33%">Plage</th><td>${esc(A.plage)}</td></tr>
+    <tr><th>Résistance de charge</th><td>${esc(A.charge)}</td></tr>
+    <tr><th>Résolution</th><td>${esc(A.resolution)}</td></tr>
+    <tr><th>Précision au zéro</th><td>${esc(A.precisionZero)}</td></tr>
+    <tr><th>Précision pleine échelle</th><td>${esc(A.precisionPE)}</td></tr>
+    <tr><th>Temps de réponse</th><td>${esc(A.tempsReponse)}</td></tr>
+   </tbody></table>
+   <h2 data-n="${num()}" style="margin-top:26px">Correspondance niveau → courant</h2>
+   <p style="margin:0 0 12px;color:var(--ink-2);font-size:13.5px">Exemple pour un réservoir de 1000 mm, capteur installé 100 mm au-dessus du bord haut.</p>
+   <table><thead><tr><th>Situation</th><th>Niveau</th><th>Sortie</th></tr></thead>
+   <tbody>${A.exemple.map(e=>`<tr><td>${esc(e[0])}</td><td class="num">${e[1]}</td><td class="num">${e[2]}</td></tr>`).join('')}</tbody></table>
+   <div class="note warn"><b>Hors plage et perte de détection</b>${esc(A.hors)}</div>
+   <div class="note info"><b>Pas d\u2019IODD, pas de GSDML, pas de maître</b>
+     En analogique, toute la chaîne IO-Link disparaît. Le capteur devient une simple source de courant :
+     c\u2019est plus simple à mettre en œuvre, mais on perd le diagnostic, le paramétrage à distance et la valeur d\u2019état.</div>
+   </section>`;
+}
+
+/* ── bloc TOR ── */
+function blocTor(r,num){
+  const T=r.tor;
+  return `<section class="blk"><h2 data-n="${num()}">Les sorties de commutation</h2>
+   <table><tbody>
+    <tr><th style="width:33%">Type</th><td>${esc(T.type)}</td></tr>
+    <tr><th>Limites électriques</th><td>${esc(T.limites)}</td></tr>
+    <tr><th>Logique</th><td>${esc(T.logique)}</td></tr>
+   </tbody></table>
+   <h2 data-n="${num()}" style="margin-top:26px">Modes de sortie disponibles</h2>
+   <table><tbody>${T.modes.map(m=>`<tr><th style="width:27%">${esc(m[0])}</th><td>${esc(m[1])}</td></tr>`).join('')}</tbody></table>
+   <div class="note warn"><b>Tout se règle sur le capteur</b>
+     Les seuils, l\u2019hystérésis et la logique N.O./N.F. se saisissent sur l\u2019afficheur du capteur, pas dans TIA Portal.
+     Côté automate, vous ne lisez que des bits. Aucune conversion, aucun bloc de calcul — mais aucune traçabilité
+     du paramétrage dans le projet non plus.</div>
+   </section>`;
+}
+
+/* ── bloc programmation à onglets ── */
+function blocProg(scl,lad,num){
+  return `<section class="blk"><h2 data-n="${num()}">Programmation</h2>
+   <div class="tabs" role="tablist">
+     <button class="tab on" onclick="lang('cont',this)">CONT — Ladder</button>
+     <button class="tab" onclick="lang('scl',this)">SCL</button>
+     <button class="tab" disabled>LOG</button><button class="tab" disabled>LIST</button>
+   </div>
+   <div class="lang on" id="lang-cont"><pre class="lad">${lad}</pre></div>
+   <div class="lang" id="lang-scl"><pre>${scl}</pre></div>
+   <div class="note info"><b>CONT ou SCL ?</b>La mise à l\u2019échelle est plus lisible en SCL.
+     L\u2019usage courant est d\u2019écrire ce bloc en SCL et de l\u2019appeler depuis le programme CONT.
+     La version CONT existe pour les sites où le SCL n\u2019est pas autorisé.</div>
+   <div class="note warn"><b>Code non validé sur installation</b>Généré depuis la documentation. À confirmer sur matériel avant mise en production.</div>
+   </section>`;
+}
+function lang(id,btn){
+  document.querySelectorAll('.lang').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+  $('lang-'+id).classList.add('on');btn.classList.add('on');
+}
+
+/* ── générateurs de code ── */
+function codeSclIolink(d,r){
+  const spec=r.valeursSpeciales.filter(v=>/Température|et/.test(v[2])).map(v=>v[0].replace('−','-')).join(', ');
+  return `<span class="c">// Données process ${d.ref} — ${r.trame.octets} octets
+// Octets 0-1 : humidité (INT, ×0,1 %RH) · 4-5 : température (INT, ×0,1 °C) · 7 : status</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref}"</span>
+<span class="k">VAR_INPUT</span>
+    humRaw : INT; tempRaw : INT; statusRaw : BYTE;
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    humidite : REAL; temperature : REAL;
+    humValide : BOOL; tempValide : BOOL;
+    deviceStatus : USINT; maintenance : BOOL; defaillance : BOOL;
+<span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="k">IF</span> #humRaw = 32764 <span class="k">THEN</span>   <span class="c">// NoData</span>
+        #humValide := FALSE; #humidite := 0.0;
+    <span class="k">ELSE</span>
+        #humValide := TRUE;  #humidite := INT_TO_REAL(#humRaw) / 10.0;
+    <span class="k">END_IF</span>;
+
+    <span class="k">CASE</span> #tempRaw <span class="k">OF</span>
+        ${spec}:
+            #tempValide := FALSE; #temperature := 0.0;
+        <span class="k">ELSE</span>
+            #tempValide := TRUE;  #temperature := INT_TO_REAL(#tempRaw) / 10.0;
+    <span class="k">END_CASE</span>;
+
+    #deviceStatus := BYTE_TO_USINT(SHR(IN := #statusRaw, N := 4)) <span class="k">AND</span> 16#0F;
+    #maintenance  := (#deviceStatus &gt;= 1);
+    #defaillance  := (#deviceStatus = 4);
+<span class="k">END_FUNCTION_BLOCK</span>
+
+<span class="c">// Valeurs aberrantes ? Inversion d'octets Siemens :
+// humRaw := WORD_TO_INT(SWAP(INT_TO_WORD(humRaw)));</span>`;
+}
+function codeLadIolink(d,r){
+  const spec=r.valeursSpeciales.filter(v=>/Température|et/.test(v[2])).map(v=>v[0].replace('−','-'));
+  const cmp=(v,i)=>`      ┌─────────────┐
+      │     <>      │
+${i===0?'──────':'      '}┤     Int     ├${i===spec.length-1?'──────────( tempValide )':'──────'}
+      │ IN1  tempRaw│
+      │ IN2 ${String(v).padStart(7)} │
+      └─────────────┘`;
+  return `<span class="c">// Adresses à adapter à la plage attribuée à votre port.</span>
+
+<span class="r">Réseau 1 — Humidité : donnée valide ?</span>
+      ┌─────────────┐
+      │     <>      │
+──────┤     Int     ├──────────( humValide )
+      │ IN1   humRaw│
+      │ IN2    32764│  <span class="c">← NoData</span>
+      └─────────────┘
+
+<span class="r">Réseau 2 — Conversion humidité (÷ 10 → % RH)</span>
+                ┌──────────┐    ┌──────────┐
+   humValide    │   CONV   │    │   DIV    │
+──────┤ ├───────┤ Int→Real ├────┤   Real   ├──( humidite )
+                │IN  humRaw│    │IN2   10.0│
+                └──────────┘    └──────────┘
+
+<span class="r">Réseau 3 — Température : donnée valide ?</span>
+<span class="c">   Les ${spec.length} valeurs spéciales sont testées en série : toutes doivent être fausses.</span>
+${spec.map(cmp).join('\n')}
+
+<span class="r">Réseau 4 — Conversion température (÷ 10 → °C)</span>
+                ┌──────────┐    ┌──────────┐
+   tempValide   │   CONV   │    │   DIV    │
+──────┤ ├───────┤ Int→Real ├────┤   Real   ├──( temperature )
+                │IN tempRaw│    │IN2   10.0│
+                └──────────┘    └──────────┘
+
+<span class="r">Réseau 5 — Device status : 4 bits de poids fort</span>
+      ┌──────────────┐    ┌──────────────┐
+      │     SHR      │    │     AND      │
+──────┤     Byte     ├────┤     Byte     ├──( deviceStatus )
+      │IN  statusRaw │    │IN2    16#0F  │
+      │N          4  │    └──────────────┘
+      └──────────────┘`;
+}
+function codeSclFRS(d,r){
+  const v2=(r.variante&&r.variante.val2)||'seconde valeur';
+  return `<span class="c">// ${d.ref} en IO-Link — 12 octets de données process
+// 0-3 : valeur actuelle (INT 32)      4-7  : ${v2.toLowerCase()} (INT 32)
+// 8   : diagnostics                   9    : erreurs
+// 10  : stabilité + couleur           11   : état des sorties</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_FR_S01"</span>
+<span class="k">VAR_INPUT</span>
+    valeurBrute : DINT;   <span class="c">// octets 0-3</span>
+    valeur2Brute: DINT;   <span class="c">// octets 4-7 — ${v2}</span>
+    diag        : BYTE;   <span class="c">// octet 8</span>
+    erreurs     : BYTE;   <span class="c">// octet 9</span>
+    etat        : BYTE;   <span class="c">// octet 10</span>
+    sorties     : BYTE;   <span class="c">// octet 11</span>
+    decimales   : USINT := 0;  <span class="c">// ⚠ doit refléter le réglage FAIT SUR LE CAPTEUR</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    niveau      : REAL;   <span class="c">// dans l'unité réglée sur l'appareil</span>
+    mesureOK    : BOOL;
+    niveauHaut  : BOOL;   <span class="c">// HIGH</span>
+    niveauBas   : BOOL;   <span class="c">// LOW</span>
+    stabilite   : USINT;  <span class="c">// 0 = perdu … 4 = signal franc</span>
+    maintenance : BOOL;   <span class="c">// stabilité dégradée</span>
+    interference: BOOL;   <span class="c">// autre source 60 GHz</span>
+    defaut      : BOOL;   <span class="c">// erreur système / EEPROM / tête</span>
+<span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Octet 8 : diagnostics ----</span>
+    #niveauBas    := #diag.%X7;   <span class="c">// bit 31 — LOW</span>
+    #niveauHaut   := #diag.%X6;   <span class="c">// bit 30 — HIGH</span>
+    #maintenance  := #diag.%X3;   <span class="c">// bit 27 — stabilité dégradée</span>
+    #interference := #diag.%X0;   <span class="c">// bit 24 — interférence 60 GHz</span>
+
+    <span class="c">// ---- Octet 9 : erreurs bloquantes ----</span>
+    #defaut := #erreurs.%X7 <span class="k">OR</span> #erreurs.%X1 <span class="k">OR</span> #erreurs.%X0;
+                  <span class="c">// tête        EEPROM         système</span>
+
+    <span class="c">// ---- Octet 10 : stabilité sur les 4 bits de poids fort ----</span>
+    #stabilite := BYTE_TO_USINT(SHR(IN := #etat, N := 4)) <span class="k">AND</span> 16#0F;
+
+    <span class="c">// ---- Mesure exploitable ? ----</span>
+    #mesureOK := <span class="k">NOT</span> #diag.%X2 <span class="k">AND</span> <span class="k">NOT</span> #defaut;  <span class="c">// bit 26 = Not Measurable</span>
+
+    <span class="c">// ---- Mise à l'échelle ----
+    // ⚠ Aucun gradient dans l'IODD : l'échelle dépend des réglages
+    //   « unité de distance » et « position du point décimal » saisis
+    //   sur l'afficheur du capteur. 0 décimale → la brute est déjà l'unité.</span>
+    <span class="k">IF</span> #mesureOK <span class="k">THEN</span>
+        <span class="k">CASE</span> #decimales <span class="k">OF</span>
+            0: #niveau := DINT_TO_REAL(#valeurBrute);
+            1: #niveau := DINT_TO_REAL(#valeurBrute) / 10.0;
+            2: #niveau := DINT_TO_REAL(#valeurBrute) / 100.0;
+            3: #niveau := DINT_TO_REAL(#valeurBrute) / 1000.0;
+            <span class="k">ELSE</span>
+               #niveau := DINT_TO_REAL(#valeurBrute) / 10000.0;
+        <span class="k">END_CASE</span>;
+    <span class="k">ELSE</span>
+        #niveau := 0.0;
+    <span class="k">END_IF</span>;
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadFRS(d,r){
+  return `<span class="c">// ${d.ref} en IO-Link — adresses à adapter à la plage attribuée au port.</span>
+
+<span class="r">Réseau 1 — Diagnostics (octet 8, lecture directe des bits)</span>
+   diag.%X7
+────┤ ├──────────────────────────────( niveauBas )      <span class="c">LOW</span>
+
+   diag.%X6
+────┤ ├──────────────────────────────( niveauHaut )     <span class="c">HIGH</span>
+
+   diag.%X3
+────┤ ├──────────────────────────────( maintenance )    <span class="c">stabilité dégradée</span>
+
+   diag.%X0
+────┤ ├──────────────────────────────( interference )   <span class="c">autre source 60 GHz</span>
+
+<span class="r">Réseau 2 — Défaut bloquant (octet 9, trois bits en parallèle)</span>
+   erreurs.%X7
+────┤ ├──┬───────────────────────────( defaut )
+   erreurs.%X1
+─────┤ ├──┤
+   erreurs.%X0
+─────┤ ├──┘
+
+<span class="r">Réseau 3 — Mesure exploitable ?</span>
+   diag.%X2    defaut
+────┤/├────────┤/├─────────────────( mesureOK )
+  <span class="c">Not Measurable</span>
+
+<span class="r">Réseau 4 — Stabilité : 4 bits de poids fort de l'octet 10</span>
+      ┌──────────────┐    ┌──────────────┐
+      │     SHR      │    │     AND      │
+──────┤     Byte     ├────┤     Byte     ├───( stabilite )
+      │IN       etat │    │IN2    16#0F  │
+      │N           4 │    └──────────────┘
+      └──────────────┘
+
+<span class="r">Réseau 5 — Mise à l'échelle selon le réglage du capteur</span>
+<span class="c">   ⚠ Le diviseur dépend de la « position du point décimal » réglée
+   sur l'afficheur. Ici : 1 décimale → division par 10.</span>
+              ┌──────────────┐    ┌──────────┐
+   mesureOK   │     CONV     │    │   DIV    │
+──────┤ ├─────┤ DInt →  Real ├────┤   Real   ├───( niveau )
+              │IN valeurBrute│    │IN2   10.0│
+              └──────────────┘    └──────────┘`;
+}
+function codeSclAnalog(d){
+  return `<span class="c">// ${d.ref} — boucle 4-20 mA sur carte d'entrées analogiques S7-1500
+// Plage 4…20 mA  →  valeur brute 0…27648
+// Réservoir de référence : 0…1000 mm</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref}_Analog"</span>
+<span class="k">VAR_INPUT</span>
+    brut     : INT;    <span class="c">// mot d'entrée du module AI</span>
+    niveauMin : REAL := 0.0;      <span class="c">// mm à 4 mA</span>
+    niveauMax : REAL := 1000.0;   <span class="c">// mm à 20 mA</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    niveau  : REAL;    <span class="c">// mm</span>
+    valide  : BOOL;
+    depHaut : BOOL;
+    depBas  : BOOL;
+<span class="k">END_VAR</span>
+<span class="k">VAR_TEMP</span> norm : REAL; <span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Dépassements : hors 0…27648, la mesure n'est plus valide ----</span>
+    #depBas  := (#brut &lt; 0);
+    #depHaut := (#brut &gt; 27648);
+    #valide  := <span class="k">NOT</span> #depBas <span class="k">AND</span> <span class="k">NOT</span> #depHaut;
+
+    <span class="k">IF</span> #valide <span class="k">THEN</span>
+        #norm   := NORM_X(MIN := 0,   VALUE := #brut, MAX := 27648);
+        #niveau := SCALE_X(MIN := #niveauMin, VALUE := #norm, MAX := #niveauMax);
+    <span class="k">ELSE</span>
+        #niveau := 0.0;
+    <span class="k">END_IF</span>;
+<span class="k">END_FUNCTION_BLOCK</span>
+
+<span class="c">// Rappel : la perte de détection se paramètre SUR LE CAPTEUR
+// (3,5 mA / 21,5 mA / maintien / valeur fixe). Choisir 3,5 mA rend
+// le défaut détectable côté automate — 0 mA ne l'est pas si on est en 0-20 mA.</span>`;
+}
+function codeLadAnalog(d){
+  return `<span class="c">// ${d.ref} — boucle 4-20 mA. Adresse %IW à adapter au module AI.</span>
+
+<span class="r">Réseau 1 — Dépassement bas ?</span>
+      ┌──────────────┐
+      │      &lt;       │
+──────┤     Int      ├──────────( depBas )
+      │IN1      brut │
+      │IN2         0 │
+      └──────────────┘
+
+<span class="r">Réseau 2 — Dépassement haut ?</span>
+      ┌──────────────┐
+      │      &gt;       │
+──────┤     Int      ├──────────( depHaut )
+      │IN1      brut │
+      │IN2     27648 │
+      └──────────────┘
+
+<span class="r">Réseau 3 — Mesure valide (aucun dépassement)</span>
+   depBas   depHaut
+────┤/├───────┤/├─────────────( valide )
+
+<span class="r">Réseau 4 — Mise à l'échelle 0…27648 → 0…1000 mm</span>
+              ┌──────────────┐   ┌──────────────┐
+   valide     │    NORM_X    │   │   SCALE_X    │
+──────┤ ├─────┤ Int  →  Real ├───┤ Real →  Real ├──( niveau )
+              │MIN        0  │   │MIN       0.0 │
+              │VALUE   brut  │   │VALUE    norm │
+              │MAX    27648  │   │MAX    1000.0 │
+              └──────────────┘   └──────────────┘
+
+<span class="c">// NORM_X ramène la valeur brute entre 0,0 et 1,0.
+// SCALE_X l'étale ensuite sur la plage physique du réservoir.</span>`;
+}
+
+/* ── recherche ── */
+function search(q){
+  const box=$('res');q=q.trim().toLowerCase();
+  if(q.length<2){box.innerHTML='';return}
+  const hits=DB.appareils.filter(d=>(d.ref+' '+d.nom+' '+d.marqueNom+' '+d.techno).toLowerCase().includes(q));
+  box.innerHTML=hits.length
+    ?`<div class="results">${hits.map(d=>`<button onmousedown="openRef('${d.id}')">
+       <span class="ref">${esc(d.ref)}</span> — ${esc(d.marqueNom)}<br>
+       <span class="sub">${esc(d.nom)}</span></button>`).join('')}</div>`
+    :`<div class="results"><button disabled style="color:var(--ink-3)">Aucun appareil documenté pour « ${esc(q)} »</button></div>`;
+}
+function openRef(id){
+  const d=dev(id);
+  S={automate:'siemens',categorie:d.categorie,type:d.type,marque:d.marque,modele:id,mode:null};
+  hide();$('q').value='';window.scrollTo(0,0);render('mode');
+}
+function hide(){$('res').innerHTML=''}
+
+go('home');
+</script>
+</body>
+</html>

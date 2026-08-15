@@ -1,0 +1,54 @@
+{
+  "id": "fr-ls20", "ref": "FR-LS20", "marque": "keyence", "marqueNom": "KEYENCE",
+  "categorie": "capteur", "type": "niveau", "techno": "Radar 60 GHz",
+  "nom": "Capteur de niveau radar longue portée, modèle sanitaire",
+  "resume": "Version inox à virole pour l’agroalimentaire et la pharma. Même IODD, mêmes 12 octets.",
+  "source": "Manuel d’utilisation série FR M04FR (10/2025) · IODD KEYENCE-FR-LS V1.1 du 08.01.2024",
+  "specs": [
+    ["Grandeur mesurée", "Niveau de liquide ou de poudre — sans contact"],
+    ["Technologie", "Radar, bande 58 … 63 GHz"],
+    ["Plage de mesure", "Jusqu’à 20 m — version « L » : 15 m"],
+    ["Résolution", "1 mm"],
+    ["Précision", "&lt; 0,1 m : ±10 mm · 0,1 à 10 m : ±1 mm · 10 à 20 m : ±2 mm"],
+    ["Pression réservoir", "−0,1 à +1 MPa"],
+    ["Matériaux au contact", "Lentille PTFE · joint de virole EPDM · virole SUS316L · corps SUS304"],
+    ["Raccord process", "Virole 2S ou 2,5S selon accessoire"],
+    ["Conformité", "Norme sanitaire 3-A — sous réserve du montage et de l’état de surface Ra ≤ 0,8 µm"],
+    ["Nettoyage", "SIP possible : 1 h maximum, ambiante ≤ 40 °C, interne ≤ 130 °C, hors tension"],
+    ["Alimentation", "24 V DC +25 % / −20 % — 106 mA max"],
+    ["IO-Link", "v1.1 / COM2 — sur la sortie IO2"],
+    ["Connectique", "1 × M12 mâle, 8 broches"],
+    ["Température ambiante", "−20 à +60 °C"],
+    ["Température du raccord", "−20 à +100 °C"],
+    ["Protection", "IP67 (CEI 60529) et IP69K (ISO 20653)"],
+    ["Poids", "Environ 900 g"]
+  ],
+  "reglagesAppareil": null,
+  "pieges": [
+    { "t": "Le corps ne tourne pas", "d": "Contrairement aux autres modèles de la gamme, le boîtier du modèle sanitaire est fixe. L’orientation de l’affichage se règle au moment de la fixation sur la virole, pas après." },
+    { "t": "Montage vertical obligatoire", "d": "Pour respecter les normes EHEDG et 3-A, l’installation doit permettre l’auto-drainage. Soudure polie à Ra ≤ 0,8 µm sur la surface au contact du produit." },
+    { "t": "Nettoyer avant la première utilisation", "d": "Le modèle sanitaire doit être nettoyé avant sa mise en service." },
+    { "t": "Contraintes de virole", "d": "Pour la conformité 3-A, la longueur de virole ne doit pas dépasser 101,6 mm (OP-88889) ou 127 mm (OP-89245). Pour l’EHEDG, utiliser un raccord ISO 2852." },
+    { "t": "La bande 60 GHz interfère", "d": "Deux capteurs FR côte à côte génèrent une erreur « Interférence », remontée en cyclique sur le bit 24." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 mâle, 8 broches — 4 conducteurs utilisés", "maitre": null, "procedure": "iolink-profinet",
+      "cable": "Câble compatible IO-Link — 20 m maximum en IO-Link",
+      "pinout": [
+        { "n": 2, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "Alimentation 24 V DC" },
+        { "n": 6, "coul": "PK", "hex": "#E08AAE", "nom": "Rose", "fn": "Sortie de commande 2 → C/Q, communication IO-Link" },
+        { "n": 7, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "0 V" }
+      ],
+      "pinoutComplement": [
+        ["1", "Blanc", "Sortie analogique — inutilisée en IO-Link"],
+        ["3", "Vert", "Sortie de commande 3"], ["4", "Jaune", "Sortie de commande 4"],
+        ["5", "Gris", "Sortie de commande 1"], ["8", "Rouge", "Sortie de commande 5"]
+      ],
+      "iodd": { "fichier": "KEYENCE-FR-LS-20240108-IODD1_1.xml", "version": "V1.1", "date": "08.01.2024",
+        "vendorId": "509 (Keyence)", "deviceId": "2042", "variantes": "FR-LS20", "dataStorage": true },
+      "familleIodd": "keyence-fr",
+      "variante": { "val2": "Valeur de conversion de débit", "bit28": "Valeur de conversion de débit invalide" }
+    }
+  }
+}

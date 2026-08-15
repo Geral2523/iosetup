@@ -1,0 +1,12 @@
+{
+  "nom": "IO-Link via un maître PROFINET",
+  "etapes": [
+    { "t": "Télécharger le GSDML du maître", "d": "Le constructeur du maître fournit le fichier GSD qui décrit l’appareil, ses paramètres et ses données process." },
+    { "t": "Installer le GSDML dans TIA Portal", "d": "Gérer les fichiers de description des appareils, puis pointer le dossier. Le projet doit être fermé, sinon TIA refuse." },
+    { "t": "Insérer le maître dans le projet", "d": "Le maître apparaît dans le catalogue après installation. Le glisser dans la vue réseau et l’affecter au système PROFINET de la CPU." },
+    { "t": "Déclarer les ports", "d": "Glisser le module correspondant au nombre de ports sur le slot 1 du maître. La configuration devient accessible via le slot 1.1." },
+    { "t": "Récupérer et installer l’IODD du capteur", "d": "L’IODD décrit le capteur : paramètres, données process, plages. Source officielle : IODDfinder. Prendre la version correspondant au firmware." },
+    { "t": "Configurer le port", "d": "Mode IO-Link, révision attendue, temps de cycle, validation du device par DeviceID. Un port mal configuré ne remonte rien." },
+    { "t": "Relever la plage d’adresses", "d": "TIA attribue automatiquement une plage d’entrées au port. C’est la base de tout l’adressage dans le programme." }
+  ]
+}

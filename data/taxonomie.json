@@ -1,0 +1,55 @@
+{
+  "automates": [
+    { "id": "siemens", "nom": "Siemens", "note": "S7-1200 / S7-1500 / ET 200SP", "actif": true },
+    { "id": "schneider", "nom": "Schneider", "note": "M241 / M251 / M262", "actif": false },
+    { "id": "rockwell", "nom": "Rockwell", "note": "CompactLogix / ControlLogix", "actif": false },
+    { "id": "beckhoff", "nom": "Beckhoff", "note": "CX / TwinCAT", "actif": false }
+  ],
+
+  "categories": [
+    { "id": "capteur", "nom": "Capteurs", "note": "Mesure et détection", "actif": true },
+    { "id": "actionneur", "nom": "Actionneurs", "note": "Signalisation, vannes, vérins", "actif": true },
+    { "id": "camera", "nom": "Caméras", "note": "Vision industrielle", "actif": false },
+    { "id": "variateur", "nom": "Variateurs", "note": "Entraînement moteur", "actif": false },
+    { "id": "ihm", "nom": "IHM", "note": "Pupitres et supervision", "actif": false }
+  ],
+
+  "sousTypes": {
+    "capteur": [
+      { "id": "temperature", "nom": "Température", "note": "Sondes, transmetteurs, ambiance", "actif": true },
+      { "id": "niveau", "nom": "Niveau", "note": "Radar, ultrason, capacitif", "actif": true },
+      { "id": "presence", "nom": "Présence", "note": "Inductif, capacitif, photoélectrique", "actif": false },
+      { "id": "pression", "nom": "Pression", "note": "Relative et absolue", "actif": false },
+      { "id": "debit", "nom": "Débit", "note": "Liquides et gaz", "actif": false }
+    ],
+    "actionneur": [
+      { "id": "signalisation", "nom": "Signalisation", "note": "Colonnes lumineuses, avertisseurs sonores", "actif": true },
+      { "id": "vanne", "nom": "Vannes", "note": "Îlots pneumatiques, distributeurs", "actif": false },
+      { "id": "verin", "nom": "Vérins", "note": "Électriques et pneumatiques", "actif": false },
+      { "id": "moteur", "nom": "Départs moteur", "note": "Démarreurs, contacteurs communicants", "actif": false }
+    ],
+    "camera": [],
+    "variateur": [],
+    "ihm": []
+  },
+
+  "marques": [
+    { "id": "ifm", "nom": "ifm electronic", "note": "Documentation en accès libre", "actif": true },
+    { "id": "keyence", "nom": "KEYENCE", "note": "Radar 60 GHz, afficheur intégré", "actif": true },
+    { "id": "siemens-c", "nom": "Siemens", "note": "SIRIUS — signalisation et commande", "actif": true },
+    { "id": "sick", "nom": "SICK", "note": "", "actif": false },
+    { "id": "balluff", "nom": "Balluff", "note": "", "actif": false }
+  ],
+
+  "modes": [
+    { "id": "iolink", "nom": "IO-Link", "note": "Via un maître IO-Link — données numériques, paramétrage à distance" },
+    { "id": "analogique", "nom": "Analogique", "note": "Boucle 4-20 mA sur carte d’entrées analogiques" },
+    { "id": "tor", "nom": "Tout ou rien", "note": "Sorties de commutation sur carte d’entrées TOR" },
+    { "id": "conventionnel", "nom": "Câblage 24 V", "note": "Un fil par segment, paramétrage préalable par USB" }
+  ],
+
+  "maitres": [
+    { "id": "al1102", "marque": "ifm", "ref": "AL1102", "protocole": "PROFINET", "ports": 8, "classe": "A",
+      "ip": "IP65 / IP66 / IP67", "specIolink": "1.0 à 1.1.2", "courantSortie": "300 mA", "courantTotal": "3,6 A" }
+  ]
+}

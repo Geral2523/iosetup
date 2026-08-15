@@ -1,0 +1,123 @@
+{
+  "id": "fr-s01", "ref": "FR-S01", "marque": "keyence", "marqueNom": "KEYENCE",
+  "categorie": "capteur", "type": "niveau", "techno": "Radar 60 GHz", "top": true,
+  "nom": "Capteur de niveau radar courte portée, affichage intégré",
+  "resume": "Trois modes de raccordement pour un seul capteur, et un assistant de réglage obligatoire au premier démarrage.",
+  "source": "Fiche technique KEYENCE France 13.08.2026 · Manuel d’instructions MFR09FR · Manuel d’utilisation série FR M04FR (10/2025)",
+  "specs": [
+    ["Grandeur mesurée", "Niveau de liquide ou de poudre — sans contact"],
+    ["Technologie", "Radar, bande 58 … 63 GHz"],
+    ["Plage de mesure", "Jusqu’à 1,5 m — plage d’affichage jusqu’à 2 m"],
+    ["Permittivité relative cible", "2 minimum"],
+    ["Résolution", "1 mm"],
+    ["Précision", "&lt; 0,1 m : ±20 mm · 0,1 à 0,3 m : ±5 mm · 0,3 à 1,5 m : ±1 mm"],
+    ["Temps de réponse", "0,4 s · 1,5 s · 4 s (défaut) · 10 s"],
+    ["Pression réservoir", "−0,1 à +1 MPa"],
+    ["Matériaux", "Lentille PTFE · garniture FKM · joint SUS304 · boîtier PBT PAR"],
+    ["Raccord process", "G3/4 (20 A) — couple de serrage 30 N·m"],
+    ["Alimentation", "24 V DC +25 % / −20 % — 80 mA max"],
+    ["Sorties de commande", "5 max — collecteur ouvert NPN/PNP, 30 V DC, 50 mA par sortie"],
+    ["Sortie analogique", "0-20 mA ou 4-20 mA — charge max 260 Ω"],
+    ["IO-Link", "v1.1 / COM2 — sur la sortie IO2"],
+    ["Connectique", "1 × M12 mâle, 8 broches"],
+    ["Température ambiante", "−20 à +55 °C (pas de gel)"],
+    ["Protection", "IP67 (CEI 60529)"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Contrairement au LDH292, ce capteur n’est pas exploitable à la sortie du carton : un assistant de configuration s’impose au premier démarrage, et certains choix sont irréversibles.",
+    "etapes": [
+      ["Langue", "Anglais · Japonais · Chinois · Allemand — pas de français"],
+      ["PNP / NPN", "⚠️ Ne se modifie plus ensuite sans réinitialisation complète"],
+      ["Sorties de commande", "0 à 5 — détermine combien de fils sont exploitables"],
+      ["Entrée externe", "ON / OFF — limite à 4 sorties si activée"],
+      ["Cible de détection", "À base d’eau (εr ≥ 3) · à base d’huile (εr &lt; 3) · poudre"],
+      ["Unité de distance", "mm · m · inch · feet"],
+      ["Distance du fond", "Distance capteur → fond du réservoir = le 0 %"],
+      ["Distance au sommet", "Distance capteur → surface haute = le 100 %"],
+      ["Seuils 1 à 5", "Points de basculement des sorties de commande"],
+      ["Logique de sortie", "N.O. / N.F. par sortie"],
+      ["Ordre des indicateurs", "Couleurs de l’anneau lumineux selon le niveau"]
+    ],
+    "apres": "Une fois l’assistant terminé, KEYENCE recommande d’exécuter la « fonction d’adaptation » : le capteur diagnostique les échos parasites, propose de masquer les fausses crêtes et optimise seul ses réglages de suivi."
+  },
+  "pieges": [
+    { "t": "IO-Link n’est PAS sur la broche 4", "d": "Connecteur M12 8 broches propriétaire : la communication IO-Link passe par la broche 6 (fil rose, sortie de commande 2). La règle habituelle « C/Q = broche 4 » ne s’applique pas." },
+    { "t": "Longueur de câble : 30 m, mais 20 m en IO-Link", "d": "La limite change selon le mode de raccordement. Dépassement = détection instable, sans message d’erreur explicite." },
+    { "t": "PNP/NPN irréversible sans réinitialisation", "d": "Choisi dans l’assistant de premier démarrage. Le menu permet ensuite de le consulter, pas de le changer. Une erreur ici se paie par une réinitialisation complète du paramétrage." },
+    { "t": "Zone morte côté proche", "d": "Distances minimales recommandées entre la surface de référence et le niveau haut : 100 mm pour un liquide aqueux, 120 mm pour un liquide huileux, 170 mm pour une poudre. En dessous, la détection décroche." },
+    { "t": "La bande 60 GHz interfère", "d": "Deux capteurs FR installés côte à côte génèrent une erreur « Interférence ». Idem à proximité de WiFi, fours micro-ondes, chauffage industriel HF ou matériel médical haute fréquence." },
+    { "t": "Mousse et turbulence faussent la mesure", "d": "Une mousse épaisse atténue le signal. Ne pas installer à l’orifice d’entrée ni là où le liquide fait des vagues ou adhère à la lentille." },
+    { "t": "Cible de détection mal choisie = mesure fausse", "d": "Le réglage eau / huile / poudre modifie automatiquement les zones de masquage. Un mauvais choix empêche la détection correcte de la surface." },
+    { "t": "Pas d’usage antidéflagrant", "d": "Le FR-S01 n’est pas un produit ATEX. Pour une zone à risque, il faut la version FR-LEX20 avec barrière." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 mâle, 8 broches — 4 conducteurs utilisés", "maitre": null, "procedure": "iolink-profinet",
+      "cable": "Câble compatible IO-Link — 20 m maximum en IO-Link",
+      "pinout": [
+        { "n": 2, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "Alimentation 24 V DC", "actif": true },
+        { "n": 6, "coul": "PK", "hex": "#E08AAE", "nom": "Rose", "fn": "Sortie de commande 2 → C/Q, communication IO-Link", "actif": true },
+        { "n": 7, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "0 V", "actif": true }
+      ],
+      "pinoutComplement": [
+        ["1", "Blanc", "Sortie analogique — inutilisée en IO-Link"],
+        ["3", "Vert", "Sortie de commande 3"], ["4", "Jaune", "Sortie de commande 4"],
+        ["5", "Gris", "Sortie de commande 1"], ["8", "Rouge", "Sortie de commande 5 / entrée externe"]
+      ],
+      "iodd": { "fichier": "KEYENCE-FR-S-20240108-IODD1_1.xml", "version": "V1.1", "date": "08.01.2024",
+        "vendorId": "509 (Keyence)", "deviceId": "2040", "variantes": "FR-S01 et FR-SA1C",
+        "revision": "IO-Link V1.1", "dataStorage": true },
+      "familleIodd": "keyence-fr",
+      "variante": { "val2": "Niveau cumulé", "bit28": "Temps de niveau cumulé invalide" }
+    },
+    "analogique": {
+      "connecteur": "M12 mâle, 8 broches", "maitre": null, "procedure": "analogique-ai",
+      "cable": "30 m maximum",
+      "pinout": [
+        { "n": 2, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "Alimentation 24 V DC" },
+        { "n": 1, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Sortie analogique 0-20 / 4-20 mA" },
+        { "n": 7, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "0 V" }
+      ],
+      "analog": {
+        "plage": "4 … 20 mA (commutable en 0 … 20 mA par réglage)",
+        "charge": "260 Ω maximum",
+        "tempsReponse": "0,2 s après détermination de la sortie de commande (réponse à 90 %)",
+        "precisionZero": "±0,1 mA au point zéro (4 mA)",
+        "precisionPE": "±0,2 mA en pleine échelle (20 mA)",
+        "resolution": "1 mm",
+        "exemple": [
+          ["Réservoir vide — 0 %", "0 mm", "4 mA"],
+          ["Niveau intermédiaire", "400 mm", "10,4 mA"],
+          ["Réservoir plein — 100 %", "1000 mm", "20 mA"]
+        ],
+        "hors": "Au-delà de la limite haute, la sortie peut monter jusqu’à 20,5 mA. Sous la limite basse, elle descend jusqu’à 3,8 mA en mode 4-20 mA. En cas de perte de détection, le comportement est paramétrable : 3,5 mA, 21,5 mA, maintien de la valeur précédente, ou valeur fixe."
+      }
+    },
+    "tor": {
+      "connecteur": "M12 mâle, 8 broches", "maitre": null, "procedure": "tor-di",
+      "cable": "30 m maximum",
+      "pinout": [
+        { "n": 2, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "Alimentation 24 V DC" },
+        { "n": 5, "coul": "GY", "hex": "#8A9299", "nom": "Gris", "fn": "Sortie de commande 1" },
+        { "n": 6, "coul": "PK", "hex": "#E08AAE", "nom": "Rose", "fn": "Sortie de commande 2" },
+        { "n": 7, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "0 V" }
+      ],
+      "pinoutComplement": [
+        ["3", "Vert", "Sortie de commande 3"], ["4", "Jaune", "Sortie de commande 4"],
+        ["8", "Rouge", "Sortie de commande 5 / entrée externe"], ["1", "Blanc", "Sortie analogique"]
+      ],
+      "tor": {
+        "type": "Collecteur ouvert NPN/PNP commutable",
+        "limites": "30 V DC max · 50 mA max par sortie · tension résiduelle 1,4 V max à 50 mA",
+        "logique": "N.O. / N.F. commutable par sortie",
+        "modes": [
+          ["Standard", "La sortie bascule quand le niveau franchit le seuil. Sens de l’hystérésis réglable."],
+          ["Zone", "La sortie bascule quand le niveau sort d’une plage. Deux limites, une seule sortie."],
+          ["Erreur", "Sortie active en cas de défaut interne du capteur."],
+          ["Alerte de stabilité", "Sortie active quand la qualité du signal chute — utile en maintenance conditionnelle."],
+          ["Niveau cumulé", "Sortie sur variation cumulée anormale du niveau sur une période."]
+        ]
+      }
+    }
+  }
+}

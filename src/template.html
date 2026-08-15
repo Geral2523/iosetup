@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intégration — guides d'automatisme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap hbar">
+    <button class="logo" onclick="go('home')">Inté<span>gration</span></button>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="Chercher une référence — ex. LDH292, FR-S01" autocomplete="off"
+             oninput="search(this.value)" onblur="setTimeout(hide,160)">
+      <div id="res"></div>
+    </div>
+  </div>
+</header>
+
+<nav class="crumbs" id="crumbs" hidden><div class="wrap" id="crumbsIn"></div></nav>
+<main class="wrap" id="app"></main>
+
+<script src="/render.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════
+   BASE DE DONNÉES
+   Une page = procédure (selon le mode) + données de l'appareil.
+   ══════════════════════════════════════════════════════════ */
+
+const DB = /*__DB_JSON__*/null/*__END_DB_JSON__*/;
+
+/* ══════════════════════════════════════════════════════════
+   NAVIGATION
+   ══════════════════════════════════════════════════════════ */
+let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const find=(c,id)=>DB[c].find(x=>x.id===id)||{};
+const sousTypes=cat=>DB.sousTypes[cat]||[];
+const findType=id=>{for(const k in DB.sousTypes){const t=DB.sousTypes[k].find(x=>x.id===id);if(t)return t}return{}};
+const dev=id=>DB.appareils.find(x=>x.id===id);
+
+function go(v,val){
+  if(v==='home')S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+  if(v==='categorie')S.automate=val;
+  if(v==='type')S.categorie=val;
+  if(v==='marque')S.type=val;
+  if(v==='modele')S.marque=val;
+  if(v==='mode')S.modele=val;
+  if(v==='guide')S.mode=val;
+  window.scrollTo(0,0);render(v);
+}
+const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
+      goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
+const back=v=>`<button class="back" onclick="go('${v}')">← Retour</button>`;
+
+function crumbs(items){
+  const c=$('crumbs');
+  if(!items.length){c.hidden=true;return}
+  c.hidden=false;
+  $('crumbsIn').innerHTML=items.map((it,i)=>
+    (i?'<span class="sep">›</span>':'')+
+    (it.vue?`<button onclick="go('${it.vue}')">${esc(it.txt)}</button>`:`<span class="now">${esc(it.txt)}</span>`)
+  ).join('');
+}
+function tiles(list,fn,topId){
+  return `<div class="grid">${list.map(x=>{
+    const on=x.actif!==false, top=topId&&x.id===topId;
+    return `<button class="tile${top?' top':''}" ${on?`onclick="${fn}('${x.id}')"`:'disabled'}>
+      <h3>${esc(x.nom)}</h3>${x.note?`<p>${esc(x.note)}</p>`:''}
+      <span class="badge">${top?'Le plus consulté':(on?'Disponible':'Bientôt')}</span></button>`;
+  }).join('')}</div>`;
+}
+const head=(s,t,l)=>`<span class="step">${esc(s)}</span><h1 class="title">${esc(t)}</h1>${l?`<p class="lede">${esc(l)}</p>`:''}`;
+
+function render(v){
+  const app=$('app'), a=find('automates',S.automate), c=find('categories',S.categorie),
+        t=findType(S.type), m=find('marques',S.marque);
+
+  if(v==='home'){
+    crumbs([]);
+    app.innerHTML=head('Étape 1 sur 7','Quel automate ?',
+      'Le guide descend jusqu\u2019au matériel exact et jusqu\u2019à son mode de raccordement : câblage, réglages sur l\u2019appareil, intégration TIA Portal, programmation.')
+      +tiles(DB.automates,'goCat')+modelNote();return;
+  }
+  if(v==='categorie'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}]);
+    app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')+tiles(DB.categories,'goType');return;
+  }
+  if(v==='type'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}]);
+    const estCapteur=S.categorie==='capteur';
+    app.innerHTML=back('categorie')+head('Étape 3 sur 7',
+      estCapteur?'Quelle grandeur mesurée ?':'Quelle fonction ?',
+      estCapteur
+        ?'On classe par ce qui est mesuré, pas par la technologie — un niveau se mesure au radar, à l\u2019ultrason ou en capacitif.'
+        :'Un actionneur ne mesure rien : on le classe par ce qu\u2019il fait.')
+      +tiles(sousTypes(S.categorie),'goMarque');return;
+  }
+  if(v==='marque'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}]);
+    const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c'}[S.type];
+    app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(DB.marques,'goModele',top);return;
+  }
+  if(v==='modele'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom,vue:'marque'},{txt:m.nom}]);
+    const l=DB.appareils.filter(d=>d.marque===S.marque&&d.type===S.type&&d.categorie===S.categorie)
+      .map(d=>({id:d.id,nom:d.ref,note:d.nom+' — '+d.techno,actif:true}));
+    app.innerHTML=back('marque')+head('Étape 5 sur 7','Quel modèle ?','')
+      +(l.length?tiles(l,'goMode',l[0].id):`<div class="note"><b>Aucun appareil</b>Cette combinaison n\u2019est pas encore documentée.</div>`);return;
+  }
+  if(v==='mode'){
+    const d=dev(S.modele);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},
+            {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref}]);
+    const dispo=DB.modes.filter(x=>d.raccordements[x.id]).map(x=>({...x,actif:true}));
+    const absents=DB.modes.filter(x=>!d.raccordements[x.id]).map(x=>({...x,actif:false,note:'Non supporté par cet appareil'}));
+    app.innerHTML=back('modele')+head('Étape 6 sur 7','Comment le raccordez-vous ?',
+      'C\u2019est ce choix qui détermine la procédure. Un même capteur en IO-Link ou en 4-20 mA n\u2019a rien de commun côté TIA Portal.')
+      +tiles(dispo.concat(absents),'goGuide',dispo[0]&&dispo[0].id);return;
+  }
+  if(v==='guide')guide();
+}
+
+function modelNote(){
+  return `<div class="model-note"><b>Comment cette maquette fonctionne</b>
+  Aucune page n\u2019est écrite à la main. Chaque guide est assemblé à partir de quatre sources :
+  la <strong>procédure du mode de raccordement</strong> (écrite une seule fois et partagée par tous les
+  appareils), les <strong>caractéristiques de l\u2019appareil</strong>, son <strong>brochage</strong> — qui n\u2019est
+  jamais générique — et, en IO-Link, la <strong>structure des données process</strong> lue dans son IODD.
+  Le schéma d\u2019octets, la table de brochage et le code sont générés depuis ces données.</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE GUIDE — assemblage délégué à render.js (partagé avec
+   le générateur de pages statiques, src/build.js)
+   ══════════════════════════════════════════════════════════ */
+
+function guide(){
+  const d=dev(S.modele), md=DB.modes.find(x=>x.id===S.mode);
+  crumbs([{txt:'Automate',vue:'home'},{txt:d.ref,vue:'mode'},{txt:md.nom}]);
+  $('app').innerHTML=back('mode')+Render.buildGuideArticle(DB,d,S.mode)+modelNote();
+}
+function showLang(id,btn){
+  document.querySelectorAll('.lang').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+  $('lang-'+id).classList.add('on');btn.classList.add('on');
+}
+
+/* ── recherche ── */
+function search(q){
+  const box=$('res');q=q.trim().toLowerCase();
+  if(q.length<2){box.innerHTML='';return}
+  const hits=DB.appareils.filter(d=>(d.ref+' '+d.nom+' '+d.marqueNom+' '+d.techno).toLowerCase().includes(q));
+  box.innerHTML=hits.length
+    ?`<div class="results">${hits.map(d=>`<button onmousedown="openRef('${d.id}')">
+       <span class="ref">${esc(d.ref)}</span> — ${esc(d.marqueNom)}<br>
+       <span class="sub">${esc(d.nom)}</span></button>`).join('')}</div>`
+    :`<div class="results"><button disabled style="color:var(--ink-3)">Aucun appareil documenté pour « ${esc(q)} »</button></div>`;
+}
+function openRef(id){
+  const d=dev(id);
+  S={automate:'siemens',categorie:d.categorie,type:d.type,marque:d.marque,modele:id,mode:null};
+  hide();$('q').value='';window.scrollTo(0,0);render('mode');
+}
+function hide(){$('res').innerHTML=''}
+
+go('home');
+</script>
+</body>
+</html>

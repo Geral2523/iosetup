@@ -1,0 +1,10 @@
+{
+  "nom": "Sorties de commutation sur carte d’entrées TOR",
+  "etapes": [
+    { "t": "Vérifier la logique PNP / NPN", "d": "Les modules d’entrées TOR Siemens standard attendent du PNP (source). Sur ce capteur, le choix se fait dans l’assistant de premier démarrage et ne se change plus ensuite sans réinitialisation." },
+    { "t": "Choisir la carte d’entrées", "d": "Module DI 24 V DC. Vérifier le courant absorbé par voie et la compatibilité avec la tension résiduelle du capteur." },
+    { "t": "Câbler les sorties de commande", "d": "Un fil par sortie utilisée vers une voie du module. Isoler individuellement toutes les sorties non utilisées." },
+    { "t": "Régler les seuils sur le capteur", "d": "Les seuils de commutation ne se règlent pas dans TIA : ils se saisissent sur l’afficheur du capteur, ou par IO-Link." },
+    { "t": "Déclarer le module et relever les adresses", "d": "Chaque sortie devient un bit d’entrée dans le programme. Rien à convertir." }
+  ]
+}

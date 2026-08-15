@@ -1,0 +1,11 @@
+{
+  "nom": "Boucle de courant sur carte d’entrées analogiques",
+  "etapes": [
+    { "t": "Choisir la carte d’entrées analogiques", "d": "Un module AI acceptant le courant — par exemple AI 8xU/I HS sur S7-1500, ou les entrées analogiques intégrées d’une CPU compacte 1512C." },
+    { "t": "Câbler la boucle de courant", "d": "Deux fils vers l’entrée courant du module. Respecter la résistance de charge maximale annoncée par le capteur, sinon la boucle décroche en haut d’échelle." },
+    { "t": "Déclarer le module dans la configuration matérielle", "d": "Insérer le module dans le rack, puis choisir le type de mesure « Courant (transducteur à 4 fils) » et la plage 4…20 mA dans ses propriétés." },
+    { "t": "Relever l’adresse d’entrée", "d": "TIA attribue un mot d’entrée par voie. C’est cette adresse qui sera lue dans le programme." },
+    { "t": "Mettre à l’échelle", "d": "Sur S7-1500, la plage 4…20 mA correspond à une valeur brute de 0 à 27648. NORM_X ramène à 0,0…1,0 puis SCALE_X convertit vers la grandeur physique." },
+    { "t": "Traiter les dépassements", "d": "Sous 4 mA et au-delà de 20 mA, le module remonte des valeurs de dépassement. Les filtrer avant affichage, sinon la supervision affiche n’importe quoi." }
+  ]
+}

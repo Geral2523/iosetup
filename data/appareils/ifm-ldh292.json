@@ -1,0 +1,55 @@
+{
+  "id": "ldh292", "ref": "LDH292", "marque": "ifm", "marqueNom": "ifm electronic",
+  "categorie": "capteur", "type": "temperature", "techno": "Capacitif", "top": true,
+  "nom": "Capteur d’humidité et de température de l’air",
+  "resume": "Deux valeurs process sur un seul port IO-Link. Conçu pour l’armoire électrique.",
+  "source": "Fiche technique ifm 13.04.2023 · Notice 09/2020 · IODD rév. 1.1 du 27.11.2020",
+  "specs": [
+    ["Grandeurs mesurées", "Humidité relative + température"],
+    ["Plage humidité", "0 … 100 % RH — précision 3 % (20 à 80 %), résolution 0,1"],
+    ["Plage température", "−40 … +80 °C — précision ±0,3 K, résolution 0,1"],
+    ["Principe", "Capacitif"],
+    ["Alimentation", "18 … 30 V DC — 13 mA"],
+    ["Interface", "IO-Link 1.1 — COM2 (38,4 kBaud)"],
+    ["Port maître requis", "Classe A"],
+    ["Temps de cycle mini", "4,5 ms"],
+    ["DeviceID", "1337"],
+    ["Protection", "IP 20 — sonde seule IP 57"],
+    ["Montage", "Rail DIN TH35, vertical, raccordement en haut"],
+    ["Raccordement", "1 × M12 codage A, 4 broches"]
+  ],
+  "reglagesAppareil": null,
+  "pieges": [
+    { "t": "Mode SIO : non", "d": "Le capteur ne fonctionne qu’en IO-Link, sans repli en mode standard. Port en DI ou désactivé : il ne remonte rien, et le diagnostic ne le dit pas clairement." },
+    { "t": "Inversion d’octets Siemens", "d": "La description d’interface ifm signale que les automates Siemens permutent poids fort et poids faible en adressage par octet. Humidité à 44 800 au lieu de 435 : c’est ça." },
+    { "t": "IP 20 contre IP 67", "d": "Le maître va au bord de la machine, pas le capteur. Le LDH292 est un appareil d’armoire." },
+    { "t": "Mesure jusqu’à 100 %, utilisation jusqu’à 90 %", "d": "Plage de mesure et plage d’utilisation ne sont pas les mêmes. Au-delà de 90 % RH ambiants, on sort des conditions d’emploi." },
+    { "t": "Air turbulent interdit", "d": "Gaines d’aspiration et point de rosée : mesures erronées. Ne pas recouvrir le capteur." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 codage A — 4 broches", "maitre": "al1102", "procedure": "iolink-profinet",
+      "cable": "Non blindé, 3 à 5 conducteurs, 20 m maximum",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Brun", "fn": "L+ — alimentation 18…30 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Non utilisé" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "C/Q — communication IO-Link" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" }
+      ],
+      "trame": { "octets": 8, "bits": 64 },
+      "donnees": [
+        { "cle": "hum", "nom": "Humidité", "bitOffset": 48, "bits": 16, "type": "INT", "octets": [0, 1], "min": 0, "max": 1000, "gradient": 0.1, "unite": "% RH", "couleur": "#1668B3" },
+        { "cle": "tmp", "nom": "Température", "bitOffset": 16, "bits": 16, "type": "INT", "octets": [4, 5], "min": -400, "max": 850, "gradient": 0.1, "unite": "°C", "couleur": "#E2570F" },
+        { "cle": "sta", "nom": "Device status", "bitOffset": 4, "bits": 4, "type": "UINT", "octets": [7], "min": 0, "max": 4, "couleur": "#2C7A44" }
+      ],
+      "valeursSpeciales": [
+        ["−32760", "UL — sous la plage de mesure", "Température"],
+        ["32760", "OL — au-dessus de la plage", "Température"],
+        ["−32762", "cr.UL — dépassement critique bas", "Température"],
+        ["32762", "cr.OL — dépassement critique haut", "Température"],
+        ["32764", "NoData — pas de donnée valide", "Humidité et température"]
+      ],
+      "deviceStatus": [["0", "Appareil OK"], ["1", "Maintenance requise"], ["2", "Hors spécification"], ["3", "Contrôle fonctionnel"], ["4", "Défaillance"]]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "nom": "KEYENCE série FR",
+  "trame": { "octets": 12, "bits": 96 },
+  "donnees": [
+    { "cle": "val", "nom": "Valeur actuelle", "bitOffset": 64, "bits": 32, "type": "INT 32", "octets": [0, 1, 2, 3],
+      "min": -199999, "max": 99999, "gradient": null, "unite": "selon réglage", "couleur": "#1668B3" },
+    { "cle": "cum", "nom": "@VAL2@", "bitOffset": 32, "bits": 32, "type": "INT 32", "octets": [4, 5, 6, 7],
+      "min": -199999999, "max": 99999999, "gradient": null, "unite": "selon réglage", "couleur": "#E2570F" },
+    { "cle": "dg1", "nom": "Diagnostics", "bitOffset": 24, "bits": 8, "type": "8 × BOOL", "octets": [8], "couleur": "#2C7A44" },
+    { "cle": "dg2", "nom": "Erreurs", "bitOffset": 16, "bits": 8, "type": "8 × BOOL", "octets": [9], "couleur": "#1F5F35" },
+    { "cle": "sta", "nom": "Stabilité + couleur", "bitOffset": 8, "bits": 8, "type": "2 × UINT 4", "octets": [10], "couleur": "#6E4FA0" },
+    { "cle": "out", "nom": "État des sorties", "bitOffset": 0, "bits": 5, "type": "5 × BOOL", "octets": [11], "couleur": "#A8830B" }
+  ],
+  "bitsDiag": [
+    ["8", "31", "LOW — niveau sous la plage de mesure"],
+    ["8", "30", "HIGH — niveau au-dessus de la plage"],
+    ["8", "29", "Tracking — suivi en cours, valeur maintenue"],
+    ["8", "28", "@BIT28@"],
+    ["8", "27", "Stabilité dégradée — alerte de maintenance"],
+    ["8", "26", "Mesure impossible"],
+    ["8", "25", "Erreur d’apprentissage"],
+    ["8", "24", "Interférence — autre source 60 GHz à proximité"],
+    ["9", "23", "Erreur de tête de capteur"],
+    ["9", "22 → 18", "Surintensité sur les sorties 5 à 1"],
+    ["9", "17", "Erreur EEPROM"],
+    ["9", "16", "Erreur système"],
+    ["10", "15 → 12", "Stabilité — 0 (détection impossible) à 4 (signal franc)"],
+    ["10", "11 → 8", "Couleur de l’indicateur — 0 éteint · 1 vert · 2 jaune · 3 rouge · 4 rouge clignotant"],
+    ["11", "4 → 0", "État des sorties de commande 5 à 1"]
+  ],
+  "avertissementIodd": {
+    "t": "Le brochage déclaré dans l’IODD est générique",
+    "d": "Les trois IODD de la gamme annoncent un M12 4 broches avec C/Q en broche 4, fil noir. Ce sont les couleurs standard DIN EN 60947-5-2, pas celles du câble réel — le faisceau ne contient aucun fil noir. Règle générale : l’IODD sert aux données process et aux paramètres, jamais au câblage. Pour le câblage, c’est la notice constructeur."
+  },
+  "sansGradient": {
+    "t": "La valeur actuelle n’a pas de facteur d’échelle",
+    "d": "Contrairement au LDH292 où le gradient est figé à 0,1, l’IODD ne définit ici aucune conversion. La plage brute va de −199999 à 99999, et sa signification dépend des réglages « unité de distance » et « position du point décimal » saisis sur l’afficheur du capteur. La même valeur brute peut valoir 1234 mm ou 1,234 m. Le programme automate doit connaître le paramétrage physique de l’appareil."
+  }
+}
