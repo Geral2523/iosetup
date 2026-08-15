@@ -74,7 +74,7 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 
 <header>
   <div class="wrap hbar">
-    <a class="logo" href="/" style="text-decoration:none">Inté<span>gration</span></a>
+    <a class="logo" href="/" style="text-decoration:none">IO<span>Setup</span></a>
   </div>
 </header>
 
