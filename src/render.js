@@ -622,6 +622,7 @@ function buildGuideArticle(DB, d, mode) {
   const P = [];
 
   P.push(`<div class="guide-head">
+    <div class="guide-head-text">
     <span class="step">Guide d’intégration</span>
     <h1 class="title">${esc(d.ref)} — raccordement ${esc(md.nom)}</h1>
     <p class="lede">${esc(d.nom)}. ${esc(d.resume)}</p>
@@ -632,7 +633,9 @@ function buildGuideArticle(DB, d, mode) {
       <span class="chip alt">${esc(a.nom)}</span>
       <span class="chip alt">${esc(d.techno)}</span>
       ${r.sens === 'sortie' ? '<span class="chip alt" style="border-color:var(--signal);color:var(--signal-deep)">Données en sortie</span>' : ''}
-    </div></div>`);
+    </div></div>
+    ${d.photo ? `<img class="guide-head-photo" src="${esc(d.photo)}" alt="${esc(d.ref)}" loading="lazy">` : ''}
+    </div>`);
 
   /* 1 — caractéristiques */
   P.push(`<section class="blk"><h2 data-n="${num()}">Caractéristiques de l’appareil</h2>

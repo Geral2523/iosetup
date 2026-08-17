@@ -94,6 +94,15 @@ Le site couvre **11 pages** sans erreur, pour 7 appareils :
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
+**Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
+automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`
+dans `build.js` scanne le dossier et pose `d.photo` sur l'objet avant la génération.
+Rendu dans l'en-tête du guide (`buildGuideArticle`, `.guide-head-photo`) et en vignette
+sur les tuiles de l'étape « Quel modèle ? » (`.tile-photo`). Absence de fichier = pas de
+photo, aucune erreur. G120C n'en a pas encore. Fichiers sources originaux (avant
+renommage par id) conservés dans `src/assets/originaux/appareils/` — même convention que
+`logo-source.png`.
+
 **Famille de commande (nouveau, pendant actionneur de la famille IODD).** Les deux colonnes
 SIRIUS 8WD46 (8WD4615 15 segments, 8WD4613 9 segments) partagent exactement le même bloc
 fonction IO-Link `Control_IOLink8WD46` (entrées/sorties, table couleurs, table effets) —

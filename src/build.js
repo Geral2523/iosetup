@@ -35,6 +35,20 @@ function readDir(dir) {
   return out;
 }
 
+/* Photo produit optionnelle : un fichier src/assets/appareils/<id>.<ext>
+   s'attache automatiquement à l'appareil du même id, sans toucher au
+   JSON — même philosophie que « ajouter un appareil = zéro ligne de
+   code ». Absent = simplement pas de photo sur la fiche. */
+const APPAREILS_ASSETS_DIR = path.join(__dirname, 'assets', 'appareils');
+function attachPhotos(appareils) {
+  if (!fs.existsSync(APPAREILS_ASSETS_DIR)) return;
+  const files = fs.readdirSync(APPAREILS_ASSETS_DIR);
+  for (const d of appareils) {
+    const match = files.find(f => f.replace(/\.[^.]+$/, '') === d.id);
+    if (match) d.photo = '/assets/appareils/' + match;
+  }
+}
+
 function buildDB() {
   const taxonomie = readJson(path.join(DATA, 'taxonomie.json'));
   const procedures = readDir(path.join(DATA, 'procedures'));
@@ -44,6 +58,7 @@ function buildDB() {
   const appareils = fs.readdirSync(appareilsDir)
     .filter(f => f.endsWith('.json'))
     .map(f => readJson(path.join(appareilsDir, f)));
+  attachPhotos(appareils);
   const blocsSystemeDir = path.join(DATA, 'blocs-systeme');
   const blocsSysteme = fs.readdirSync(blocsSystemeDir)
     .filter(f => f.endsWith('.json'))
@@ -101,15 +116,16 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 </head>
 <body>
 
+<div class="topbar">
 <header>
   <div class="wrap hbar">
     <a class="logo" href="/" style="text-decoration:none"><img src="/assets/logo.png?v=${assetV}" alt="IO Setup"></a>
   </div>
 </header>
 
-<nav class="crumbs"><div class="wrap">${breadcrumb}</div></nav>
+<nav class="crumbs"><div class="wrap"><a class="back" href="/">← Tous les guides</a>${breadcrumb}</div></nav>
+</div>
 <main class="wrap">
-<a class="back" href="/" style="display:inline-block">← Tous les guides</a>
 ${articleHtml}
 ${otherModesHtml}
 ${familyHtml}
@@ -244,6 +260,12 @@ function build() {
   fs.copyFileSync(path.join(assetsDir, 'logo.png'), path.join(distDir, 'assets', 'logo.png'));
   for (const f of ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
     fs.copyFileSync(path.join(assetsDir, f), path.join(distDir, f));
+  }
+  if (fs.existsSync(APPAREILS_ASSETS_DIR)) {
+    fs.mkdirSync(path.join(distDir, 'assets', 'appareils'), { recursive: true });
+    for (const f of fs.readdirSync(APPAREILS_ASSETS_DIR)) {
+      fs.copyFileSync(path.join(APPAREILS_ASSETS_DIR, f), path.join(distDir, 'assets', 'appareils', f));
+    }
   }
   const assetV = computeAssetVersion(assetsDir);
 

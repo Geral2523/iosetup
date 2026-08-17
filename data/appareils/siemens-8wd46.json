@@ -6,8 +6,8 @@
   "source": "Exemple d’application Siemens 109818146 V1.0 (04/2023) · Manuel des colonnes SIRIUS 8WD4 · Fiches revendeurs pour les variantes",
   "specs": [
     ["Fonction", "Signalisation visuelle et sonore de l’état machine"],
-    ["Segments LED", "9 ou 15 selon la référence — 8WD4613 (9) · 8WD4615 (15)"],
-    ["Acoustique", "Avec ou sans, selon la référence. Type de signal et volume réglables jusqu’à 105 dB"],
+    ["Segments LED", "15 — la même gamme existe en 9 segments (8WD4613), voir « même famille » ci-dessous"],
+    ["Acoustique", "Avec sirène — type de signal et volume réglables jusqu’à 105 dB, 10 sons possibles"],
     ["Couleurs disponibles", "Rouge · vert · bleu · jaune · jaune clair · turquoise · violet · blanc · plus une couleur RVB personnalisée"],
     ["Effets lumineux", "Fixe · clignotant 1, 2 ou 3 Hz · flash simple, double ou triple · rotatif"],
     ["Raccordement", "IO-Link ou câblage conventionnel 24 V, au choix selon la référence"],
@@ -31,10 +31,10 @@
     "apres": "Le chargement se fait par « Charger avec les appareils » depuis S7-PCT. C’est une opération distincte du chargement du programme dans la CPU : oublier cette étape est une source classique de « ça ne fait rien »."
   },
   "pieges": [
-    { "t": "15 segments physiques, 5 pilotables", "d": "En mode Autoscale, cinq niveaux maximum. Au-delà, il faut le « Signaling column mode » — que le bloc fonction fourni par Siemens ne gère pas. Acheter 15 segments ne donne pas 15 couleurs commandables." },
+    { "t": "15 segments physiques, 5 pilotables", "d": "Le bloc fonction Control_IOLink8WD46 pilote toujours 5 « stacks » logiques (structure typeSignalStack8WD46), quel que soit le nombre de segments physiques de la référence. En mode Autoscale, ces 5 niveaux se répartissent proportionnellement sur les 15 segments. Acheter 15 segments ne donne pas 15 couleurs commandables indépendamment, pas plus que 9 n’en donnent 9 sur l’autre référence de la gamme." },
     { "t": "Trois chargements distincts", "d": "Le programme va dans la CPU, le nom d’appareil PROFINET dans l’ET 200SP, et la configuration IO-Link dans le maître et l’appareil via S7-PCT. En oublier un donne une colonne muette sans message d’erreur." },
     { "t": "S7-PCT doit être installé avant d’ouvrir TIA", "d": "Sans redémarrage de TIA Portal après l’installation, l’entrée « Démarrer l’outil d’appareil » n’apparaît pas au clic droit." },
-    { "t": "Deux versions incompatibles à l’usage", "d": "La version conventionnelle 24 V se paramètre à l’avance par une interface USB, une seule fois. La version IO-Link se reconfigure à tout moment depuis le programme ou en ligne. Le choix se fait à l’achat, pas après." },
+    { "t": "Deux versions incompatibles à l’usage", "d": "La version conventionnelle 24 V (référence -5JH37, sans IO-Link) se paramètre à l’avance par une interface USB, une seule fois. La version IO-Link (-5JH47, documentée ici) se reconfigure à tout moment depuis le programme ou en ligne. Le choix se fait à l’achat, pas après." },
     { "t": "Couleur personnalisée en deux temps", "d": "Les valeurs RVB se règlent dans S7-PCT, mais la couleur ne s’active qu’en envoyant la valeur 0 depuis le programme pour le segment concerné. Régler le RVB sans envoyer 0 ne produit rien." },
     { "t": "Combinaisons interdites par la norme", "d": "Le concept de signalisation Siemens précise que rouge et vert allumés simultanément est un état invalide. Ce n’est pas une limite technique, c’est une règle de sécurité à respecter côté programme." }
   ],

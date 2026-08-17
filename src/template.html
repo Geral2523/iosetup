@@ -15,6 +15,7 @@
 </head>
 <body>
 
+<div class="topbar">
 <header>
   <div class="wrap hbar">
     <button class="logo" onclick="go('home')"><img src="/assets/logo.png?v=__ASSET_V__" alt="IO Setup"></button>
@@ -28,6 +29,7 @@
 </header>
 
 <nav class="crumbs" id="crumbs" hidden><div class="wrap" id="crumbsIn"></div></nav>
+</div>
 <main class="wrap" id="app"></main>
 
 <script src="/render.js?v=__ASSET_V__"></script>
@@ -82,11 +84,14 @@ function goBlocGuide(id){S.bloc=id;window.scrollTo(0,0);render('blocGuide')}
 function backTo(v){window.scrollTo(0,0);render(v);}
 const back=v=>`<button class="back" onclick="backTo('${v}')">← Retour</button>`;
 
-function crumbs(items){
+/* backView : vue vers laquelle pointe le bouton ← Retour, rendu ici
+   pour rester dans la barre sticky plutôt que dans le contenu qui
+   défile — voir .topbar dans styles.css. */
+function crumbs(items,backView){
   const c=$('crumbs');
-  if(!items.length){c.hidden=true;return}
+  if(!items.length&&!backView){c.hidden=true;return}
   c.hidden=false;
-  $('crumbsIn').innerHTML=items.map((it,i)=>
+  $('crumbsIn').innerHTML=(backView?back(backView):'')+items.map((it,i)=>
     (i?'<span class="sep">›</span>':'')+
     (it.vue?`<button onclick="backTo('${it.vue}')">${esc(it.txt)}</button>`:`<span class="now">${esc(it.txt)}</span>`)
   ).join('');
@@ -95,6 +100,7 @@ function tiles(list,fn,topId){
   return `<div class="grid">${list.map(x=>{
     const on=x.actif!==false, top=topId&&x.id===topId;
     return `<button class="tile${top?' top':''}" ${on?`onclick="${fn}('${x.id}')"`:'disabled'}>
+      ${x.photo?`<img class="tile-photo" src="${esc(x.photo)}" alt="">`:''}
       <h3>${esc(x.nom)}</h3>${x.note?`<p>${esc(x.note)}</p>`:''}
       <span class="badge">${top?'Le plus consulté':(on?'Disponible':'Bientôt')}</span></button>`;
   }).join('')}</div>`;
@@ -112,27 +118,27 @@ function render(v){
       +tiles(DB.automates.filter(x=>x.actif),'goCat')+modelNote();return;
   }
   if(v==='categorie'){
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}]);
-    app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}],'home');
+    app.innerHTML=head('Étape 2 sur 7',a.nom+' — quel matériel ?','')
       +tiles(DB.categories.filter(x=>usedCategories.has(x.id)),'goType')
       +blocsSystemeTile();return;
   }
   if(v==='blocsListe'){
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système'}]);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système'}],'categorie');
     const l=DB.blocsSysteme.map(x=>({id:x.id,nom:x.nom,note:x.sousTitre,actif:true}));
-    app.innerHTML=back('categorie')+head('Bloc système','Quel bloc système ?',
+    app.innerHTML=head('Bloc système','Quel bloc système ?',
       'Des briques de programmation indépendantes de tout appareil — à connaître pour lire ou écrire n’importe quel programme TIA Portal.')
       +tiles(l,'goBlocGuide');return;
   }
   if(v==='blocGuide'){
     const bs=DB.blocsSysteme.find(x=>x.id===S.bloc);
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système',vue:'blocsListe'},{txt:bs.nom}]);
-    app.innerHTML=back('blocsListe')+Render.buildBlocArticle(bs)+modelNote();return;
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système',vue:'blocsListe'},{txt:bs.nom}],'blocsListe');
+    app.innerHTML=Render.buildBlocArticle(bs)+modelNote();return;
   }
   if(v==='type'){
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}]);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}],'categorie');
     const estCapteur=S.categorie==='capteur';
-    app.innerHTML=back('categorie')+head('Étape 3 sur 7',
+    app.innerHTML=head('Étape 3 sur 7',
       estCapteur?'Quelle grandeur mesurée ?':'Quelle fonction ?',
       estCapteur
         ?'On classe par ce qui est mesuré, pas par la technologie — un niveau se mesure au radar, à l\u2019ultrason ou en capacitif.'
@@ -140,24 +146,24 @@ function render(v){
       +tiles(sousTypes(S.categorie).filter(x=>usedTypes.has(S.categorie+'|'+x.id)),'goMarque');return;
   }
   if(v==='marque'){
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}]);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}],'type');
     const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c',vitesse:'siemens-c'}[S.type];
     const marques=DB.marques.filter(x=>usedMarques.has(S.categorie+'|'+S.type+'|'+x.id));
-    app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(marques,'goModele',top);return;
+    app.innerHTML=head('Étape 4 sur 7','Quelle marque ?','')+tiles(marques,'goModele',top);return;
   }
   if(v==='modele'){
-    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom,vue:'marque'},{txt:m.nom}]);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom,vue:'marque'},{txt:m.nom}],'marque');
     const l=DB.appareils.filter(d=>d.marque===S.marque&&d.type===S.type&&d.categorie===S.categorie)
-      .map(d=>({id:d.id,nom:d.ref,note:d.nom+' — '+d.techno,actif:true}));
-    app.innerHTML=back('marque')+head('Étape 5 sur 7','Quel modèle ?','')
+      .map(d=>({id:d.id,nom:d.ref,note:d.nom+' — '+d.techno,actif:true,photo:d.photo}));
+    app.innerHTML=head('Étape 5 sur 7','Quel modèle ?','')
       +(l.length?tiles(l,'goMode',l[0].id):`<div class="note"><b>Aucun appareil</b>Cette combinaison n\u2019est pas encore documentée.</div>`);return;
   }
   if(v==='mode'){
     const d=dev(S.modele);
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},
-            {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref}]);
+            {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref}],'modele');
     const dispo=DB.modes.filter(x=>d.raccordements[x.id]).map(x=>({...x,actif:true}));
-    app.innerHTML=back('modele')+head('Étape 6 sur 7','Comment le raccordez-vous ?',
+    app.innerHTML=head('Étape 6 sur 7','Comment le raccordez-vous ?',
       'C\u2019est ce choix qui détermine la procédure. Un même capteur en IO-Link ou en 4-20 mA n\u2019a rien de commun côté TIA Portal.')
       +tiles(dispo,'goGuide',dispo[0]&&dispo[0].id);return;
   }
@@ -193,8 +199,8 @@ function modelNote(){
 
 function guide(){
   const d=dev(S.modele), md=DB.modes.find(x=>x.id===S.mode);
-  crumbs([{txt:'Automate',vue:'home'},{txt:d.ref,vue:'mode'},{txt:md.nom}]);
-  $('app').innerHTML=back('mode')+Render.buildGuideArticle(DB,d,S.mode)+modelNote();
+  crumbs([{txt:'Automate',vue:'home'},{txt:d.ref,vue:'mode'},{txt:md.nom}],'mode');
+  $('app').innerHTML=Render.buildGuideArticle(DB,d,S.mode)+modelNote();
 }
 function showLang(id,btn){
   document.querySelectorAll('.lang').forEach(e=>e.classList.remove('on'));
