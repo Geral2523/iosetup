@@ -693,6 +693,62 @@ function buildGuideArticle(DB, d, mode) {
   return `<article class="guide">${P.join('')}</article>`;
 }
 
+/* ══════════════════════════════════════════════════════════
+   BLOCS SYSTÈME — fiches indépendantes de tout appareil
+   (temporisation, comptage, front, comparaison/déplacement,
+   communication, conversion/calcul). Même logique d'assemblage
+   que buildGuideArticle, mais sans appareil ni mode de
+   raccordement : une fiche = une famille de blocs TIA Portal.
+   ══════════════════════════════════════════════════════════ */
+function buildBlocArticle(bs) {
+  let n = 0; const num = () => String(++n).padStart(2, '0');
+  const P = [];
+
+  P.push(`<div class="guide-head">
+    <span class="step">Bloc système</span>
+    <h1 class="title">${esc(bs.nom)} — ${esc(bs.sousTitre)}</h1>
+    <p class="lede">${esc(bs.resume)}</p>
+    <div class="chain">${bs.blocs.map(b => `<span class="chip mode">${esc(b.nom)}</span>`).join('')}</div>
+  </div>`);
+
+  P.push(`<section class="blk"><h2 data-n="${num()}">À quoi ça sert</h2>
+   <p style="margin:0;color:var(--ink-2);font-size:13.5px">${esc(bs.intro)}</p></section>`);
+
+  bs.blocs.forEach(b => {
+    P.push(`<section class="blk"><h2 data-n="${num()}">${esc(b.nom)} — ${esc(b.fonction)}</h2>
+     <p style="margin:0 0 14px;color:var(--ink-2);font-size:13.5px">${esc(b.description)}</p>
+     <table><thead><tr><th style="width:20%">Paramètre</th><th style="width:16%">Type</th><th>Rôle</th></tr></thead>
+     <tbody>${b.parametres.map(p => `<tr><td class="mono">${esc(p[0])}</td><td class="mono">${esc(p[1])}</td><td>${esc(p[2])}</td></tr>`).join('')}</tbody></table>
+     ${b.quand ? `<div class="note info"><b>Quand l’utiliser</b>${esc(b.quand)}</div>` : ''}
+     ${b.piege ? `<div class="note warn"><b>Piège</b>${esc(b.piege)}</div>` : ''}
+     </section>`);
+  });
+
+  if (bs.exemple) P.push(blocProg(bs.exemple.scl, bs.exemple.lad, num));
+
+  if (bs.pieges && bs.pieges.length)
+    P.push(`<section class="blk"><h2 data-n="${num()}">Les pièges</h2>
+     <table><tbody>${bs.pieges.map(p => `<tr><th style="width:33%">${esc(p.t)}</th><td>${esc(p.d)}</td></tr>`).join('')}</tbody></table></section>`);
+
+  if (bs.source) P.push(`<section class="blk"><h2 data-n="${num()}">Sources</h2>
+   <p class="mono" style="margin:0;font-size:12.5px;color:var(--ink-2)">${esc(bs.source)}</p></section>`);
+
+  return `<article class="guide">${P.join('')}</article>`;
+}
+
+/* ── URL canonique d'une fiche bloc système : /siemens/bloc-systeme/<id>/ ── */
+function blocSystemePath(bs) {
+  return `/siemens/bloc-systeme/${bs.id}/`;
+}
+
+/* ── title + meta description d'une fiche bloc système ── */
+function metaForBloc(bs) {
+  const title = `${bs.nom} (${bs.sousTitre}) dans TIA Portal — utilisation, paramètres et code`;
+  let description = `${bs.resume} Blocs couverts : ${bs.blocs.map(b => b.nom).join(', ')}. Exemple CONT/SCL et pièges inclus.`;
+  if (description.length > 160) description = description.slice(0, 157).replace(/\s+\S*$/, '') + '…';
+  return { title, description, path: blocSystemePath(bs) };
+}
+
 /* ── URL canonique d'un guide : /<automate>/<categorie>/<type>/<marque>/<id>/<mode>/ ── */
 function guidePath(automateId, d, mode) {
   return `/${automateId}/${d.categorie}/${d.type}/${d.marque}/${d.id}/${mode}/`;
@@ -752,7 +808,8 @@ const api = {
   esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
   codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclAnalog, codeLadAnalog,
   codeSclProfinet, codeLadProfinet,
-  buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode
+  buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode,
+  buildBlocArticle, blocSystemePath, metaForBloc
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = api;

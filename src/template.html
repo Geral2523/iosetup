@@ -42,7 +42,7 @@ const DB = /*__DB_JSON__*/null/*__END_DB_JSON__*/;
 /* ══════════════════════════════════════════════════════════
    NAVIGATION
    ══════════════════════════════════════════════════════════ */
-let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const find=(c,id)=>DB[c].find(x=>x.id===id)||{};
@@ -69,6 +69,11 @@ function go(v,val){
 }
 const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
       goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
+
+/* Blocs système : branche parallèle à la catégorie, indépendante de tout
+   appareil — accessible juste après le choix de l'automate. */
+function goBlocs(){window.scrollTo(0,0);render('blocsListe')}
+function goBlocGuide(id){S.bloc=id;window.scrollTo(0,0);render('blocGuide')}
 
 /* Retour/breadcrumb : ré-affiche une étape déjà visitée SANS toucher à S.
    go(v,val) sert à avancer (il enregistre val dans le champ d'état
@@ -109,7 +114,20 @@ function render(v){
   if(v==='categorie'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}]);
     app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')
-      +tiles(DB.categories.filter(x=>usedCategories.has(x.id)),'goType');return;
+      +tiles(DB.categories.filter(x=>usedCategories.has(x.id)),'goType')
+      +blocsSystemeTile();return;
+  }
+  if(v==='blocsListe'){
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système'}]);
+    const l=DB.blocsSysteme.map(x=>({id:x.id,nom:x.nom,note:x.sousTitre,actif:true}));
+    app.innerHTML=back('categorie')+head('Bloc système','Quel bloc système ?',
+      'Des briques de programmation indépendantes de tout appareil — à connaître pour lire ou écrire n’importe quel programme TIA Portal.')
+      +tiles(l,'goBlocGuide');return;
+  }
+  if(v==='blocGuide'){
+    const bs=DB.blocsSysteme.find(x=>x.id===S.bloc);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:'Bloc système',vue:'blocsListe'},{txt:bs.nom}]);
+    app.innerHTML=back('blocsListe')+Render.buildBlocArticle(bs)+modelNote();return;
   }
   if(v==='type'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}]);
@@ -146,6 +164,19 @@ function render(v){
   if(v==='guide')guide();
 }
 
+/* Tuile ajoutée sous la grille des catégories, pas dans tiles() :
+   elle mène à une branche parallèle (les blocs système), pas à un
+   sous-type de matériel — un onclick différent des autres tuiles
+   de la même grille. */
+function blocsSystemeTile(){
+  return `<div class="grid" style="margin-top:14px">
+    <button class="tile" onclick="goBlocs()">
+      <h3>Blocs système</h3>
+      <p>Temporisation, comptage, détection de front, comparaison, communication, conversion — des briques de programmation indépendantes de tout appareil.</p>
+      <span class="badge">Disponible</span>
+    </button>
+  </div>`;
+}
 function modelNote(){
   return `<div class="model-note"><b>Comment cette maquette fonctionne</b>
   Aucune page n\u2019est écrite à la main. Chaque guide est assemblé à partir de quatre sources :

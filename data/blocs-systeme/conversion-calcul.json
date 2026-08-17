@@ -1,0 +1,53 @@
+{
+  "id": "conversion-calcul",
+  "ordre": 6,
+  "nom": "Conversion et calcul",
+  "sousTitre": "CONV, MOD, ADD/SUB/MUL/DIV",
+  "resume": "Les blocs qu'on utilise sans les nommer — convertir un type, calculer un reste, faire une addition — présents dans presque tout réseau d'un programme, et pourtant rarement expliqués pour eux-mêmes.",
+  "intro": "Contrairement aux blocs des autres pages, ceux-ci n'ont pas d'instance : ce sont des opérations sans mémoire, recalculées à chaque cycle. NORM_X et SCALE_X, déjà vus dans les guides de raccordement analogique de ce site, appartiennent à la même famille — mise à l'échelle mise à part, ce sont les mêmes principes de conversion et de calcul qui reviennent partout ailleurs.",
+  "blocs": [
+    {
+      "nom": "CONV",
+      "fonction": "Conversion de type",
+      "description": "Convertit IN d'un type vers un autre type de sortie OUT — par exemple INT_TO_REAL, DINT_TO_REAL, WORD_TO_INT. En SCL, chaque conversion est une fonction nommée explicitement ; en CONT, une seule boîte CONV où l'on choisit les deux types dans des listes déroulantes.",
+      "parametres": [
+        ["IN", "type source", "Valeur à convertir"],
+        ["OUT", "type destination", "Résultat converti"]
+      ],
+      "quand": "Presque systématique avant une mise à l'échelle NORM_X/SCALE_X, ou avant un calcul en virgule flottante sur une valeur entière lue depuis une trame IO-Link.",
+      "piege": "Convertir INT → REAL ne perd jamais d'information. L'inverse, REAL → INT, tronque ou arrondit selon le bloc exact utilisé (TRUNC coupe la partie décimale, ROUND arrondit) — vérifier lequel des deux est câblé avant de lui faire confiance dans un compteur d'itérations ou un calcul cumulatif, où l'écart s'accumule cycle après cycle."
+    },
+    {
+      "nom": "MOD",
+      "fonction": "Reste de la division entière (modulo)",
+      "description": "OUT = reste de la division entière de IN1 par IN2. Fonctionne sur les types entiers (INT, DINT…), pas sur REAL.",
+      "parametres": [
+        ["IN1", "entier", "Dividende"],
+        ["IN2", "entier", "Diviseur"],
+        ["OUT", "entier", "Reste de la division IN1 / IN2"]
+      ],
+      "quand": "Cadencer une action toutes les N cycles sans mobiliser un temporisateur (par exemple rafraîchir un affichage tous les 10 cycles via un compteur de cycle % 10 = 0), ou boucler un index de tableau qui doit revenir à 0 après sa dernière valeur.",
+      "piege": "MOD par zéro déclenche une erreur d'exécution, exactement comme une division normale — si IN2 peut être une variable (et non une constante fixe), il faut le sécuriser avant l'appel."
+    },
+    {
+      "nom": "ADD, SUB, MUL, DIV",
+      "fonction": "Opérations arithmétiques de base",
+      "description": "Les quatre opérations élémentaires. ADD et MUL acceptent en général plusieurs entrées (IN1…INn) sur une seule boîte en CONT ; SUB et DIV n'en ont que deux (IN1, IN2, dans cet ordre — IN1 − IN2 et IN1 / IN2).",
+      "parametres": [
+        ["IN1…INn", "selon type", "Opérandes"],
+        ["OUT", "selon type", "Résultat"]
+      ],
+      "quand": "La brique la plus fondamentale de tout programme — mise à l'échelle manuelle sans NORM_X/SCALE_X, cumul de production, calcul d'une moyenne glissante.",
+      "piege": "Le type de sortie doit pouvoir contenir le résultat. Un ADD sur INT qui dépasse 32767 déborde silencieusement — la CPU ne s'arrête pas et ne signale rien par défaut, elle continue avec une valeur fausse. Le bit ENO du bloc reste à VRAI même en cas de dépassement de plage sur certaines opérations ; seul un test de plage explicite sur le résultat protège contre ce cas."
+    }
+  ],
+  "pieges": [
+    { "t": "DIV par zéro arrête le programme, pas seulement le calcul", "d": "Une division (ou un MOD) par une variable qui peut valoir 0 doit être testée avant l'appel — sans quoi le bloc peut passer en erreur d'exécution et, selon la configuration de traitement d'erreurs de la CPU, provoquer un arrêt (STOP) plutôt qu'un simple résultat faux." },
+    { "t": "L'ordre des types compte dans une expression mixte", "d": "Mélanger INT et REAL dans une même expression sans conversion explicite est refusé à la compilation en SCL — ce qui évite l'erreur, mais surprend qui vient d'un langage où la conversion est implicite. En CONT, la boîte de calcul impose un type unique pour toutes ses entrées." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Rafraîchit un accumulateur d'affichage tous les 10 cycles\n// (MOD), et calcule sa moyenne glissante depuis la dernière\n// remise à zéro (ADD + DIV, avec conversion CONV vers REAL).</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_MoyenneCyclique\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    mesure       : INT;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    moyenne      : REAL;\n    rafraichir   : BOOL;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR</span>\n    compteurCycle : DINT;\n    somme         : DINT;\n    nbEchantillons: DINT;\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #compteurCycle := #compteurCycle + 1;\n    #somme         := #somme + #mesure;\n    #nbEchantillons:= #nbEchantillons + 1;\n\n    #rafraichir := (#compteurCycle <span class=\"k\">MOD</span> 10 = 0);\n    <span class=\"k\">IF</span> #rafraichir <span class=\"k\">AND</span> #nbEchantillons &gt; 0 <span class=\"k\">THEN</span>\n        #moyenne := DINT_TO_REAL(#somme) / DINT_TO_REAL(#nbEchantillons);\n        #somme := 0; #nbEchantillons := 0;\n    <span class=\"k\">END_IF</span>;\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"r\">Réseau 1 — Cumul à chaque cycle</span>\n      ┌──────────────┐    ┌──────────────┐\n      │     ADD      │    │     ADD      │\n──────┤     DInt     ├────┤     DInt     ├──[ somme ]\n      │IN1     somme │    │IN1 nbEchant. │\n      │IN2    mesure │    │IN2         1 │\n      └──────────────┘    └──────────────┘\n\n<span class=\"r\">Réseau 2 — Rafraîchissement tous les 10 cycles</span>\n      ┌──────────────┐    ┌──────────────┐\n      │     MOD      │    │      ==      │\n──────┤     DInt     ├────┤     DInt     ├──( rafraichir )\n      │IN1 cptCycle  │    │IN1       ...│\n      │IN2        10 │    │IN2         0 │\n      └──────────────┘    └──────────────┘\n\n<span class=\"r\">Réseau 3 — Moyenne, si rafraîchissement dû</span>\n   rafraichir     ┌──────────────┐   ┌──────────────┐\n────────┤ ├───────┤     CONV     ├───┤     DIV      ├──( moyenne )\n                  │DInt →  Real  │   │IN1      somme│\n                  │IN      somme │   │IN2 nbEchant. │\n                  └──────────────┘   └──────────────┘"
+  },
+  "source": "Documentation TIA Portal — instructions de conversion et de calcul (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}

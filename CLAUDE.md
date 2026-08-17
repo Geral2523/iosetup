@@ -30,6 +30,7 @@ d'un même fabricant, limites fonctionnelles cachées. C'est ça, la valeur du s
 data/appareils/<marque>-<ref>.json     une fiche appareil (5 fichiers)
 data/familles/<id>.json                une famille IODD (keyence-fr)
 data/procedures/<id>.json              une procédure d'intégration (4 fichiers)
+data/blocs-systeme/<id>.json           une fiche « bloc système » TIA Portal (6 fichiers) — nouveau
 data/taxonomie.json                    automates, catégories, sous-types, marques, modes, maîtres
 iodd/                                  les 4 fichiers IODD bruts
 src/render.js                          logique de rendu partagée (Node + navigateur) : construction
@@ -92,6 +93,22 @@ Le site couvre **9 pages** sans erreur, pour 5 appareils :
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
 Fichiers IODD sources dans `iodd/` (ifm LDH292 + les trois KEYENCE de la gamme FR).
+
+**Blocs système TIA Portal (nouveau, indépendant de tout appareil).** Six fiches dans
+`data/blocs-systeme/` : `temporisation` (TON/TOF/TP), `compteur` (CTU/CTD/CTUD), `front`
+(R_TRIG/F_TRIG), `comparaison-deplacement` (CMP/MOVE/MOVE_BLK), `communication`
+(TSEND_C/TRCV_C, MB_CLIENT/MB_SERVER) et `conversion-calcul` (CONV/MOD/ADD-SUB-MUL-DIV).
+Chaque fiche a un champ `ordre` (tri d'affichage) et suit le même schéma : `nom`,
+`sousTitre`, `resume`, `intro`, `blocs[]` (nom/fonction/description/parametres/quand/piège
+par bloc), `exemple.{scl,lad}` (un seul exemple représentatif par fiche, rendu via
+`blocProg()`), `pieges[]` (niveau fiche) et `source`. Rendu par `Render.buildBlocArticle()`
+dans `render.js` (nouvelle fonction, même structure que `buildGuideArticle()` mais sans
+appareil ni mode de raccordement). Pages statiques générées par `buildBlocPages()` dans
+`build.js`, sous `/siemens/bloc-systeme/<id>/`. Dans la maquette interactive, accessible
+par une tuile « Blocs système » ajoutée sous la grille de catégories à l'étape 2 (juste
+après le choix de l'automate) — branche parallèle à Capteurs/Actionneurs/Variateurs, pas
+un sous-type de matériel. Ajouter une septième fiche = un fichier JSON de plus dans
+`data/blocs-systeme/`, aucune ligne de code à toucher.
 
 ---
 

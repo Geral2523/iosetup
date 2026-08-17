@@ -1,0 +1,50 @@
+{
+  "id": "communication",
+  "ordre": 5,
+  "nom": "Communication",
+  "sousTitre": "TSEND_C / TRCV_C, MB_CLIENT / MB_SERVER",
+  "resume": "Échanger des données avec un équipement tiers — un autre automate, un PC, une passerelle MODBUS — sans passer par le bus de terrain cyclique décrit ailleurs sur ce site.",
+  "intro": "Tous les guides IO-Link et PROFINET de ce site portent sur des données process cycliques, échangées automatiquement à chaque cycle bus via un GSDML. Ces blocs couvrent un besoin différent : une communication point à point, souvent aperiodique, déclenchée par le programme lui-même — typiquement vers un PC de supervision ou un équipement qui ne parle pas PROFINET.",
+  "blocs": [
+    {
+      "nom": "TSEND_C / TRCV_C",
+      "fonction": "Communication ouverte S7 (TCP, ISO-on-TCP, UDP)",
+      "description": "TSEND_C envoie des données, TRCV_C en reçoit, sur une connexion TCP/IP ouverte qu'ils établissent et surveillent eux-mêmes (le « _C » signifie « avec gestion de connexion intégrée » — pas besoin d'un bloc de connexion séparé comme sur les anciennes versions TSEND/TRCV). Chaque extrémité de la liaison doit avoir un rôle cohérent : l'une active (qui initie la connexion), l'autre passive (qui l'accepte).",
+      "parametres": [
+        ["CONNECT", "structure", "Paramètres de connexion — IP distante, port, rôle actif/passif"],
+        ["REQ / EN_R", "BOOL", "Déclenche l'envoi / active la réception en continu"],
+        ["DATA", "variable", "Zone mémoire à envoyer ou à recevoir"],
+        ["DONE / NDR", "BOOL", "VRAI un cycle quand l'envoi / la réception a réussi"],
+        ["BUSY", "BOOL", "Opération en cours"],
+        ["ERROR", "BOOL", "Échec — voir STATUS"],
+        ["STATUS", "WORD", "Code d'erreur détaillé"]
+      ],
+      "quand": "Échanger des données libres avec un PC de supervision, un autre automate S7, ou tout équipement qui parle TCP ouvert — situation qui sort du monde IODD/GSDML couvert par le reste de ce site.",
+      "piege": "Un rôle actif/passif mal apparié entre les deux extrémités (les deux configurées en actif, ou les deux en passif) ne remonte pas toujours une erreur explicite côté programme : la connexion ne s'établit tout simplement jamais, et STATUS reste souvent sur un code générique de timeout."
+    },
+    {
+      "nom": "MB_CLIENT / MB_SERVER",
+      "fonction": "MODBUS TCP natif",
+      "description": "Implémentation MODBUS TCP directement intégrée aux CPU S7-1200/S7-1500 (pas de module matériel dédié nécessaire pour la variante TCP). MB_CLIENT interroge un serveur MODBUS distant, MB_SERVER fait de la CPU un serveur MODBUS interrogeable par un tiers.",
+      "parametres": [
+        ["REQ", "BOOL", "Déclenche une requête (MB_CLIENT)"],
+        ["MB_MODE", "USINT", "Fonction MODBUS demandée — lecture ou écriture, bits ou registres"],
+        ["MB_DATA_ADDR", "UDINT", "Adresse de départ dans l'espace MODBUS de l'équipement distant"],
+        ["MB_DATA_LEN", "UINT", "Nombre de bits ou de registres concernés"],
+        ["DATA_PTR", "variable", "Zone locale source ou destination des données"],
+        ["DONE / BUSY / ERROR / STATUS", "BOOL / WORD", "Mêmes principes que les blocs de communication ouverte"]
+      ],
+      "quand": "Piloter ou lire un équipement MODBUS TCP tiers — variateur, centrale de mesure, passerelle d'un fabricant qui ne fournit pas de GSDML PROFINET.",
+      "piege": "MB_DATA_ADDR encode à la fois le type de zone MODBUS et l'adresse. La confusion la plus fréquente vient de la documentation constructeur : certaines notices indexent leurs registres à partir de 1 (convention historique MODBUS), alors que le protocole réel les adresse à partir de 0 — un décalage d'une adresse qui fait lire ou écrire le mauvais registre sans erreur visible."
+    }
+  ],
+  "pieges": [
+    { "t": "Ces blocs sont asynchrones, pas des lectures instantanées", "d": "Un front sur REQ ne déclenche qu'une tentative ponctuelle. Le programme doit surveiller DONE/ERROR et relancer l'appel (souvent via un temporisateur ou un séquenceur) tant que l'échange n'est pas terminé — contrairement aux données cycliques PROFINET, disponibles en permanence sans appel explicite." },
+    { "t": "Pas de diagnostic automatique comme sur un GSDML", "d": "Un équipement MODBUS ou en communication ouverte ne remonte pas de bits de diagnostic standardisés comme le fait un maître IO-Link ou un GSDML PROFINET. Toute la détection de défaut (équipement déconnecté, valeur hors plage) doit être reconstruite dans le programme à partir de STATUS et d'une éventuelle temporisation de timeout." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Lecture de 2 registres de maintien (holding registers) sur un\n// équipement MODBUS TCP tiers, à l'adresse MODBUS 0 (souvent notée\n// \"40001\" côté documentation constructeur — décalage de 1 à vérifier).</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_LectureModbus\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    lancerLecture : BOOL;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    lectureOK   : BOOL;\n    enErreur    : BOOL;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR</span>\n    client      : \"MB_CLIENT\";\n    registres   : ARRAY[0..1] <span class=\"k\">OF</span> WORD;\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #client(<span class=\"n\">REQ</span> := #lancerLecture,\n            <span class=\"n\">MB_MODE</span> := 0,              <span class=\"c\">// 0 = lecture</span>\n            <span class=\"n\">MB_DATA_ADDR</span> := 0,          <span class=\"c\">// premier registre</span>\n            <span class=\"n\">MB_DATA_LEN</span> := 2,\n            <span class=\"n\">MB_DATA_PTR</span> := #registres,\n            <span class=\"n\">DONE</span> =&gt; #lectureOK,\n            <span class=\"n\">ERROR</span> =&gt; #enErreur);\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"r\">Réseau 1 — Requête de lecture MODBUS TCP</span>\n              ┌──────────────────┐\n              │     MB_CLIENT     │\n              │    \"client\"       │\n──────────────┤REQ           DONE ├──────────────( lectureOK )\n lancerLecture│                   │\n         0────┤MB_MODE      ERROR ├──────────────( enErreur )\n         0────┤MB_DATA_ADDR       │\n         2────┤MB_DATA_LEN        │\n  registres────┤MB_DATA_PTR        │\n              └──────────────────┘\n\n<span class=\"c\">// Un front sur lancerLecture déclenche une tentative — pas une\n// lecture continue. Pour interroger en boucle, relancer REQ sur\n// une temporisation (voir la page « Temporisateurs »).</span>"
+  },
+  "source": "Documentation TIA Portal — instructions de communication ouverte S7 et MODBUS TCP natif (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}

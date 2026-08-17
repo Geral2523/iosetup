@@ -1,0 +1,59 @@
+{
+  "id": "temporisation",
+  "ordre": 1,
+  "nom": "Temporisateurs",
+  "sousTitre": "TON, TOF, TP",
+  "resume": "Trois temporisateurs IEC, chacun pour un besoin différent — retarder une entrée, prolonger une sortie, ou générer une impulsion calibrée.",
+  "intro": "Les trois sont des blocs fonctionnels standard (IEC 61131-3), disponibles aussi bien en CONT qu'en SCL. Chacun a besoin d'une instance propre — un DB créé automatiquement à l'appel, ou une multi-instance si on l'utilise à l'intérieur d'un autre bloc. Sans instance dédiée, deux temporisations qui partagent le même DB partagent aussi le même état : la seconde écrase la première.",
+  "blocs": [
+    {
+      "nom": "TON",
+      "fonction": "Retard à l'enclenchement (On-delay)",
+      "description": "La sortie Q passe à VRAI seulement si l'entrée IN reste VRAIE sans interruption pendant la durée PT. Si IN repasse à FAUX avant l'échéance, le comptage repart de zéro au prochain front — rien n'est mémorisé entre-temps.",
+      "parametres": [
+        ["IN", "BOOL", "Entrée à surveiller"],
+        ["PT", "TIME", "Durée de temporisation à atteindre"],
+        ["Q", "BOOL", "Sortie — VRAI une fois PT écoulé, tant que IN reste VRAI"],
+        ["ET", "TIME", "Temps écoulé depuis le dernier front montant de IN"]
+      ],
+      "quand": "Filtrer un signal bruité — n'accepter un front que s'il tient au moins X ms avant de le considérer comme réel — ou temporiser le démarrage d'une pompe après une commande de marche.",
+      "piege": "Si IN redevient FAUX avant la fin de PT, Q ne s'active jamais et ET retombe à 0. C'est voulu : TON n'a pas de mémoire d'un cycle à l'autre entre deux fronts, contrairement à ce qu'on attend parfois d'un « minuteur »."
+    },
+    {
+      "nom": "TOF",
+      "fonction": "Retard au déclenchement (Off-delay)",
+      "description": "La sortie Q passe à VRAI immédiatement dès que IN passe à VRAI — pas de délai à la montée. Elle ne repasse à FAUX que PT après que IN soit retombé à FAUX. C'est l'inverse d'un TON, et c'est la confusion la plus fréquente entre les deux.",
+      "parametres": [
+        ["IN", "BOOL", "Entrée à surveiller"],
+        ["PT", "TIME", "Durée de maintien après la retombée de IN"],
+        ["Q", "BOOL", "Sortie — VRAI dès IN, reste VRAI PT de plus après sa retombée"],
+        ["ET", "TIME", "Temps écoulé depuis le dernier front descendant de IN"]
+      ],
+      "quand": "Maintenir un ventilateur de refroidissement en marche quelques minutes après l'arrêt d'un four, ou prolonger l'affichage d'un voyant de défaut le temps qu'un opérateur ait le temps de le voir.",
+      "piege": "Un TOF posé là où un TON était attendu ne retarde rien à la montée — le symptôme typique est une sortie qui réagit trop vite, puis qui traîne trop longtemps à l'extinction."
+    },
+    {
+      "nom": "TP",
+      "fonction": "Impulsion calibrée (Pulse)",
+      "description": "Un front montant de IN déclenche une impulsion de durée PT sur Q, quelle que soit la durée réelle de IN — même si IN redescend avant la fin de PT, Q reste actif jusqu'au bout. Un nouveau front pendant que Q est déjà actif est ignoré : TP ne redémarre pas le comptage.",
+      "parametres": [
+        ["IN", "BOOL", "Entrée déclenchante — seul le front montant compte"],
+        ["PT", "TIME", "Durée fixe de l'impulsion générée"],
+        ["Q", "BOOL", "Sortie — impulsion de durée PT"],
+        ["ET", "TIME", "Temps écoulé depuis le déclenchement"]
+      ],
+      "quand": "Générer une impulsion de durée fixe à partir d'un bouton poussoir, quelle que soit la durée d'appui — par exemple pour piloter une électrovanne qui doit s'ouvrir exactement 500 ms.",
+      "piege": "Appuyer une seconde fois sur le bouton pendant l'impulsion en cours ne la prolonge pas et ne la relance pas : il faut attendre que Q retombe pour qu'un nouveau front soit pris en compte."
+    }
+  ],
+  "pieges": [
+    { "t": "PT est un TIME, pas un entier", "d": "Une constante s'écrit T#500ms ou T#2s500ms, pas simplement « 500 ». Passer un INT brut sans conversion est une erreur de compilation, pas une erreur silencieuse — mais elle surprend les débutants venus d'autres langages." },
+    { "t": "Une instance par appel, pas par bloc", "d": "Copier-coller un réseau contenant un TON sans changer le nom d'instance (le DB associé) fait cohabiter deux temporisations différentes sur le même état interne. Symptôme typique : une des deux temporisations semble « figée » ou copie le comportement de l'autre." },
+    { "t": "PT peut être une variable, pas seulement une constante", "d": "Rien n'empêche de câbler PT sur une variable modifiable en cours de fonctionnement (recette, réglage opérateur) — utile, mais un changement de PT pendant que la temporisation est en cours ne réinitialise pas ET : l'effet n'est visible qu'au prochain front." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Filtrage anti-rebond d'une entrée TOR par TON — le front n'est\n// validé que s'il tient au moins 50 ms sans interruption.</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_Antirebond\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    entreeBrute : BOOL;   <span class=\"c\">// signal capteur, potentiellement bruité</span>\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    entreeFiltree : BOOL;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR</span>\n    tempo : TON;          <span class=\"c\">// instance dédiée à ce FB</span>\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #tempo(<span class=\"n\">IN</span> := #entreeBrute, <span class=\"n\">PT</span> := T#50ms);\n    #entreeFiltree := #tempo.Q;\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"c\">// Un réseau suffit : le bloc TON encapsule toute la logique.</span>\n\n<span class=\"r\">Réseau 1 — Filtrage par temporisation à l'enclenchement</span>\n              ┌──────────────┐\n              │     TON      │\n              │  \"tempo\"     │\n──────────────┤IN         Q  ├──────────────( entreeFiltree )\n entreeBrute  │              │\n     T#50ms───┤PT        ET  │\n              └──────────────┘\n\n<span class=\"c\">// entreeFiltree ne passe à 1 que si entreeBrute est resté à 1\n// sans interruption pendant 50 ms.</span>"
+  },
+  "source": "Documentation TIA Portal — instructions de temporisation IEC 61131-3 (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}

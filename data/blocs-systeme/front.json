@@ -1,0 +1,41 @@
+{
+  "id": "front",
+  "ordre": 3,
+  "nom": "Détection de front",
+  "sousTitre": "R_TRIG, F_TRIG",
+  "resume": "Transformer un état stable en une impulsion d'un seul cycle — la base de toute logique « une seule fois par événement », et l'erreur la plus fréquente chez qui l'ignore.",
+  "intro": "Un capteur ou un bouton reste souvent VRAI pendant plusieurs cycles automate d'affilée. Sans détection de front, une condition testée directement sur cet état déclenche l'action qu'elle commande à chaque cycle tant que l'état reste vrai — pas une seule fois. R_TRIG et F_TRIG isolent le changement d'état lui-même, indépendamment de sa durée. Chaque instance a sa propre mémoire d'un cycle à l'autre : c'est ce qui permet de « se souvenir » de l'état précédent pour détecter le changement.",
+  "blocs": [
+    {
+      "nom": "R_TRIG",
+      "fonction": "Détection de front montant",
+      "description": "Q passe à VRAI pendant exactement un cycle lorsque CLK passe de FAUX à VRAI, puis retombe à FAUX même si CLK reste VRAI. Nécessite une instance (DB) pour mémoriser l'état de CLK au cycle précédent.",
+      "parametres": [
+        ["CLK", "BOOL", "Signal à surveiller"],
+        ["Q", "BOOL", "Impulsion d'un cycle au front montant de CLK"]
+      ],
+      "quand": "Incrémenter un compteur personnalisé une seule fois par appui, ou déclencher une temporisation une seule fois par cycle machine plutôt qu'à chaque scrutation.",
+      "piege": "Tester directement CLK dans une condition (sans passer par R_TRIG ou un bit de mémoire équivalent) redéclenche l'action à chaque cycle tant que CLK reste vrai — c'est l'erreur la plus fréquente en début d'apprentissage du langage."
+    },
+    {
+      "nom": "F_TRIG",
+      "fonction": "Détection de front descendant",
+      "description": "Symétrique de R_TRIG : Q passe à VRAI pendant un cycle lorsque CLK passe de VRAI à FAUX.",
+      "parametres": [
+        ["CLK", "BOOL", "Signal à surveiller"],
+        ["Q", "BOOL", "Impulsion d'un cycle au front descendant de CLK"]
+      ],
+      "quand": "Détecter le relâchement d'un bouton poussoir, ou la fin d'un mouvement signalée par la retombée d'un capteur de fin de course."
+    }
+  ],
+  "pieges": [
+    { "t": "Une instance par signal surveillé", "d": "R_TRIG et F_TRIG mémorisent l'état du cycle précédent dans leur propre instance. Réutiliser la même instance pour surveiller deux signaux différents (par exemple en copiant un réseau sans changer le nom du DB) ne détecte correctement le front que sur l'un des deux, de façon imprévisible selon l'ordre d'évaluation." },
+    { "t": "Alternative plus légère en CONT : les contacts P et N", "d": "Un contact « P » (front montant) ou « N » (front descendant) posé directement sur un fil produit le même résultat qu'un R_TRIG/F_TRIG, mais mémorise son état dans un simple bit interne plutôt que dans une instance de bloc — pratique pour une détection ponctuelle sans vouloir déclarer un DB dédié. Le résultat logique est identique." },
+    { "t": "Un redémarrage à chaud peut générer un faux front", "d": "Si CLK est déjà VRAI au premier cycle après une remise en RUN, l'instance non initialisée peut, selon son état de mémoire au démarrage, interpréter cela comme un front montant. À vérifier si l'action déclenchée est sensible (démarrage moteur, par exemple)." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Déclenche une alarme une seule fois quand le niveau franchit le\n// seuil haut, plutôt qu'en continu tant que le seuil est dépassé.</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_AlarmeUneFois\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    niveauHaut : BOOL;   <span class=\"c\">// ex. bit HIGH remonté par le capteur</span>\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    impulsionAlarme : BOOL;   <span class=\"c\">// un seul cycle par dépassement</span>\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR</span>\n    detecteur : R_TRIG;\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #detecteur(<span class=\"n\">CLK</span> := #niveauHaut);\n    #impulsionAlarme := #detecteur.Q;\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"r\">Réseau 1 — Impulsion unique sur franchissement de seuil</span>\n              ┌──────────────┐\n              │    R_TRIG    │\n              │ \"detecteur\"  │\n──────────────┤CLK        Q  ├──────────────( impulsionAlarme )\n niveauHaut   │              │\n              └──────────────┘\n\n<span class=\"c\">// impulsionAlarme ne reste à 1 qu'un cycle, même si niveauHaut\n// reste à 1 pendant des heures.</span>"
+  },
+  "source": "Documentation TIA Portal — instructions de détection de front IEC 61131-3 (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}

@@ -43,6 +43,11 @@ function buildDB() {
   const appareils = fs.readdirSync(appareilsDir)
     .filter(f => f.endsWith('.json'))
     .map(f => readJson(path.join(appareilsDir, f)));
+  const blocsSystemeDir = path.join(DATA, 'blocs-systeme');
+  const blocsSysteme = fs.readdirSync(blocsSystemeDir)
+    .filter(f => f.endsWith('.json'))
+    .map(f => readJson(path.join(blocsSystemeDir, f)))
+    .sort((a, b) => a.ordre - b.ordre);
 
   return {
     automates: taxonomie.automates,
@@ -53,7 +58,8 @@ function buildDB() {
     maitres: taxonomie.maitres,
     procedures,
     famillesIodd,
-    appareils
+    appareils,
+    blocsSysteme
   };
 }
 
@@ -158,6 +164,41 @@ function familyHtml(DB, d) {
     <ul style="margin:0;padding-left:18px">${items}</ul></div>`;
 }
 
+function blocBreadcrumbHtml(DB, bs) {
+  const a = DB.automates.find(x => x.id === 'siemens');
+  const seg = (txt) => `<span class="now">${Render.esc(txt)}</span>`;
+  return [
+    `<a href="/">Accueil</a>`,
+    seg(a.nom), seg('Bloc système'), seg(bs.nom)
+  ].join('<span class="sep">›</span>');
+}
+
+/* ── une page statique par fiche de bloc système, indépendante de tout appareil ── */
+function buildBlocPages(db, distDir, assetV) {
+  let count = 0;
+  for (const bs of db.blocsSysteme) {
+    const meta = Render.metaForBloc(bs);
+    const articleHtml = Render.buildBlocArticle(bs);
+
+    const html = pageTemplate({
+      title: meta.title,
+      description: meta.description,
+      canonical: SITE_URL + meta.path,
+      breadcrumb: blocBreadcrumbHtml(db, bs),
+      articleHtml,
+      otherModesHtml: '',
+      familyHtml: '',
+      assetV
+    });
+
+    const outDir = path.join(distDir, meta.path);
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, 'index.html'), html);
+    count++;
+  }
+  return count;
+}
+
 /* ── une page statique par appareil × mode de raccordement ── */
 function buildGuidePages(db, distDir, assetV) {
   let count = 0;
@@ -206,10 +247,12 @@ function build() {
 
   buildMaquette(db, distDir, assetV);
   const pageCount = buildGuidePages(db, distDir, assetV);
+  const blocPageCount = buildBlocPages(db, distDir, assetV);
 
-  console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD`);
+  console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD, ${db.blocsSysteme.length} blocs système`);
   console.log(`→ dist/index.html (maquette interactive)`);
-  console.log(`→ ${pageCount} pages statiques générées`);
+  console.log(`→ ${pageCount} pages statiques générées (appareils)`);
+  console.log(`→ ${blocPageCount} pages statiques générées (blocs système)`);
 }
 
 build();

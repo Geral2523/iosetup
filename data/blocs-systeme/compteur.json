@@ -1,0 +1,62 @@
+{
+  "id": "compteur",
+  "ordre": 2,
+  "nom": "Compteurs",
+  "sousTitre": "CTU, CTD, CTUD",
+  "resume": "Compter des fronts en incrémental, en décrémental, ou dans les deux sens — sans réécrire soi-même la logique de comptage à chaque programme.",
+  "intro": "Comme les temporisateurs, ce sont des blocs fonctionnels IEC avec instance propre. Ils comptent des fronts logiciels, au rythme du cycle automate — pas des impulsions haute fréquence. Pour du comptage rapide (codeur, débitmètre à sortie impulsionnelle au-delà de quelques centaines de Hz), il faut un compteur rapide matériel (HSC), pas ces blocs.",
+  "blocs": [
+    {
+      "nom": "CTU",
+      "fonction": "Comptage incrémental (Count Up)",
+      "description": "Chaque front montant de CU incrémente CV de 1. Q passe à VRAI dès que CV atteint ou dépasse PV. R remet CV à 0 et est prioritaire sur CU : si les deux sont vrais au même cycle, le comptage repart de zéro.",
+      "parametres": [
+        ["CU", "BOOL", "Entrée de comptage — un front montant = +1"],
+        ["R", "BOOL", "Remise à zéro de CV, prioritaire sur CU"],
+        ["PV", "INT", "Valeur de consigne (seuil)"],
+        ["Q", "BOOL", "Sortie — VRAI quand CV ≥ PV"],
+        ["CV", "INT", "Valeur courante du comptage"]
+      ],
+      "quand": "Compter des pièces passant devant un capteur de présence sur un convoyeur jusqu'à un seuil de lot, ou compter des cycles machine avant une maintenance préventive.",
+      "piege": "R prioritaire sur CU : si le signal de remise à zéro et le signal de comptage arrivent vrais sur le même cycle, CV repasse à 0 sans jamais tenir compte du front de CU de ce cycle-là."
+    },
+    {
+      "nom": "CTD",
+      "fonction": "Comptage décrémental (Count Down)",
+      "description": "Chaque front montant de CD décrémente CV de 1. Q passe à VRAI quand CV atteint 0 ou moins. LD charge CV avec la valeur PV, indépendamment du comptage en cours — c'est l'équivalent du R du CTU, mais pour repartir d'une valeur de départ plutôt que de zéro.",
+      "parametres": [
+        ["CD", "BOOL", "Entrée de comptage — un front montant = −1"],
+        ["LD", "BOOL", "Chargement de CV avec PV"],
+        ["PV", "INT", "Valeur de départ à charger via LD"],
+        ["Q", "BOOL", "Sortie — VRAI quand CV ≤ 0"],
+        ["CV", "INT", "Valeur courante du comptage"]
+      ],
+      "quand": "Décompte de stock à chaque sortie de pièce d'un magasin, ou compte à rebours d'un nombre de cycles restants avant arrêt programmé.",
+      "piege": "Sans un LD initial, CV démarre à 0 : un CTD non initialisé passe Q à VRAI dès la mise en route, avant même le premier comptage."
+    },
+    {
+      "nom": "CTUD",
+      "fonction": "Comptage bidirectionnel (Count Up/Down)",
+      "description": "Combine les deux sens dans un seul bloc : CU incrémente, CD décrémente, sur la même valeur CV. QU et QD sont les deux sorties de seuil (haute et basse), R et LD gardent le même rôle que dans CTU et CTD.",
+      "parametres": [
+        ["CU / CD", "BOOL", "Comptage montant / descendant"],
+        ["R", "BOOL", "Remise à zéro de CV, prioritaire"],
+        ["LD", "BOOL", "Chargement de CV avec PV"],
+        ["PV", "INT", "Valeur de consigne / de chargement"],
+        ["QU / QD", "BOOL", "VRAI si CV ≥ PV / si CV ≤ 0"],
+        ["CV", "INT", "Valeur courante, modifiable dans les deux sens"]
+      ],
+      "quand": "Suivi de position par comptage d'impulsions dans les deux sens — par exemple un axe qui va-et-vient sans codeur absolu, où chaque capteur de sens incrémente ou décrémente le même total.",
+      "piege": "CTUD reste un compteur logiciel cyclique : à cadence élevée, deux fronts CU qui arrivent dans le même cycle automate ne comptent qu'une fois. Pour du comptage rapide, c'est un compteur matériel (HSC) qu'il faut configurer, pas ce bloc."
+    }
+  ],
+  "pieges": [
+    { "t": "CV est un INT — débordement silencieux", "d": "Sur S7-1200/1500, CV est borné à la plage −32768…32767 pour un compteur INT standard. Un dépassement n'arrête rien et ne remonte pas d'erreur visible : CV boucle simplement. À sécuriser par un test de plage si le comptage peut monter haut." },
+    { "t": "Le comptage est basé sur le front, pas sur l'état", "d": "CU et CD ne comptent que sur un front montant détecté d'un cycle au suivant. Si l'entrée change deux fois plus vite que le temps de cycle automate, un ou plusieurs événements sont perdus sans avertissement — vérifier le temps de cycle face à la cadence réelle du process." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Comptage de pièces sur un convoyeur, lot de 24, remise à zéro\n// manuelle par bouton poussoir.</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_ComptageLot\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    detectionPiece : BOOL;   <span class=\"c\">// capteur de présence, un front par pièce</span>\n    rearmement     : BOOL;   <span class=\"c\">// bouton poussoir opérateur</span>\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    lotComplet : BOOL;\n    nbPieces   : INT;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR</span>\n    compteur : CTU;\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #compteur(<span class=\"n\">CU</span> := #detectionPiece, <span class=\"n\">R</span> := #rearmement, <span class=\"n\">PV</span> := 24);\n    #lotComplet := #compteur.Q;\n    #nbPieces   := #compteur.CV;\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"r\">Réseau 1 — Comptage de pièces jusqu'au seuil du lot</span>\n              ┌──────────────┐\n              │     CTU      │\n              │  \"compteur\"  │\n──────────────┤CU         Q  ├──────────────( lotComplet )\n detectionPiece│              │\n──────────────┤R         CV  ├──────────────[ nbPieces ]\n rearmement   │              │\n         24───┤PV            │\n              └──────────────┘\n\n<span class=\"c\">// lotComplet passe à 1 dès que nbPieces atteint 24.\n// rearmement (prioritaire) remet nbPieces à 0.</span>"
+  },
+  "source": "Documentation TIA Portal — instructions de comptage IEC 61131-3 (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}

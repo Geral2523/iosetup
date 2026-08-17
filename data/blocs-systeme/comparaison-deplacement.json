@@ -1,0 +1,53 @@
+{
+  "id": "comparaison-deplacement",
+  "ordre": 4,
+  "nom": "Comparaison et déplacement",
+  "sousTitre": "CMP, MOVE, MOVE_BLK",
+  "resume": "Les briques les plus utilisées de tout programme automate — et les plus invisibles, parce qu'on ne les remarque que lorsqu'elles manquent.",
+  "intro": "Contrairement aux temporisateurs ou aux compteurs, ces instructions n'ont pas d'instance : ce sont des opérations sans mémoire, exécutées à chaque cycle sur les valeurs présentes à leurs entrées. En SCL, la comparaison est même un opérateur du langage plutôt qu'un bloc séparé.",
+  "blocs": [
+    {
+      "nom": "CMP (==, <>, <, >, <=, >=)",
+      "fonction": "Comparaison de deux valeurs",
+      "description": "Compare IN1 et IN2 (de même type) selon la relation choisie et renvoie un booléen. En CONT, c'est un contact à part entière, câblable comme n'importe quel autre. En SCL, ce n'est pas un bloc à appeler : c'est directement un opérateur dans une expression (IF x > seuil THEN …).",
+      "parametres": [
+        ["IN1", "selon type", "Première valeur à comparer"],
+        ["IN2", "selon type", "Seconde valeur à comparer, même type que IN1"],
+        ["sortie", "BOOL", "VRAI si la relation choisie est vérifiée"]
+      ],
+      "quand": "Tester le franchissement d'un seuil, valider qu'une valeur reste dans une plage (deux comparateurs combinés), déclencher une alarme de dépassement.",
+      "piege": "Comparer deux REAL avec une égalité stricte (==) est risqué : les arrondis en virgule flottante font qu'un calcul censé donner exactement une valeur tombe en réalité à quelques millièmes près. Préférer un test de plage — ABS(x − cible) < tolérance — plutôt qu'une égalité exacte."
+    },
+    {
+      "nom": "MOVE",
+      "fonction": "Transfert d'une valeur",
+      "description": "Copie la valeur de IN vers OUT1. Le type de destination doit être compatible ; TIA effectue certaines conversions implicites (par exemple INT vers DINT) mais pas toutes — une conversion explicite (CONV) reste nécessaire dans les cas ambigus, comme vers REAL.",
+      "parametres": [
+        ["IN", "selon type", "Valeur source"],
+        ["OUT1", "selon type", "Variable de destination"]
+      ],
+      "quand": "Écrire une consigne fixe dans une variable, recopier une valeur lue vers une variable de travail avant de la modifier, initialiser un paramètre au démarrage."
+    },
+    {
+      "nom": "MOVE_BLK",
+      "fonction": "Transfert d'un bloc de données (tableau)",
+      "description": "Copie COUNT éléments consécutifs du tableau IN vers le tableau OUT, à partir du premier élément de chacun. Utile pour dupliquer un tableau entier sans écrire une boucle FOR élément par élément.",
+      "parametres": [
+        ["IN", "ARRAY", "Tableau source"],
+        ["COUNT", "UDINT", "Nombre d'éléments à copier"],
+        ["OUT", "ARRAY", "Tableau destination"]
+      ],
+      "quand": "Copier un tableau de mesures vers un buffer d'historique, dupliquer une recette de production dans une zone de travail avant de la modifier sans toucher à l'original.",
+      "piege": "COUNT n'est pas vérifié par rapport à la taille réelle du tableau destination à la compilation. Un COUNT trop grand écrit au-delà de la zone allouée et peut provoquer un arrêt CPU (STOP sur erreur d'accès mémoire) à l'exécution — toujours borner COUNT à la taille du plus petit des deux tableaux."
+    }
+  ],
+  "pieges": [
+    { "t": "Une plage se teste avec deux comparateurs, pas un seul", "d": "Vérifier qu'une valeur reste « entre min et max » demande deux contacts CMP en série (x >= min ET x <= max), pas un bloc dédié à la plage — ce bloc n'existe pas nativement." },
+    { "t": "MOVE ne vérifie pas le dépassement de type", "d": "Copier un DINT trop grand vers un INT tronque silencieusement la valeur sans erreur visible. Vérifier la compatibilité des plages avant de câbler un MOVE entre deux types de tailles différentes." }
+  ],
+  "exemple": {
+    "scl": "<span class=\"c\">// Seuil haut sur une valeur de process, avec recopie de la valeur\n// courante dans une variable de travail au moment du dépassement.</span>\n\n<span class=\"k\">FUNCTION_BLOCK</span> <span class=\"n\">\"FB_SeuilHaut\"</span>\n<span class=\"k\">VAR_INPUT</span>\n    valeur      : REAL;\n    seuilHaut   : REAL := 80.0;\n<span class=\"k\">END_VAR</span>\n<span class=\"k\">VAR_OUTPUT</span>\n    depassement : BOOL;\n    valeurAuDepassement : REAL;\n<span class=\"k\">END_VAR</span>\n\n<span class=\"k\">BEGIN</span>\n    #depassement := #valeur &gt; #seuilHaut;\n    <span class=\"k\">IF</span> #depassement <span class=\"k\">THEN</span>\n        #valeurAuDepassement := #valeur;   <span class=\"c\">// équivalent d'un MOVE</span>\n    <span class=\"k\">END_IF</span>;\n<span class=\"k\">END_FUNCTION_BLOCK</span>",
+    "lad": "<span class=\"r\">Réseau 1 — Comparaison de seuil</span>\n      ┌──────────────┐\n      │      &gt;       │\n──────┤     Real     ├──────────────┬───( depassement )\n      │IN1     valeur│              │\n      │IN2 seuilHaut │              │\n      └──────────────┘              │\n                                     │\n<span class=\"r\">Réseau 2 — Recopie de la valeur au moment du dépassement</span>\n   depassement   ┌──────────────┐\n────────┤ ├──────┤     MOVE     │\n              IN─┤    valeur    ├───[ valeurAuDepassement ]\n                 └──────────────┘"
+  },
+  "source": "Documentation TIA Portal — instructions de comparaison et de déplacement (SIMATIC S7-1200/S7-1500), aide en ligne Siemens."
+}
