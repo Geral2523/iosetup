@@ -2,11 +2,26 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const Render = require('./render.js');
 
 const ROOT = path.join(__dirname, '..');
 const DATA = path.join(ROOT, 'data');
 const SITE_URL = 'https://iosetup.com';
+
+/* Cache-busting : un hash court du contenu des assets statiques (CSS, JS
+   partagé, logo, favicons). Injecté en ?v=... sur leurs URLs pour qu'un
+   navigateur ou le cache Cloudflare qui aurait gardé une ancienne version
+   récupère automatiquement la nouvelle au prochain déploiement. */
+function computeAssetVersion(assetsDir) {
+  const hash = crypto.createHash('md5');
+  hash.update(fs.readFileSync(path.join(__dirname, 'styles.css')));
+  hash.update(fs.readFileSync(path.join(__dirname, 'render.js')));
+  for (const f of ['logo.png', 'favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
+    hash.update(fs.readFileSync(path.join(assetsDir, f)));
+  }
+  return hash.digest('hex').slice(0, 10);
+}
 
 function readJson(p) {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -43,7 +58,7 @@ function buildDB() {
 }
 
 /* ── la maquette interactive : un seul fichier, navigable, pratique pour se repérer ── */
-function buildMaquette(db, distDir) {
+function buildMaquette(db, distDir, assetV) {
   const templatePath = path.join(__dirname, 'template.html');
   const template = fs.readFileSync(templatePath, 'utf8');
 
@@ -51,12 +66,14 @@ function buildMaquette(db, distDir) {
   if (!marker.test(template)) {
     throw new Error('Placeholder __DB_JSON__ introuvable dans template.html');
   }
-  const out = template.replace(marker, JSON.stringify(db));
+  const out = template
+    .replace(marker, JSON.stringify(db))
+    .replace(/__ASSET_V__/g, assetV);
   fs.writeFileSync(path.join(distDir, 'index.html'), out);
 }
 
 /* ── chrome de page statique autour de l'article de guide ── */
-function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, otherModesHtml, familyHtml }) {
+function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, otherModesHtml, familyHtml, assetV }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -65,20 +82,20 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 <title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico?v=${assetV}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=${assetV}">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=${assetV}">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=${assetV}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=${assetV}">
 </head>
 <body>
 
 <header>
   <div class="wrap hbar">
-    <a class="logo" href="/" style="text-decoration:none"><img src="/assets/logo.png" alt="IO Setup"></a>
+    <a class="logo" href="/" style="text-decoration:none"><img src="/assets/logo.png?v=${assetV}" alt="IO Setup"></a>
   </div>
 </header>
 
@@ -142,7 +159,7 @@ function familyHtml(DB, d) {
 }
 
 /* ── une page statique par appareil × mode de raccordement ── */
-function buildGuidePages(db, distDir) {
+function buildGuidePages(db, distDir, assetV) {
   let count = 0;
   for (const d of db.appareils) {
     for (const mode in d.raccordements) {
@@ -157,7 +174,8 @@ function buildGuidePages(db, distDir) {
         breadcrumb: breadcrumbHtml(db, d, md),
         articleHtml,
         otherModesHtml: otherModesHtml(db, d, mode),
-        familyHtml: familyHtml(db, d)
+        familyHtml: familyHtml(db, d),
+        assetV
       });
 
       const outDir = path.join(distDir, meta.path);
@@ -184,9 +202,10 @@ function build() {
   for (const f of ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
     fs.copyFileSync(path.join(assetsDir, f), path.join(distDir, f));
   }
+  const assetV = computeAssetVersion(assetsDir);
 
-  buildMaquette(db, distDir);
-  const pageCount = buildGuidePages(db, distDir);
+  buildMaquette(db, distDir, assetV);
+  const pageCount = buildGuidePages(db, distDir, assetV);
 
   console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD`);
   console.log(`→ dist/index.html (maquette interactive)`);
