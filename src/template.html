@@ -62,7 +62,13 @@ function go(v,val){
 }
 const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
       goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
-const back=v=>`<button class="back" onclick="go('${v}')">← Retour</button>`;
+
+/* Retour/breadcrumb : ré-affiche une étape déjà visitée SANS toucher à S.
+   go(v,val) sert à avancer (il enregistre val dans le champ d'état
+   correspondant à l'étape précédente) — l'appeler sans val pour reculer
+   écrasait ce champ avec undefined et cassait l'étape suivante. */
+function backTo(v){window.scrollTo(0,0);render(v);}
+const back=v=>`<button class="back" onclick="backTo('${v}')">← Retour</button>`;
 
 function crumbs(items){
   const c=$('crumbs');
@@ -70,7 +76,7 @@ function crumbs(items){
   c.hidden=false;
   $('crumbsIn').innerHTML=items.map((it,i)=>
     (i?'<span class="sep">›</span>':'')+
-    (it.vue?`<button onclick="go('${it.vue}')">${esc(it.txt)}</button>`:`<span class="now">${esc(it.txt)}</span>`)
+    (it.vue?`<button onclick="backTo('${it.vue}')">${esc(it.txt)}</button>`:`<span class="now">${esc(it.txt)}</span>`)
   ).join('');
 }
 function tiles(list,fn,topId){
