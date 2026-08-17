@@ -115,7 +115,7 @@ function render(v){
   }
   if(v==='marque'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}]);
-    const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c'}[S.type];
+    const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c',vitesse:'siemens-c'}[S.type];
     app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(DB.marques,'goModele',top);return;
   }
   if(v==='modele'){

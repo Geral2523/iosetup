@@ -65,7 +65,20 @@ Ajouter un capteur de la famille `keyence-fr` = créer un fichier dans `data/app
 aucune ligne de code à toucher — la page statique et les liens de famille sont générés
 automatiquement.
 
-Le site couvre **8 pages** sans erreur, pour 4 appareils :
+**Nouveau mode : `profinet` (PROFINET natif, sans maître IO-Link).** Premier appareil qui
+s'intègre directement par GSDML plutôt que par IODD — le variateur SINAMICS G120C. La
+structure de données process d'un télégramme PROFIdrive se décrit par **mot PZD**, pas par
+octet/bit comme une IODD : nouveau bloc `blocProfinet()` dans `render.js` (table, pas bande
+d'octets), nouveaux champs sur l'appareil (`gsdml`, `telegrammes`, `telegrammeDocumente`,
+`diagnostics`), et `connSvg()` sait maintenant dessiner un connecteur RJ45 en plus du M12.
+Sources dans `gsdml/` (2 XML GSDML + bmp), fournies par l'utilisateur — la notice
+d'exploitation PDF (caractéristiques électriques, brochage bornier, connecteur X150) a été
+récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de la machine).
+**Le détail bit à bit de STW1/ZSW1 n'est pas dans le GSD** (c'est le profil PROFIdrive,
+un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
+dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
+
+Le site couvre **9 pages** sans erreur, pour 5 appareils :
 
 | Appareil | Marque | Type | Modes de raccordement |
 |---|---|---|---|
@@ -74,6 +87,9 @@ Le site couvre **8 pages** sans erreur, pour 4 appareils :
 | FR-LM20 | KEYENCE | Niveau radar longue portée | IO-Link |
 | FR-LS20 | KEYENCE | Niveau radar sanitaire | IO-Link |
 | SIRIUS 8WD46 | Siemens | Colonne de signalisation | IO-Link · conventionnel 24 V |
+| SINAMICS G120C | Siemens | Variateur de vitesse | PROFINET natif |
+
+**G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
 Fichiers IODD sources dans `iodd/` (ifm LDH292 + les trois KEYENCE de la gamme FR).
 
@@ -136,13 +152,15 @@ Un actionneur par **fonction** (signalisation, vannes, vérins).
 
 ---
 
-## Trois procédures d'intégration, pas une
+## Cinq procédures d'intégration, pas une
 
-- **`iolink-profinet`** — maître IO-Link + GSDML, configuration dans TIA
+- **`iolink-profinet`** — maître IO-Link + GSDML **du maître**, configuration dans TIA
 - **`analogique-ai`** — carte d'entrées analogiques, NORM_X / SCALE_X, aucun IO-Link
 - **`iolink-s7pct`** — passe par **S7 Port Configuration Tool**, un logiciel séparé
   à installer, avec son propre catalogue et son propre « charger dans les appareils »
 - **`tor-di`** — sorties de commutation sur carte d'entrées TOR
+- **`profinet-drive`** — pas de maître intermédiaire : GSDML **de l'appareil final**
+  lui-même, télégramme PROFIdrive choisi dans ses propriétés, mise en service Startdrive
 
 ---
 

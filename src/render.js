@@ -30,6 +30,16 @@ function rac(DB, d, mode) {
 
 /* ── connecteur dessiné selon le nombre de broches ── */
 function connSvg(r) {
+  if (/RJ45/.test(r.connecteur)) {
+    const c = {}; r.pinout.forEach(p => c[p.n] = p.hex);
+    let s = `<svg viewBox="0 0 160 90" aria-label="Brochage RJ45"><rect x="10" y="15" width="140" height="55" rx="4" fill="none" stroke="#141A20" stroke-width="2.5"/>`;
+    for (let i = 0; i < 8; i++) {
+      const x = 24 + i * 16;
+      s += `<rect x="${x - 5}" y="24" width="10" height="26" fill="${c[i + 1] || '#EDEEEA'}" stroke="#141A20" stroke-width="1.2"/>`;
+      s += `<text x="${x}" y="63" text-anchor="middle" font-family="IBM Plex Mono" font-size="9">${i + 1}</text>`;
+    }
+    return s + '</svg>';
+  }
   const huit = /8/.test(r.connecteur);
   if (!huit) {
     const c = {}; r.pinout.forEach(p => c[p.n] = p.hex);
@@ -196,6 +206,51 @@ function blocTor(r, num) {
      Côté automate, vous ne lisez que des bits. Aucune conversion, aucun bloc de calcul — mais aucune traçabilité
      du paramétrage dans le projet non plus.</div>
    </section>`;
+}
+
+/* ── bloc données process PROFINET natif (télégramme PROFIdrive) ──
+   Contrairement à l'IODD, un GSDML ne décrit ses données que par mot
+   PZD, pas par bit — la structure est donc une table, pas une bande
+   d'octets. Le détail bit à bit de STW1/ZSW1 relève du profil
+   PROFIdrive, un standard séparé du GSD de cet appareil : signalé
+   explicitement plutôt que présenté comme vérifié depuis le GSD. */
+function blocProfinet(r, num) {
+  let h = `<section class="blk"><h2 data-n="${num()}">Structure des données process</h2>`;
+  if (r.gsdml) {
+    h += `<table style="margin-bottom:18px"><tbody>
+      <tr><th style="width:33%">Fichier GSDML</th><td class="mono">${esc(r.gsdml.fichier)}</td></tr>
+      <tr><th>Version · date</th><td>${esc(r.gsdml.version)} — ${esc(r.gsdml.date)}</td></tr>
+      <tr><th>VendorID · DeviceID</th><td class="mono">${esc(r.gsdml.vendorId)} · ${esc(r.gsdml.deviceId)}</td></tr>
+      <tr><th>Variantes couvertes</th><td>${esc(r.gsdml.variantes)}</td></tr>
+      </tbody></table>`;
+  }
+  if (r.telegrammes) {
+    h += `<h2 data-n="${num()}" style="margin-top:28px">Télégrammes disponibles</h2>
+     <p style="margin:0 0 12px;color:var(--ink-2);font-size:13.5px">Le choix du télégramme se fait dans les propriétés de l’appareil sous TIA Portal — rien à coder, c’est déclaratif. Celui documenté ci-dessous est indiqué en premier.</p>
+     <table><thead><tr><th>Télégramme</th><th>Mots PZD (in/out)</th><th>Description</th></tr></thead>
+     <tbody>${r.telegrammes.map(t => `<tr><td${t.id === r.telegrammeDocumente ? ' style="color:var(--signal-deep);font-weight:600"' : ''}>${esc(t.id)}${t.id === r.telegrammeDocumente ? ' ←' : ''}</td><td class="num">${esc(t.pzd)}</td><td>${esc(t.desc)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  if (r.donnees) {
+    h += `<h2 data-n="${num()}" style="margin-top:28px">Mots PZD du télégramme documenté</h2>
+     <table><thead><tr><th>Mot</th><th>Sens</th><th>Nom</th><th>Type</th><th>Unité / échelle</th></tr></thead>
+     <tbody>${r.donnees.map(x => `<tr><td class="num">PZD${x.pzd}</td>
+       <td>${x.sens === 'sortie' ? '→ Écriture (CPU → variateur)' : '← Lecture (variateur → CPU)'}</td>
+       <td>${esc(x.nom)}</td><td class="num">${esc(x.type)}</td>
+       <td>${x.unite ? esc(x.unite) : '—'}</td></tr>`).join('')}</tbody></table>
+     <div class="note warn"><b>Le détail bit à bit n’est pas dans le GSD</b>
+       Le GSDML nomme chaque mot (« mot de commande ou consigne », « mot d’état ou mesure ») mais ne détaille pas
+       la signification de chaque bit — celle-ci vient du profil PROFIdrive, un standard séparé de ce document.
+       Les bits les plus universellement documentés — STW1 bit 0 (Marche/Arrêt1), ZSW1 bits 0 à 3 (prêt à
+       l’enclenchement, prêt, fonctionnement activé, défaut) — sont repris ci-dessous en code ; pour le reste,
+       se reporter à la liste des paramètres du variateur ou au profil PROFIdrive.</div>`;
+  }
+  if (r.diagnostics) {
+    h += `<h2 data-n="${num()}" style="margin-top:28px">Diagnostics PROFIdrive</h2>
+     <p style="margin:0 0 12px;color:var(--ink-2);font-size:13.5px">Codes de diagnostic génériques, remontés en cyclique sans lecture acyclique nécessaire.</p>
+     <table><thead><tr><th style="width:34%">Diagnostic</th><th>Cause et action</th></tr></thead>
+     <tbody>${r.diagnostics.map(x => `<tr><th>${esc(x.nom)}</th><td>${esc(x.aide)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  return h + '</section>';
 }
 
 /* ── bloc programmation à onglets ── */
@@ -478,6 +533,71 @@ function codeLadAnalog(d) {
 <span class="c">// NORM_X ramène la valeur brute entre 0,0 et 1,0.
 // SCALE_X l'étale ensuite sur la plage physique du réservoir.</span>`;
 }
+function codeSclProfinet(d, r) {
+  return `<span class="c">// ${d.ref} — télégramme PROFIdrive standard 1 (PZD 2/2)
+// Sortie (CPU → variateur) : STW1 (mot de commande) + NSOLL_A (consigne)
+// Entrée (variateur → CPU) : ZSW1 (mot d'état) + NIST_A (vitesse réelle)
+// ⚠ Seuls les bits STW1.0 et ZSW1.0-3 sont du standard PROFIdrive
+//   universellement documenté — le reste dépend du profil complet.</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref}"</span>
+<span class="k">VAR_INPUT</span>
+    zsw1        : WORD;   <span class="c">// mot d'état, lu depuis le variateur</span>
+    nistA       : INT;    <span class="c">// vitesse réelle</span>
+    consigneOn  : BOOL;   <span class="c">// commande "marche" venant du programme</span>
+    consigneVit : INT;    <span class="c">// consigne de vitesse à envoyer</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    stw1        : WORD;   <span class="c">// mot de commande, à écrire vers le variateur</span>
+    nsollA      : INT;    <span class="c">// consigne, à écrire vers le variateur</span>
+    pretEnclenchement : BOOL;   <span class="c">// ZSW1.0</span>
+    pret              : BOOL;   <span class="c">// ZSW1.1</span>
+    enMarche          : BOOL;   <span class="c">// ZSW1.2 — fonctionnement activé</span>
+    defaut            : BOOL;   <span class="c">// ZSW1.3</span>
+<span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Lecture : décodage des 4 bits d'état les plus standards ----</span>
+    #pretEnclenchement := #zsw1.%X0;
+    #pret              := #zsw1.%X1;
+    #enMarche          := #zsw1.%X2;
+    #defaut            := #zsw1.%X3;
+
+    <span class="c">// ---- Écriture : commande minimale Marche/Arrêt1 (STW1 bit 0) ----
+    // Une séquence de démarrage PROFIdrive complète (activation
+    // progressive des bits ON, enable operation, etc.) suit le profil
+    // standard — non détaillée ici, à confirmer sur le variateur.</span>
+    #stw1.%X0 := #consigneOn;
+    #nsollA   := #consigneVit;
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadProfinet(d, r) {
+  return `<span class="c">// ${d.ref} — adresses %IW/%QW à adapter à la plage attribuée par TIA.</span>
+
+<span class="r">Réseau 1 — Décodage des bits d'état standards (ZSW1)</span>
+   zsw1.%X0
+────┤ ├──────────────────────────────( pretEnclenchement )
+
+   zsw1.%X1
+────┤ ├──────────────────────────────( pret )
+
+   zsw1.%X2
+────┤ ├──────────────────────────────( enMarche )
+
+   zsw1.%X3
+────┤ ├──────────────────────────────( defaut )
+
+<span class="r">Réseau 2 — Commande Marche/Arrêt1 (STW1 bit 0)</span>
+   consigneOn
+────┤ ├──────────────────────────────( stw1.%X0 )
+
+<span class="r">Réseau 3 — Consigne de vitesse (mot entier, pas de mise à l'échelle)</span>
+      ┌──────────────┐
+      │     MOVE     │
+──────┤     Int      ├──────────( nsollA )
+      │IN  consigneVit│
+      └──────────────┘`;
+}
 
 /* ══════════════════════════════════════════════════════════
    ASSEMBLAGE D'UN GUIDE — utilisé par la SPA (maquette
@@ -555,12 +675,14 @@ function buildGuideArticle(DB, d, mode) {
   if (mode === 'iolink' && r.donnees) P.push(blocIolink(r, num));
   if (mode === 'analogique') P.push(blocAnalog(r, num));
   if (mode === 'tor') P.push(blocTor(r, num));
+  if (mode === 'profinet' && r.donnees) P.push(blocProfinet(r, num));
 
   /* 6 — programmation */
   if (mode === 'iolink' && r.donnees && !r.commande) P.push(r.familleIodd === 'keyence-fr'
     ? blocProg(codeSclFRS(d, r), codeLadFRS(d, r), num)
     : blocProg(codeSclIolink(d, r), codeLadIolink(d, r), num));
   if (mode === 'analogique') P.push(blocProg(codeSclAnalog(d), codeLadAnalog(d), num));
+  if (mode === 'profinet' && r.donnees) P.push(blocProg(codeSclProfinet(d, r), codeLadProfinet(d, r), num));
 
   /* 7 — pièges + sources */
   P.push(`<section class="blk"><h2 data-n="${num()}">Les pièges</h2>
@@ -593,14 +715,17 @@ function metaFor(DB, d, mode) {
     title = `${d.ref} en 4-20 mA dans TIA Portal — câblage et mise à l’échelle`;
   } else if (mode === 'tor') {
     title = `${d.ref} en tout ou rien dans TIA Portal — câblage et lecture des sorties`;
+  } else if (mode === 'profinet') {
+    title = `${d.ref} en PROFINET natif dans TIA Portal — GSD, télégramme et Startdrive`;
   } else {
     title = `${d.ref} en câblage 24 V — raccordement et paramétrage`;
   }
 
   let description = `${d.marqueNom} ${d.ref} — ${d.nom}. Raccordement ${md.nom} : brochage`;
   if (mode === 'iolink' && !sortie) description += ', structure IODD';
+  if (mode === 'profinet') description += ', télégramme PROFIdrive';
   description += `, intégration TIA Portal`;
-  if ((mode === 'iolink' && !sortie) || mode === 'analogique') description += ' et code SCL/CONT';
+  if ((mode === 'iolink' && !sortie) || mode === 'analogique' || mode === 'profinet') description += ' et code SCL/CONT';
   description += '. Pièges de mise en service inclus.';
   if (description.length > 160) description = description.slice(0, 157).replace(/\s+\S*$/, '') + '…';
 
@@ -624,8 +749,9 @@ function primaryMode(d) {
 }
 
 const api = {
-  esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProg,
+  esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
   codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclAnalog, codeLadAnalog,
+  codeSclProfinet, codeLadProfinet,
   buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode
 };
 

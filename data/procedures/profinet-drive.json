@@ -1,0 +1,12 @@
+{
+  "nom": "Variateur PROFINET natif, avec mise en service Startdrive",
+  "etapes": [
+    { "t": "Installer le GSDML du variateur", "d": "Contrairement à un capteur IO-Link, il n’y a pas de maître intermédiaire : c’est le GSD de l’appareil final lui-même qui s’installe dans TIA (Gérer les fichiers de description des appareils). Le projet doit être fermé, sinon TIA refuse." },
+    { "t": "Insérer le variateur dans le projet", "d": "Il apparaît dans le catalogue matériel après installation du GSD. Le glisser dans la vue réseau et le raccorder au système PROFINET de la CPU." },
+    { "t": "Choisir le télégramme", "d": "Dans les propriétés de l’appareil, sélectionner le télégramme PROFIdrive parmi ceux proposés par le GSD (Télégramme standard 1, 20, SIEMENS 350…). C’est ce choix qui fixe le nombre de mots PZD échangés à chaque cycle — pas de code à écrire pour ça, c’est déclaratif." },
+    { "t": "Attribuer le nom d’appareil PROFINET", "d": "Avant toute mise en service, le variateur doit recevoir son nom d’appareil (clic droit → Attribuer un nom d’appareil). Sans ce nom, la CPU ne le reconnaît pas sur le réseau, même bien câblé." },
+    { "t": "Mettre en service avec Startdrive", "d": "Clic droit sur le variateur dans la vue appareil → Démarrer la mise en service. Startdrive est l’outil intégré à TIA Portal pour les appareils SINAMICS : données moteur, macro d’application, réglages de la fonction de sécurité STO si utilisée." },
+    { "t": "Charger la configuration", "d": "Le programme et la configuration matérielle se chargent dans la CPU. Le paramétrage du variateur fait via Startdrive part avec le même chargement — pas d’étape séparée comme pour S7-PCT." },
+    { "t": "Relever la plage d’adresses PZD", "d": "TIA attribue automatiquement une plage de mots d’entrée (%IW, ce que le variateur renvoie : mot d’état ZSW1, vitesse réelle) et de mots de sortie (%QW, ce qu’on lui envoie : mot de commande STW1, consigne de vitesse) selon le télégramme choisi. Sens inversé par rapport à un capteur : ici, l’essentiel du travail consiste à écrire, pas à lire." }
+  ]
+}

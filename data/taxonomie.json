@@ -10,7 +10,7 @@
     { "id": "capteur", "nom": "Capteurs", "note": "Mesure et détection", "actif": true },
     { "id": "actionneur", "nom": "Actionneurs", "note": "Signalisation, vannes, vérins", "actif": true },
     { "id": "camera", "nom": "Caméras", "note": "Vision industrielle", "actif": false },
-    { "id": "variateur", "nom": "Variateurs", "note": "Entraînement moteur", "actif": false },
+    { "id": "variateur", "nom": "Variateurs", "note": "Entraînement moteur", "actif": true },
     { "id": "ihm", "nom": "IHM", "note": "Pupitres et supervision", "actif": false }
   ],
 
@@ -29,14 +29,16 @@
       { "id": "moteur", "nom": "Départs moteur", "note": "Démarreurs, contacteurs communicants", "actif": false }
     ],
     "camera": [],
-    "variateur": [],
+    "variateur": [
+      { "id": "vitesse", "nom": "Variation de vitesse", "note": "Moteurs asynchrones et synchrones", "actif": true }
+    ],
     "ihm": []
   },
 
   "marques": [
     { "id": "ifm", "nom": "ifm electronic", "note": "Documentation en accès libre", "actif": true },
     { "id": "keyence", "nom": "KEYENCE", "note": "Radar 60 GHz, afficheur intégré", "actif": true },
-    { "id": "siemens-c", "nom": "Siemens", "note": "SIRIUS — signalisation et commande", "actif": true },
+    { "id": "siemens-c", "nom": "Siemens", "note": "SIRIUS, SINAMICS — signalisation, commande et variation de vitesse", "actif": true },
     { "id": "sick", "nom": "SICK", "note": "", "actif": false },
     { "id": "balluff", "nom": "Balluff", "note": "", "actif": false }
   ],
@@ -45,7 +47,8 @@
     { "id": "iolink", "nom": "IO-Link", "note": "Via un maître IO-Link — données numériques, paramétrage à distance" },
     { "id": "analogique", "nom": "Analogique", "note": "Boucle 4-20 mA sur carte d’entrées analogiques" },
     { "id": "tor", "nom": "Tout ou rien", "note": "Sorties de commutation sur carte d’entrées TOR" },
-    { "id": "conventionnel", "nom": "Câblage 24 V", "note": "Un fil par segment, paramétrage préalable par USB" }
+    { "id": "conventionnel", "nom": "Câblage 24 V", "note": "Un fil par segment, paramétrage préalable par USB" },
+    { "id": "profinet", "nom": "PROFINET natif", "note": "Intégré directement au bus, sans maître IO-Link — télégramme PROFIdrive" }
   ],
 
   "maitres": [

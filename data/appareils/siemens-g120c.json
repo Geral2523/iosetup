@@ -1,0 +1,95 @@
+{
+  "id": "g120c", "ref": "G120C", "marque": "siemens-c", "marqueNom": "Siemens",
+  "categorie": "variateur", "type": "vitesse", "techno": "Convertisseur de fréquence PROFINET natif",
+  "nom": "Variateur SINAMICS G120C, variateur de vitesse compact — Control Unit CU240C",
+  "resume": "Premier variateur du site : intégration PROFINET native, sans maître IO-Link, via un GSDML et Startdrive.",
+  "source": "Variateur SINAMICS G120C — Instructions de service, éd. 04/2018, FW V4.7 SP10, A5E34263257D AG · GSDML V2.31 du 04.09.2017 (VendorID 0x002A, DeviceID 0x0510)",
+  "specs": [
+    ["Fonction", "Variation de vitesse pour moteurs asynchrones et synchrones triphasés"],
+    ["Référence", "6SL3210-1KExx-xxFx — Control Unit CU240C, firmware V4.5 / V4.6 / V4.7"],
+    ["Tension réseau", "3~ 380 V … 480 V +10 % / −20 %"],
+    ["Fréquence d’entrée", "47 Hz … 63 Hz"],
+    ["Tension de sortie", "3~ 0 V … tension réseau × 0,95"],
+    ["Fréquence de manœuvre", "120 s minimum entre deux mises sous tension réseau"],
+    ["Indice de protection", "IP20 — montage en armoire"],
+    ["Tenue aux courts-circuits (SCCR)", "100 kA"],
+    ["Température ambiante en service", "0 °C … 40 °C sans restriction — jusqu’à 50 °C avec courant de sortie réduit"],
+    ["Humidité relative de l’air", "&lt; 95 % — condensation non admissible"],
+    ["Altitude d’installation", "Jusqu’à 1000 m sans réduction"],
+    ["Interface réseau", "PROFINET IO — RT et IRT, communication acyclique — 2 ports (switch intégré, topologie en ligne)"],
+    ["Profils supportés", "PROFIdrive, PROFIsafe, PROFIenergy"]
+  ],
+  "reglagesAppareil": null,
+  "pieges": [
+    { "t": "Ce GSD couvre le G120C, pas le G120X", "d": "Le fichier GSDML utilisé ici (VendorID 0x002A, DeviceID 0x0510) décrit uniquement la gamme G120C. Le G120X est une gamme différente, avec son propre GSD — vérifier la référence exacte du variateur avant de télécharger le fichier." },
+    { "t": "Sans nom d’appareil PROFINET, rien ne fonctionne", "d": "Le variateur doit recevoir son nom d’appareil PROFINET avant la mise en service (clic droit → Attribuer un nom d’appareil). Câblage correct mais nom non attribué : la CPU ne le voit pas, sans message d’erreur évident côté variateur." },
+    { "t": "IP20 seulement : appareil d’armoire", "d": "Comme la plupart des Control Units SINAMICS compactes, le G120C n’est pas prévu pour une installation hors armoire électrique." },
+    { "t": "120 s avant de ré-enclencher le réseau", "d": "La fréquence de manœuvre maximale est une mise sous tension toutes les 120 s. Couper puis remettre le réseau trop vite sollicite le circuit intermédiaire au-delà de ce qui est prévu." },
+    { "t": "Le sens des données est inversé par rapport à un capteur", "d": "L’essentiel du travail consiste à écrire (mot de commande, consigne de vitesse) plutôt qu’à lire. Un programme copié depuis un guide capteur IO-Link avec les sens inversés ne fera rien tourner." },
+    { "t": "STW1/ZSW1 : le détail des bits n’est pas dans le GSD", "d": "Le GSDML nomme les mots (« mot de commande ou consigne », « mot d’état ou mesure ») mais ne détaille pas chaque bit — cette information vient du profil PROFIdrive, un document séparé. Les 4 bits repris dans le code de cette page (Marche/Arrêt1, prêt à l’enclenchement, prêt, fonctionnement activé, défaut) sont les plus universellement documentés ; pour le reste, se référer à la liste des paramètres du variateur." }
+  ],
+  "raccordements": {
+    "profinet": {
+      "connecteur": "RJ45, 2 ports X150 P1/P2 — switch 2 ports intégré, topologie en ligne possible",
+      "maitre": null, "procedure": "profinet-drive",
+      "cable": "Ethernet industriel, Cat5e minimum",
+      "pinout": [
+        { "n": 1, "coul": "--", "hex": "#E2570F", "nom": "RX+", "fn": "Données de réception +" },
+        { "n": 2, "coul": "--", "hex": "#1668B3", "nom": "RX−", "fn": "Données de réception −" },
+        { "n": 3, "coul": "--", "hex": "#E2570F", "nom": "TX+", "fn": "Données d’émission +" },
+        { "n": 6, "coul": "--", "hex": "#1668B3", "nom": "TX−", "fn": "Données d’émission −" }
+      ],
+      "pinoutComplement": [
+        ["4", "—", "Non utilisé"], ["5", "—", "Non utilisé"],
+        ["7", "—", "Non utilisé"], ["8", "—", "Non utilisé"]
+      ],
+      "gsdml": {
+        "fichier": "GSDML-V2.31-Siemens-Sinamics_G120C-20170904.xml",
+        "version": "V2.31", "date": "04.09.2017",
+        "vendorId": "0x002A (Siemens AG)", "deviceId": "0x0510",
+        "variantes": "CU240C V4.5 / V4.6 / V4.7 — SINAMICS G120C PN"
+      },
+      "telegrammes": [
+        { "id": "Télégramme standard 1", "pzd": "2/2", "desc": "Télégramme standard 1 : régulation de vitesse, longueur PZD 2/2 mots" },
+        { "id": "Télégramme standard 20", "pzd": "2/6", "desc": "Télégramme standard 20 : régulation de vitesse, industrie de procédés, NAMUR, longueur PZD 2/6 mots" },
+        { "id": "Télégramme SIEMENS 350", "pzd": "4/4", "desc": "Télégramme SIEMENS 350 : régulation de vitesse, réduction du couple, longueur PZD 4/4 mots" },
+        { "id": "Télégramme SIEMENS 352", "pzd": "6/6", "desc": "Télégramme SIEMENS 352 : régulation de vitesse, Drive ES PCS7, longueur PZD 6/6 mots" },
+        { "id": "Télégramme SIEMENS 353", "pzd": "PKW+2/2", "desc": "Télégramme SIEMENS 353 : régulation de vitesse, longueur PZD 2/2 mots avec canal PKW 4 mots" },
+        { "id": "Télégramme SIEMENS 354", "pzd": "PKW+6/6", "desc": "Télégramme SIEMENS 354 : régulation de vitesse, PCS7, longueur PZD 6/6 mots avec canal PKW 4 mots" },
+        { "id": "Télégramme libre", "pzd": "6/6", "desc": "Télégramme libre, longueur PZD 6/6 mots" },
+        { "id": "Télégramme libre", "pzd": "8/8", "desc": "Télégramme libre, longueur PZD 8/8 mots" },
+        { "id": "Télégramme libre", "pzd": "12/12", "desc": "Télégramme libre, longueur PZD 12/12 mots" },
+        { "id": "PROFIsafe télégramme 30", "pzd": "F-DI/DO 2/2 octets", "desc": "PROFIsafe télégramme standard 30 : F-DI/DO longueur 2/2 octets — sécurité câblée (Safe Torque Off), en complément d’un télégramme standard" }
+      ],
+      "telegrammeDocumente": "Télégramme standard 1",
+      "donnees": [
+        { "cle": "stw1", "nom": "STW1 — mot de commande", "pzd": 1, "sens": "sortie", "type": "Word" },
+        { "cle": "nsoll", "nom": "NSOLL_A — consigne de vitesse", "pzd": 2, "sens": "sortie", "type": "Int", "unite": "normée selon p2000 (vitesse de référence)" },
+        { "cle": "zsw1", "nom": "ZSW1 — mot d’état", "pzd": 1, "sens": "entree", "type": "Word" },
+        { "cle": "nist", "nom": "NIST_A — vitesse réelle", "pzd": 2, "sens": "entree", "type": "Int", "unite": "normée selon p2000 (vitesse de référence)" }
+      ],
+      "diagnostics": [
+        { "nom": "Défaut matériel/logiciel", "aide": "Un dysfonctionnement du matériel ou du logiciel a été détecté. Effectuer un POWER ON des composants concernés. En cas de persistance du défaut, contacter l’assistance téléphonique." },
+        { "nom": "Défaut réseau", "aide": "Un défaut est apparu dans alimentation réseau (coupure phase, niveau tension, ...). Contrôler réseau et fusibles. Contrôler tension raccordement. Contrôler câblage." },
+        { "nom": "Défaut tension d’alimentation", "aide": "Un défaut a été détecté dans l’alimentation de l’électronique (48 V, 24 V, 5 V, ...). Contrôler câblage. Contrôler niveau tension." },
+        { "nom": "Surtension de circuit intermédiaire", "aide": "La valeur de la tension du circuit intermédiaire est trop élevée et non autorisée. Contrôler le dimensionnement de l’installation (réseau, inductance, tensions). Vérifier le paramétrage de l’alimentation." },
+        { "nom": "Électronique de puissance défectueuse", "aide": "Un état de fonctionnement non autorisé de l’électronique de puissance (surintensité, surchauffe, défaillance de l’IGBT,...) a été détecté. Contrôler le respect des cycles de charge. Contrôler les températures ambiantes (ventilateurs)." },
+        { "nom": "Surchauffe composants électroniques", "aide": "La température du composant a dépassé la limite maximale autorisée. Contrôler la température ambiante / la ventilation de l’armoire électrique." },
+        { "nom": "Défaut à la terre/défaut de phase détecté", "aide": "Un défaut à la terre / défaut de phase a été détecté dans les câbles de puissance ou dans les enroulements du moteur. Contrôler les câbles de puissance (raccordement). Contrôler le moteur." },
+        { "nom": "Surcharge moteur", "aide": "Le moteur a été exploité au-delà des valeurs autorisées (température, courant, couple, ...). Contrôler les cycles de charge et les limites paramétrées. Contrôler la température ambiante / la ventilation du moteur." },
+        { "nom": "Communication avec la commande de niveau supérieur perturbée", "aide": "La communication avec la commande de niveau supérieur (couplage interne, PROFIBUS, PROFINET, ...) est perturbée ou interrompue. Contrôler l’état de la commande de niveau supérieur. Contrôler la liaison / le câblage de communication. Contrôler la configuration du bus / les temps de cycle." },
+        { "nom": "Le canal de surveillance sûre a détecté un défaut", "aide": "Une surveillance du fonctionnement sûr (Safety) a détecté un défaut." },
+        { "nom": "Valeur réelle de position / de vitesse manquante ou erronée", "aide": "Un état de signal non autorisé a été détecté lors de l’exploitation des signaux du capteur (signaux de voie, tops zéro, valeurs absolues,...). Contrôler le capteur/l’état des signaux du capteur. Respecter les fréquences max. admissibles." },
+        { "nom": "Communication interne (DRIVE-CLiQ) perturbée", "aide": "La communication interne entre les composants SINAMICS est perturbée ou interrompue. Contrôler le câblage DRIVE-CLiQ. Veiller à assurer la CEM. Respecter les quantités fonctionnelles / temps de cycle maximaux." },
+        { "nom": "Alimentation perturbée", "aide": "L’alimentation est perturbée ou défaillante. Contrôler l’alimentation et son environnement (réseau, filtres, inductances, fusibles, ...). Contrôler la régulation de l’alimentation." },
+        { "nom": "Hacheur de freinage/Braking Module défectueux", "aide": "Le Braking Module interne ou externe est perturbé ou surchargé (température). Contrôler le raccordement / l’état du Braking Module. Respecter le nombre et la durée admissible des freinages." },
+        { "nom": "Filtre réseau défectueux", "aide": "La surveillance du filtre réseau a détecté une température trop élevée ou un autre état inadmissible. Contrôler la température / la surveillance de température. Contrôler la validité de la configuration (type de filtre, alimentation, seuils)." },
+        { "nom": "Valeur de mesure / état de signal externe en dehors de la plage autorisée", "aide": "Une valeur de mesure / un état de signal en entrée (TOR, analogique, température) présente une valeur inadmissible. Déterminer le signal concerné et le contrôler. Contrôler les seuils paramétrés." },
+        { "nom": "Application/fonction technologique défaillante", "aide": "L’application / la fonction technologique a dépassé un seuil (paramétré - position, vitesse, couple). Déterminer le seuil concerné et le contrôler. Contrôler la consigne provenant de la commande de niveau supérieur." },
+        { "nom": "Défaut dans le paramétrage/la configuration/le déroulement de la mise en service", "aide": "Un défaut a été détecté dans le paramétrage ou dans la séquence de mise en service ou le paramétrage ne correspond pas à la configuration réelle des appareils. Déterminer la cause exacte avec un outil de mise en service et adapter le paramétrage ou la configuration des appareils." },
+        { "nom": "Défaut général au niveau de l’entraînement", "aide": "Défaut groupé, déterminer la cause exacte avec un outil de mise en service." },
+        { "nom": "Dispositif auxiliaire perturbé", "aide": "La surveillance d’un dispositif auxiliaire (transfo d’entrée, refroidissement, ...) a détecté un état inadmissible. Déterminer la cause exacte et contrôler l’appareil concerné." }
+      ]
+    }
+  }
+}
