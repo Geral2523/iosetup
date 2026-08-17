@@ -65,6 +65,10 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 <title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -74,7 +78,7 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 
 <header>
   <div class="wrap hbar">
-    <a class="logo" href="/" style="text-decoration:none">IO<span>Setup</span></a>
+    <a class="logo" href="/" style="text-decoration:none"><img src="/assets/logo.png" alt="IO Setup"></a>
   </div>
 </header>
 
@@ -173,6 +177,13 @@ function build() {
 
   fs.copyFileSync(path.join(__dirname, 'styles.css'), path.join(distDir, 'styles.css'));
   fs.copyFileSync(path.join(__dirname, 'render.js'), path.join(distDir, 'render.js'));
+
+  const assetsDir = path.join(__dirname, 'assets');
+  fs.mkdirSync(path.join(distDir, 'assets'), { recursive: true });
+  fs.copyFileSync(path.join(assetsDir, 'logo.png'), path.join(distDir, 'assets', 'logo.png'));
+  for (const f of ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
+    fs.copyFileSync(path.join(assetsDir, f), path.join(distDir, f));
+  }
 
   buildMaquette(db, distDir);
   const pageCount = buildGuidePages(db, distDir);

@@ -17,8 +17,9 @@ code,.mono,.m{font-family:var(--mono)}
 
 header{background:var(--ink);color:var(--card);border-bottom:3px solid var(--signal);position:sticky;top:0;z-index:50}
 .hbar{display:flex;align-items:center;gap:20px;padding:14px 0;flex-wrap:wrap}
-.logo{font-family:var(--disp);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;white-space:nowrap;border:0;background:none;color:var(--card);padding:0}
+.logo{font-family:var(--disp);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;white-space:nowrap;border:0;background:none;color:var(--card);padding:0;display:inline-flex;align-items:center}
 .logo span{color:var(--signal)}
+.logo img{height:26px;width:auto;display:block}
 .search{flex:1;min-width:220px;position:relative}
 .search input{width:100%;padding:9px 12px 9px 34px;border:1px solid #39434D;border-radius:2px;background:#1E262E;color:var(--card);font-family:var(--mono);font-size:13px}
 .search input::placeholder{color:#6E7A85}
