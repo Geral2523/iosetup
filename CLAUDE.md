@@ -30,7 +30,8 @@ d'un même fabricant, limites fonctionnelles cachées. C'est ça, la valeur du s
 data/appareils/<marque>-<ref>.json     une fiche appareil (5 fichiers)
 data/familles/<id>.json                une famille IODD (keyence-fr)
 data/procedures/<id>.json              une procédure d'intégration (4 fichiers)
-data/blocs-systeme/<id>.json           une fiche « bloc système » TIA Portal (6 fichiers) — nouveau
+data/blocs-systeme/<id>.json           une fiche « bloc système » TIA Portal (6 fichiers)
+data/familles-commande/<id>.json       un bloc de commande IO-Link partagé (actionneurs) — nouveau
 data/taxonomie.json                    automates, catégories, sous-types, marques, modes, maîtres
 iodd/                                  les 4 fichiers IODD bruts
 src/render.js                          logique de rendu partagée (Node + navigateur) : construction
@@ -79,7 +80,7 @@ récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de l
 un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
 dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
 
-Le site couvre **9 pages** sans erreur, pour 5 appareils :
+Le site couvre **11 pages** sans erreur, pour 7 appareils :
 
 | Appareil | Marque | Type | Modes de raccordement |
 |---|---|---|---|
@@ -87,10 +88,25 @@ Le site couvre **9 pages** sans erreur, pour 5 appareils :
 | FR-S01 | KEYENCE | Niveau radar courte portée | IO-Link · analogique · TOR |
 | FR-LM20 | KEYENCE | Niveau radar longue portée | IO-Link |
 | FR-LS20 | KEYENCE | Niveau radar sanitaire | IO-Link |
-| SIRIUS 8WD46 | Siemens | Colonne de signalisation | IO-Link · conventionnel 24 V |
+| SIRIUS 8WD4615-5JH47 | Siemens | Colonne de signalisation, 15 segments | IO-Link · conventionnel 24 V |
+| SIRIUS 8WD4613-5JH47 | Siemens | Colonne de signalisation, 9 segments | IO-Link · conventionnel 24 V |
 | SINAMICS G120C | Siemens | Variateur de vitesse | PROFINET natif |
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
+
+**Famille de commande (nouveau, pendant actionneur de la famille IODD).** Les deux colonnes
+SIRIUS 8WD46 (8WD4615 15 segments, 8WD4613 9 segments) partagent exactement le même bloc
+fonction IO-Link `Control_IOLink8WD46` (entrées/sorties, table couleurs, table effets) —
+seule la géométrie physique (nombre de segments) change. Ce bloc partagé vit dans
+`data/familles-commande/siemens-8wd46-iolink.json`, référencé par chaque appareil via
+`raccordements.iolink.familleCommande` (au lieu de dupliquer `commande` inline). Mécanisme
+symétrique à `familleIodd`/`data/familles/` mais côté sortie : `Render.rac()` fusionne les
+deux indépendamment (un appareil pourrait en théorie avoir les deux), et
+`Render.familySiblings()` matche sur l'une ou l'autre pour générer le lien croisé « Même
+famille » sur les pages statiques. Sources vérifiées depuis les fiches techniques Siemens
+officielles (8WD4613-5JH47 IO-Link et 8WD4613-5JH37 conventionnel, téléchargées et lues en
+PDF — pas de résumé de recherche web fait confiance sans vérification directe, un premier
+essai de résumé automatique s'est avéré faux sur plusieurs valeurs).
 
 Fichiers IODD sources dans `iodd/` (ifm LDH292 + les trois KEYENCE de la gamme FR).
 

@@ -1,0 +1,22 @@
+{
+  "id": "siemens-8wd46-iolink",
+  "nom": "SIRIUS 8WD46 IO-Link",
+  "commande": {
+    "bloc": "Control_IOLink8WD46",
+    "blocNote": "Siemens fournit ce bloc fonction dans un projet TIA téléchargeable avec l’exemple d’application 109818146. Il gère la communication IO-Link : on ne code pas la trame d’octets, on appelle le bloc. Le même bloc pilote toute la gamme 8WD46 IO-Link, quel que soit le nombre de segments physiques de la référence exacte.",
+    "entrees": [
+      ["hwID", "HW_IO", "Identifiant matériel du maître IO-Link, pris dans les constantes système"],
+      ["port", "INT", "Numéro de port sur lequel la colonne est raccordée"],
+      ["moduleInterface", "typeSignalStack8WD46", "Couleur et effet de chacun des 5 segments"]
+    ],
+    "sorties": [
+      ["stackConnectPeriphery", "—", "À raccorder au mot source des données process optiques, relevé dans S7-PCT"],
+      ["done · busy · error · status", "—", "État de la communication"],
+      ["diagDeviceFB", "—", "Diagnostic de l’appareil"]
+    ],
+    "couleurs": [["0", "Couleur personnalisée (RVB réglé dans S7-PCT)"], ["1", "Rouge"], ["2", "Vert"], ["3", "Bleu"],
+      ["4", "Jaune"], ["5", "Jaune clair"], ["6", "Turquoise"], ["7", "Violet"], ["8", "Blanc"]],
+    "effets": [["0", "Éteint"], ["1", "Fixe"], ["2", "Clignotant 3 Hz"], ["3", "Clignotant 2 Hz"], ["4", "Clignotant 1 Hz"],
+      ["5", "Flash simple"], ["6", "Flash double"], ["7", "Flash triple"], ["8", "Rotatif"]]
+  }
+}

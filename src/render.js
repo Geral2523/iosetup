@@ -10,22 +10,31 @@
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/* Fusionne la famille IODD dans le raccordement de l'appareil.
-   C'est ce qui permet d'ajouter un capteur de la même gamme
-   en quelques lignes de données, sans dupliquer la trame. */
+/* Fusionne la famille IODD (capteurs) et/ou la famille de commande
+   (actionneurs) dans le raccordement de l'appareil. C'est ce qui permet
+   d'ajouter un appareil de la même gamme en quelques lignes de données,
+   sans dupliquer la trame ou le bloc fonction de commande. */
 function rac(DB, d, mode) {
   const r = d.raccordements[mode];
-  if (!r || !r.familleIodd) return r;
-  const F = DB.famillesIodd[r.familleIodd], v = r.variante || {};
-  const sub = t => String(t).replace('@VAL2@', v.val2 || '—').replace('@BIT28@', v.bit28 || '—');
-  return Object.assign({}, r, {
-    famille: F.nom,
-    trame: F.trame,
-    donnees: F.donnees.map(x => Object.assign({}, x, { nom: sub(x.nom) })),
-    bitsDiag: F.bitsDiag.map(b => [b[0], b[1], sub(b[2])]),
-    avertissementIodd: F.avertissementIodd,
-    sansGradient: F.sansGradient
-  });
+  if (!r) return r;
+  let out = r;
+  if (r.familleIodd) {
+    const F = DB.famillesIodd[r.familleIodd], v = r.variante || {};
+    const sub = t => String(t).replace('@VAL2@', v.val2 || '—').replace('@BIT28@', v.bit28 || '—');
+    out = Object.assign({}, out, {
+      famille: F.nom,
+      trame: F.trame,
+      donnees: F.donnees.map(x => Object.assign({}, x, { nom: sub(x.nom) })),
+      bitsDiag: F.bitsDiag.map(b => [b[0], b[1], sub(b[2])]),
+      avertissementIodd: F.avertissementIodd,
+      sansGradient: F.sansGradient
+    });
+  }
+  if (r.familleCommande) {
+    const FC = DB.famillesCommande[r.familleCommande];
+    out = Object.assign({}, out, { commande: FC.commande, familleCommandeNom: FC.nom });
+  }
+  return out;
 }
 
 /* ── connecteur dessiné selon le nombre de broches ── */
@@ -788,15 +797,18 @@ function metaFor(DB, d, mode) {
   return { title, description, path: guidePath('siemens', d, mode) };
 }
 
-/* ── appareils de la même famille IODD (hors soi-même) ── */
+/* ── appareils de la même famille (hors soi-même) — IODD (capteurs)
+   ou commande (actionneurs), selon ce que l'appareil déclare ── */
 function familySiblings(DB, d) {
-  let familleId = null;
+  let familleId = null, cle = null;
   for (const mode in d.raccordements) {
-    if (d.raccordements[mode].familleIodd) { familleId = d.raccordements[mode].familleIodd; break; }
+    const r = d.raccordements[mode];
+    if (r.familleIodd) { familleId = r.familleIodd; cle = 'familleIodd'; break; }
+    if (r.familleCommande) { familleId = r.familleCommande; cle = 'familleCommande'; break; }
   }
   if (!familleId) return [];
   return DB.appareils.filter(other => other.id !== d.id && Object.values(other.raccordements)
-    .some(r => r.familleIodd === familleId));
+    .some(r => r[cle] === familleId));
 }
 
 /* ── premier mode disponible pour un appareil (pour pointer un lien) ── */

@@ -39,6 +39,7 @@ function buildDB() {
   const taxonomie = readJson(path.join(DATA, 'taxonomie.json'));
   const procedures = readDir(path.join(DATA, 'procedures'));
   const famillesIodd = readDir(path.join(DATA, 'familles'));
+  const famillesCommande = readDir(path.join(DATA, 'familles-commande'));
   const appareilsDir = path.join(DATA, 'appareils');
   const appareils = fs.readdirSync(appareilsDir)
     .filter(f => f.endsWith('.json'))
@@ -58,6 +59,7 @@ function buildDB() {
     maitres: taxonomie.maitres,
     procedures,
     famillesIodd,
+    famillesCommande,
     appareils,
     blocsSysteme
   };
@@ -159,8 +161,8 @@ function familyHtml(DB, d) {
     const href = Render.guidePath('siemens', s, mode);
     return `<li><a href="${href}">${Render.esc(s.marqueNom)} ${Render.esc(s.ref)}</a> — ${Render.esc(s.nom)}</li>`;
   }).join('');
-  return `<div class="note"><b>Même famille IODD</b>
-    <p style="margin:0 0 8px">Structure de données process identique — utile pour comparer ou changer de portée.</p>
+  return `<div class="note"><b>Même famille</b>
+    <p style="margin:0 0 8px">Même structure de données ou même bloc de commande — utile pour comparer les références de la gamme.</p>
     <ul style="margin:0;padding-left:18px">${items}</ul></div>`;
 }
 
@@ -249,7 +251,7 @@ function build() {
   const pageCount = buildGuidePages(db, distDir, assetV);
   const blocPageCount = buildBlocPages(db, distDir, assetV);
 
-  console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD, ${db.blocsSysteme.length} blocs système`);
+  console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD, ${Object.keys(db.famillesCommande).length} famille(s) de commande, ${db.blocsSysteme.length} blocs système`);
   console.log(`→ dist/index.html (maquette interactive)`);
   console.log(`→ ${pageCount} pages statiques générées (appareils)`);
   console.log(`→ ${blocPageCount} pages statiques générées (blocs système)`);
