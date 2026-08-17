@@ -47,6 +47,13 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const find=(c,id)=>DB[c].find(x=>x.id===id)||{};
 const sousTypes=cat=>DB.sousTypes[cat]||[];
+
+/* Une tuile ne s'affiche que si au moins un appareil existe derrière —
+   pas de « Bientôt » : ajouter un appareil = créer un fichier JSON,
+   pas cocher une case ailleurs. Calculé une fois depuis DB.appareils. */
+const usedCategories=new Set(DB.appareils.map(d=>d.categorie));
+const usedTypes=new Set(DB.appareils.map(d=>d.categorie+'|'+d.type));
+const usedMarques=new Set(DB.appareils.map(d=>d.categorie+'|'+d.type+'|'+d.marque));
 const findType=id=>{for(const k in DB.sousTypes){const t=DB.sousTypes[k].find(x=>x.id===id);if(t)return t}return{}};
 const dev=id=>DB.appareils.find(x=>x.id===id);
 
@@ -97,11 +104,12 @@ function render(v){
     crumbs([]);
     app.innerHTML=head('Étape 1 sur 7','Quel automate ?',
       'Le guide descend jusqu\u2019au matériel exact et jusqu\u2019à son mode de raccordement : câblage, réglages sur l\u2019appareil, intégration TIA Portal, programmation.')
-      +tiles(DB.automates,'goCat')+modelNote();return;
+      +tiles(DB.automates.filter(x=>x.actif),'goCat')+modelNote();return;
   }
   if(v==='categorie'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}]);
-    app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')+tiles(DB.categories,'goType');return;
+    app.innerHTML=back('home')+head('Étape 2 sur 7',a.nom+' — quel matériel ?','')
+      +tiles(DB.categories.filter(x=>usedCategories.has(x.id)),'goType');return;
   }
   if(v==='type'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom}]);
@@ -111,12 +119,13 @@ function render(v){
       estCapteur
         ?'On classe par ce qui est mesuré, pas par la technologie — un niveau se mesure au radar, à l\u2019ultrason ou en capacitif.'
         :'Un actionneur ne mesure rien : on le classe par ce qu\u2019il fait.')
-      +tiles(sousTypes(S.categorie),'goMarque');return;
+      +tiles(sousTypes(S.categorie).filter(x=>usedTypes.has(S.categorie+'|'+x.id)),'goMarque');return;
   }
   if(v==='marque'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}]);
     const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c',vitesse:'siemens-c'}[S.type];
-    app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(DB.marques,'goModele',top);return;
+    const marques=DB.marques.filter(x=>usedMarques.has(S.categorie+'|'+S.type+'|'+x.id));
+    app.innerHTML=back('type')+head('Étape 4 sur 7','Quelle marque ?','')+tiles(marques,'goModele',top);return;
   }
   if(v==='modele'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom,vue:'marque'},{txt:m.nom}]);
@@ -130,10 +139,9 @@ function render(v){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},
             {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref}]);
     const dispo=DB.modes.filter(x=>d.raccordements[x.id]).map(x=>({...x,actif:true}));
-    const absents=DB.modes.filter(x=>!d.raccordements[x.id]).map(x=>({...x,actif:false,note:'Non supporté par cet appareil'}));
     app.innerHTML=back('modele')+head('Étape 6 sur 7','Comment le raccordez-vous ?',
       'C\u2019est ce choix qui détermine la procédure. Un même capteur en IO-Link ou en 4-20 mA n\u2019a rien de commun côté TIA Portal.')
-      +tiles(dispo.concat(absents),'goGuide',dispo[0]&&dispo[0].id);return;
+      +tiles(dispo,'goGuide',dispo[0]&&dispo[0].id);return;
   }
   if(v==='guide')guide();
 }
