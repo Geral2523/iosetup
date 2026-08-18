@@ -68,7 +68,12 @@ function connSvg(r) {
     }
     return s + '</svg>';
   }
-  const huit = /8/.test(r.connecteur);
+  /* Le nombre de broches se lit sur le pinout réellement déclaré, pas sur une
+     recherche de texte dans la description libre du connecteur — un appareil
+     au port natif 8 broches mais raccordé en IO-Link via un adaptateur 4 broches
+     (KEYENCE FD-H20) mentionne « 8 » dans son texte sans que le brochage IO-Link
+     lui-même en compte 8. */
+  const huit = Math.max(...r.pinout.map(p => p.n)) > 4;
   if (!huit) {
     const c = {}; r.pinout.forEach(p => c[p.n] = p.hex);
     return `<svg viewBox="0 0 120 120" aria-label="Brochage M12 4 broches"><circle cx="60" cy="60" r="44" fill="none" stroke="#141A20" stroke-width="2.5"/>
@@ -132,7 +137,7 @@ function blocIolink(r, num) {
    <tbody>${r.donnees.map(x => `<tr><td>${esc(x.nom)}</td><td class="num">${x.bitOffset}</td>
      <td class="num">${x.bits} bits</td><td class="num">${esc(x.type)}</td>
      <td class="num">${x.min !== undefined ? x.min + ' … ' + x.max : '—'}</td>
-     <td class="num">${x.gradient ? '÷ 10 → ' + x.unite : (x.unite ? esc(x.unite) : 'bits d’état')}</td></tr>`).join('')}</tbody></table>`;
+     <td class="num">${x.gradient ? '÷ ' + Math.round(1 / x.gradient) + ' → ' + x.unite : (x.unite ? esc(x.unite) : 'bits d’état')}</td></tr>`).join('')}</tbody></table>`;
 
   /* L'exemple de lecture est propre à chaque appareil (quels octets,
      quelle grandeur) — jamais de texte générique codé en dur ici : sans
@@ -559,6 +564,100 @@ function codeLadFRS(d, r) {
               │IN valeurBrute│    │IN2   10.0│
               └──────────────┘    └──────────┘`;
 }
+function codeSclFDH20(d, r) {
+  return `<span class="c">// ${d.ref} en IO-Link — disposition « 0_Flow rate » (celle d'usine)
+// ⚠ Cette disposition est un PARAMÈTRE (index IO-Link 4009), pas une
+//   constante : si quelqu'un la change pour « 1_Multi » ou « 2_Heat »,
+//   ces offsets ne correspondent plus à rien.
+// ⚠ Les diviseurs 1000.0 et 10000.0 sont les résolutions d'usine
+//   (index 4010/4011) pour l'unité L/min — à revérifier si l'unité de
+//   débit de l'appareil a été changée (m3/h, G/min).</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_FD_H20"</span>
+<span class="k">VAR_INPUT</span>
+    flowInstBrut  : DINT;  <span class="c">// octets 0-3</span>
+    flowTotalBrut : DINT;  <span class="c">// octets 4-7 (positif uniquement, tient dans un DINT)</span>
+    temp1Brut     : INT;   <span class="c">// octets 8-9 — sonde de tuyau intégrée</span>
+    stabiliteBrut : BYTE;  <span class="c">// octet 21 — nibble de poids faible</span>
+    etatOctet22   : BYTE;  <span class="c">// octet 22 — erreurs Temp2 / Level</span>
+    etatOctet23   : BYTE;  <span class="c">// octet 23 — sorties Ch1-4 + erreurs communes</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    debitInst     : REAL;  <span class="c">// L/min</span>
+    debitCumule   : REAL;  <span class="c">// L</span>
+    tempTuyau     : REAL;  <span class="c">// °C</span>
+    stabilite     : USINT; <span class="c">// 0 = aucun signal … 4 = signal élevé</span>
+    sortieCh1     : BOOL;
+    sortieCh2     : BOOL;
+    erreurCommune : BOOL;
+    erreurDebit   : BOOL;
+    erreurTemp1   : BOOL;
+<span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Mise à l'échelle ----</span>
+    #debitInst   := DINT_TO_REAL(#flowInstBrut)  / 1000.0;
+    #debitCumule := DINT_TO_REAL(#flowTotalBrut) / 10000.0;
+    #tempTuyau   := INT_TO_REAL(#temp1Brut) / 10.0;
+
+    <span class="c">// ---- Octet 21 : stabilité sur le nibble de poids faible ----</span>
+    #stabilite := BYTE_TO_USINT(#stabiliteBrut) <span class="k">AND</span> 16#0F;
+
+    <span class="c">// ---- Octet 23 : sorties et erreurs, lecture directe des bits ----</span>
+    #sortieCh1     := #etatOctet23.%X0;
+    #sortieCh2     := #etatOctet23.%X1;
+    #erreurCommune := #etatOctet23.%X4;
+    #erreurDebit   := #etatOctet23.%X5;
+    #erreurTemp1   := #etatOctet23.%X7;
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadFDH20(d, r) {
+  return `<span class="c">// ${d.ref} — adresses à adapter à la plage attribuée au port.
+// ⚠ Diviseurs valables pour la disposition « 0_Flow rate » et
+//   les résolutions d'usine (voir pièges de mise en service).</span>
+
+<span class="r">Réseau 1 — Débit instantané (octets 0-3)</span>
+              ┌──────────────┐    ┌──────────┐
+              │     CONV     │    │   DIV    │
+──────────────┤ DInt →  Real ├────┤   Real   ├──( debitInst )
+   flowInstBrut│IN flowInstBrut│  │IN2  1000.0│
+              └──────────────┘    └──────────┘
+
+<span class="r">Réseau 2 — Débit cumulé (octets 4-7)</span>
+              ┌──────────────┐    ┌──────────┐
+              │     CONV     │    │   DIV    │
+──────────────┤ DInt →  Real ├────┤   Real   ├──( debitCumule )
+  flowTotalBrut│IN flowTotalBrut│ │IN2 10000.0│
+              └──────────────┘    └──────────┘
+
+<span class="r">Réseau 3 — Température de tuyau (octets 8-9)</span>
+              ┌──────────────┐    ┌──────────┐
+              │     CONV     │    │   DIV    │
+──────────────┤  Int →  Real ├────┤   Real   ├──( tempTuyau )
+    temp1Brut │IN   temp1Brut│    │IN2   10.0│
+              └──────────────┘    └──────────┘
+
+<span class="r">Réseau 4 — Stabilité (octet 21, nibble de poids faible)</span>
+      ┌──────────────┐
+      │     AND      │
+──────┤     Byte     ├──────────( stabilite )
+      │IN stabiliteBrut│
+      │IN2      16#0F│
+      └──────────────┘
+
+<span class="r">Réseau 5 — Sorties et erreurs (octet 23, lecture directe)</span>
+   etatOctet23.%X0
+────┤ ├──────────────────────────────( sortieCh1 )
+
+   etatOctet23.%X4
+────┤ ├──────────────────────────────( erreurCommune )
+
+   etatOctet23.%X5
+────┤ ├──────────────────────────────( erreurDebit )
+
+   etatOctet23.%X7
+────┤ ├──────────────────────────────( erreurTemp1 )`;
+}
 function codeSclAnalog(d) {
   return `<span class="c">// ${d.ref} — boucle 4-20 mA sur carte d'entrées analogiques S7-1500
 // Plage 4…20 mA  →  valeur brute 0…27648
@@ -789,6 +888,7 @@ function buildGuideArticle(DB, d, mode, voieId) {
     let scl, lad;
     if (r.familleIodd === 'keyence-fr') { scl = codeSclFRS(d, r); lad = codeLadFRS(d, r); }
     else if (d.id === 'pn7093') { scl = codeSclPN7093(d, r); lad = codeLadPN7093(d, r); }
+    else if (d.id === 'fd-h20') { scl = codeSclFDH20(d, r); lad = codeLadFDH20(d, r); }
     else { scl = codeSclIolink(d, r); lad = codeLadIolink(d, r); }
     P.push(blocProg(scl, lad, num));
   }
@@ -925,7 +1025,7 @@ function primaryMode(d) {
 
 const api = {
   esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
-  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclAnalog, codeLadAnalog,
+  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclFDH20, codeLadFDH20, codeSclAnalog, codeLadAnalog,
   codeSclProfinet, codeLadProfinet,
   buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode,
   buildBlocArticle, blocSystemePath, metaForBloc

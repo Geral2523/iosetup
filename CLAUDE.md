@@ -80,7 +80,7 @@ récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de l
 un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
 dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
 
-Le site couvre **17 pages** sans erreur, pour 8 appareils (dont 4 pages « voie IO-Link »
+Le site couvre **25 pages** sans erreur, pour 9 appareils (dont pages « voie IO-Link »
 supplémentaires pour les capteurs — voir section Navigation) :
 
 | Appareil | Marque | Type | Modes de raccordement |
@@ -93,6 +93,7 @@ supplémentaires pour les capteurs — voir section Navigation) :
 | SIRIUS 8WD4615-5JH47 | Siemens | Colonne de signalisation, 15 segments | IO-Link · conventionnel 24 V |
 | SIRIUS 8WD4613-5JH47 | Siemens | Colonne de signalisation, 9 segments | IO-Link · conventionnel 24 V |
 | SINAMICS G120C | Siemens | Variateur de vitesse | PROFINET natif |
+| FD-H20 | KEYENCE | Débit + température de tuyau (sonde intégrée) | IO-Link |
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
@@ -123,6 +124,37 @@ Catégorie « pression » activée automatiquement dans l'entonnoir (mécanisme 
 `usedTypes` déjà en place, zéro ligne de taxonomie à toucher). La voie IO-Link
 (S7-PCT vs maître générique) s'applique aussi automatiquement à ce capteur, sans code
 supplémentaire — confirmé en testant après ajout.
+
+**FD-H20 (KEYENCE, débitmètre à clipser) — premier appareil dont la structure de données
+process est elle-même un paramètre reconfigurable, pas une constante de l'IODD, et un
+vrai bug générique corrigé dans `connSvg()`.** Sources : manuel FD-H (AS_149495,
+17982FR) + IODD officiel `KEYENCE-FD-H20-20240108-IODD1.1.xml`, les deux fournis
+directement par l'utilisateur dans `iodd/` et `manuel/` — contournement du blocage
+initial (le manuel/IODD KEYENCE sont derrière un formulaire de création de compte sur
+keyence.com, jamais franchi même autorisé ; l'utilisateur les a téléchargés lui-même).
+Le paramètre IO-Link « IO-Link process data » (index 4009) bascule entre trois
+dispositions de trame totalement différentes (Flow/Multi/Heat) — cette fiche documente
+uniquement la disposition par défaut (« 0_Flow rate »), avec un `avertissementIodd`
+explicite à ce sujet. Autre première : le facteur d'échelle du débit lui-même est un
+paramètre IO-Link en lecture seule (résolution ×0,001 ou ×0,01 pour l'instantané, ×0,0001
+ou ×0,001 pour le cumulé — index 4010/4011), pas une constante fixée par l'IODD comme
+pour les appareils précédents du site.
+Bug générique trouvé et corrigé dans `render.js` : la ligne « Conversion » du tableau de
+`blocIolink()` affichait toujours « ÷ 10 → unité », codé en dur, alors que jusqu'ici tous
+les appareils du site avaient effectivement un gradient de 0,1 (LDH292, PN7093) — jamais
+testé avec une autre valeur. Le FD-H20 a un gradient de 0,001 (débit) et 0,0001 (débit
+cumulé) : la ligne affichait « ÷ 10 » au lieu de « ÷ 1000 »/« ÷ 10000 ». Corrigé en
+calculant le diviseur depuis `x.gradient` (`Math.round(1 / x.gradient)`) au lieu du texte
+figé. Deuxième bug trouvé et corrigé dans `connSvg()` : la détection « connecteur 8
+broches vs 4 broches » se faisait par une recherche `/8/.test(r.connecteur)` dans le texte
+libre du champ `connecteur` — le FD-H20 a un port natif 8 broches mais se raccorde en
+IO-Link via un adaptateur 4 broches (FD-HCC2/10/0), et le texte décrivant ce fait mentionne
+« 8 » sans que le brochage IO-Link documenté en compte 8. Corrigé : le nombre de broches se
+lit désormais sur `Math.max(...r.pinout.map(p => p.n))`, jamais sur une recherche de texte.
+Catégorie « débit » activée automatiquement (mécanisme `usedTypes`, déjà en place).
+Code SCL/CONT dédié (`codeSclFDH20`/`codeLadFDH20`, sélectionné sur `d.id === 'fd-h20'`) —
+même principe que PN7093/FR-S01 : chaque appareil à la structure suffisamment différente
+a son propre générateur, jamais de fonction générique paramétrée.
 
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`

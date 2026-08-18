@@ -1,0 +1,988 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<IODevice xmlns="http://www.io-link.com/IODD/2010/10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.io-link.com/IODD/2010/10 IODD1.1.xsd">
+  <DocumentInfo copyright="Copyright 2021, KEYENCE CORPORATION" releaseDate="2022-03-01" version="V1.1"/>
+  <ProfileHeader>
+    <ProfileIdentification>IO Device Profile</ProfileIdentification>
+    <ProfileRevision>1.1</ProfileRevision>
+    <ProfileName>Device Profile for IO Devices</ProfileName>
+    <ProfileSource>IO-Link Consortium</ProfileSource>
+    <ProfileClassID>Device</ProfileClassID>
+    <ISO15745Reference>
+      <ISO15745Part>1</ISO15745Part>
+      <ISO15745Edition>1</ISO15745Edition>
+      <ProfileTechnology>IODD</ProfileTechnology>
+    </ISO15745Reference>
+  </ProfileHeader>
+  <ProfileBody>
+    <DeviceIdentity deviceId="2026" vendorId="509" vendorName="Keyence">
+      <VendorText textId="TI_VendorText"/>
+      <VendorUrl textId="TI_VendorUrl"/>
+      <VendorLogo name="KEYENCE-logo.png"/>
+      <DeviceName textId="TI_Device"/>
+      <DeviceFamily textId="TI_DeviceFamily"/>
+      <DeviceVariantCollection>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T8">
+          <Name textId="TI_Product_Name1"/>
+          <Description textId="TI_DescriptionProduct_Name1"/>
+        </DeviceVariant>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T15">
+          <Name textId="TI_Product_Name2"/>
+          <Description textId="TI_DescriptionProduct_Name2"/>
+        </DeviceVariant>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T25">
+          <Name textId="TI_Product_Name3"/>
+          <Description textId="TI_DescriptionProduct_Name3"/>
+        </DeviceVariant>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T50">
+          <Name textId="TI_Product_Name4"/>
+          <Description textId="TI_DescriptionProduct_Name4"/>
+        </DeviceVariant>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T100">
+          <Name textId="TI_Product_Name5"/>
+          <Description textId="TI_DescriptionProduct_Name5"/>
+        </DeviceVariant>
+        <DeviceVariant deviceIcon="KEYENCE-FI-T-icon.png" deviceSymbol="KEYENCE-FI-T-pic.png" productId="FI-T200">
+          <Name textId="TI_Product_Name6"/>
+          <Description textId="TI_DescriptionProduct_Name6"/>
+        </DeviceVariant>
+      </DeviceVariantCollection>
+    </DeviceIdentity>
+    <DeviceFunction>
+      <Features blockParameter="false" dataStorage="true">
+        <SupportedAccessLocks dataStorage="true" localParameterization="false" localUserInterface="false" parameter="false"/>
+      </Features>
+      <VariableCollection>
+        <StdVariableRef id="V_DirectParameters_1"/>
+        <StdVariableRef id="V_DirectParameters_2"/>
+        <StdVariableRef id="V_SystemCommand">
+          <StdSingleValueRef value="130"/>
+          <SingleValue value="240">
+            <Name textId="TI_ItemSystemCommand_2"/>
+          </SingleValue>
+          <SingleValue value="241">
+            <Name textId="TI_ItemSystemCommand_3"/>
+          </SingleValue>
+          <SingleValue value="242">
+            <Name textId="TI_ItemSystemCommand_4"/>
+          </SingleValue>
+          <SingleValue value="243">
+            <Name textId="TI_ItemSystemCommand_5"/>
+          </SingleValue>
+        </StdVariableRef>
+        <StdVariableRef id="V_DeviceAccessLocks">
+          <StdRecordItemRef subindex="2" defaultValue="false"/>
+        </StdVariableRef>
+        <StdVariableRef id="V_VendorName" defaultValue="Keyence"/>
+        <StdVariableRef id="V_VendorText" defaultValue="www.keyence.com/global.jsp"/>
+        <StdVariableRef id="V_ProductName" defaultValue="FI-T"/>
+        <StdVariableRef id="V_ProductID" defaultValue="FI-T"/>
+        <StdVariableRef id="V_ProductText" defaultValue="Temperature Sensor"/>
+        <StdVariableRef id="V_SerialNumber" fixedLengthRestriction="16"/>
+        <StdVariableRef id="V_HardwareRevision"/>
+        <StdVariableRef id="V_FirmwareRevision"/>
+        <StdVariableRef id="V_ApplicationSpecificTag" defaultValue="***" fixedLengthRestriction="32"/>
+        <StdVariableRef id="V_DetailedDeviceStatus" fixedLengthRestriction="7"/>
+        <StdVariableRef id="V_ProcessDataInput"/>
+        <Variable id="V_IOConfiguration" accessRights="rw" defaultValue="0" index="100">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemIOConfiguration_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemIOConfiguration_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemIOConfiguration_2"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_IOConfiguration"/>
+          <Description textId="TI_DescriptionIOConfiguration"/>
+        </Variable>
+        <Variable id="V_NPNPNP" accessRights="rw" defaultValue="0" index="101">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemNPNPNP_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemNPNPNP_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_NPNPNP"/>
+          <Description textId="TI_DescriptionNPNPNP"/>
+        </Variable>
+        <Variable id="V_AverageTime" accessRights="rw" defaultValue="0" index="102">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemAverageTime_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemAverageTime_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemAverageTime_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemAverageTime_3"/>
+            </SingleValue>
+            <SingleValue value="4">
+              <Name textId="TI_ItemAverageTime_4"/>
+            </SingleValue>
+            <SingleValue value="5">
+              <Name textId="TI_ItemAverageTime_5"/>
+            </SingleValue>
+            <SingleValue value="6">
+              <Name textId="TI_ItemAverageTime_6"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_AverageTime"/>
+          <Description textId="TI_DescriptionAverageTime"/>
+        </Variable>
+        <Variable id="V_AnalogOutputCurrent" accessRights="rw" defaultValue="0" index="103">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemAnalogOutputCurrent_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemAnalogOutputCurrent_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_AnalogOutputCurrent"/>
+          <Description textId="TI_DescriptionAnalogOutputCurrent"/>
+        </Variable>
+        <Variable id="V_Tuning" accessRights="wo" defaultValue="0" index="104">
+          <Datatype xsi:type="UIntegerT" bitLength="16">
+            <SingleValue value="0">
+              <Name textId="TI_ItemTuning_0"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_Tuning"/>
+          <Description textId="TI_DescriptionTuning"/>
+        </Variable>
+        <Variable id="V_AnalogLowerLimit" accessRights="rw" defaultValue="-200" index="105">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_AnalogLowerLimit"/>
+          <Description textId="TI_DescriptionAnalogLowerLimit"/>
+        </Variable>
+        <Variable id="V_AnalogUpperLimit" accessRights="rw" defaultValue="1800" index="106">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_AnalogUpperLimit"/>
+          <Description textId="TI_DescriptionAnalogUpperLimit"/>
+        </Variable>
+        <Variable id="V_OutputLogicSetting_Output1" accessRights="rw" defaultValue="0" index="110">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemOutputLogicSetting_Output1_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemOutputLogicSetting_Output1_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_OutputLogicSetting_Output1"/>
+          <Description textId="TI_DescriptionOutputLogicSetting_Output1"/>
+        </Variable>
+        <Variable id="V_SettingValueHigh_Output1" accessRights="rw" defaultValue="150" index="112">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_SettingValueHigh_Output1"/>
+          <Description textId="TI_DescriptionSettingValueHigh_Output1"/>
+        </Variable>
+        <Variable id="V_SettingValueLow_Output1" accessRights="rw" defaultValue="700" index="113">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_SettingValueLow_Output1"/>
+          <Description textId="TI_DescriptionSettingValueLow_Output1"/>
+        </Variable>
+        <Variable id="V_OutputLogicSetting_Output2" accessRights="rw" defaultValue="0" index="118">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemOutputLogicSetting_Output2_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemOutputLogicSetting_Output2_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_OutputLogicSetting_Output2"/>
+          <Description textId="TI_DescriptionOutputLogicSetting_Output2"/>
+        </Variable>
+        <Variable id="V_SettingValueHigh_Output2" accessRights="rw" defaultValue="0" index="120">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_SettingValueHigh_Output2"/>
+          <Description textId="TI_DescriptionSettingValueHigh_Output2"/>
+        </Variable>
+        <Variable id="V_SettingValueLow_Output2" accessRights="rw" defaultValue="800" index="121">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_SettingValueLow_Output2"/>
+          <Description textId="TI_DescriptionSettingValueLow_Output2"/>
+        </Variable>
+        <Variable id="V_HysteresisValue" accessRights="rw" defaultValue="2" index="131">
+          <Datatype xsi:type="UIntegerT" bitLength="16">
+            <ValueRange lowerValue="0" upperValue="20"/>
+          </Datatype>
+          <Name textId="TI_HysteresisValue"/>
+          <Description textId="TI_DescriptionHysteresisValue"/>
+        </Variable>
+        <Variable id="V_Offset" accessRights="rw" defaultValue="0" index="134">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-200" upperValue="200"/>
+          </Datatype>
+          <Name textId="TI_Offset"/>
+          <Description textId="TI_DescriptionOffset"/>
+        </Variable>
+        <Variable id="V_KeylockStatus" accessRights="rw" defaultValue="0" index="139">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemKeylockStatus_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemKeylockStatus_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemKeylockStatus_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemKeylockStatus_3"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_KeylockStatus"/>
+          <Description textId="TI_DescriptionKeylockStatus"/>
+        </Variable>
+        <Variable id="V_KeylockMethod" accessRights="rw" defaultValue="0" index="140">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemKeylockMethod_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemKeylockMethod_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_KeylockMethod"/>
+          <Description textId="TI_DescriptionKeylockMethod"/>
+        </Variable>
+        <Variable id="V_PINCode" accessRights="rw" defaultValue="0" index="141">
+          <Datatype xsi:type="UIntegerT" bitLength="16">
+            <ValueRange lowerValue="0" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_PINCode"/>
+          <Description textId="TI_DescriptionPINCode"/>
+        </Variable>
+        <Variable id="V_UserTag1" accessRights="rw" defaultValue="0" index="144">
+          <Datatype xsi:type="UIntegerT" bitLength="32">
+            <ValueRange lowerValue="0" upperValue="4294967295"/>
+          </Datatype>
+          <Name textId="TI_UserTag1"/>
+          <Description textId="TI_DescriptionUserTag1"/>
+        </Variable>
+        <Variable id="V_UserTag2" accessRights="rw" defaultValue="0" index="145">
+          <Datatype xsi:type="UIntegerT" bitLength="16">
+            <ValueRange lowerValue="0" upperValue="65535"/>
+          </Datatype>
+          <Name textId="TI_UserTag2"/>
+          <Description textId="TI_DescriptionUserTag2"/>
+        </Variable>
+        <Variable id="V_CurrentTemperatureValue" accessRights="ro" defaultValue="0" index="148">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-9999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_CurrentTemperatureValue"/>
+          <Description textId="TI_DescriptionCurrentTemperatureValue"/>
+        </Variable>
+        <Variable id="V_ErrorStatus" accessRights="ro" defaultValue="0" index="150">
+          <Datatype xsi:type="UIntegerT" bitLength="16">
+            <ValueRange lowerValue="0" upperValue="65535"/>
+          </Datatype>
+          <Name textId="TI_ErrorStatus"/>
+          <Description textId="TI_DescriptionErrorStatus"/>
+        </Variable>
+        <Variable id="V_TemperaturePeakValue" accessRights="ro" defaultValue="0" index="151">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-9999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_TemperaturePeakValue"/>
+          <Description textId="TI_DescriptionTemperaturePeakValue"/>
+        </Variable>
+        <Variable id="V_TemperatureBottomValue" accessRights="ro" defaultValue="0" index="152">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-9999" upperValue="9999"/>
+          </Datatype>
+          <Name textId="TI_TemperatureBottomValue"/>
+          <Description textId="TI_DescriptionTemperatureBottomValue"/>
+        </Variable>
+        <Variable id="V_OutputSelection" accessRights="rw" defaultValue="0" index="166">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemOutputSelection_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemOutputSelection_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_OutputSelection"/>
+          <Description textId="TI_DescriptionOutputSelection"/>
+        </Variable>
+        <Variable id="V_FlipDisplay" accessRights="rw" defaultValue="0" index="170">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemFlipDisplay_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemFlipDisplay_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_FlipDisplay"/>
+          <Description textId="TI_DescriptionFlipDisplay"/>
+        </Variable>
+        <Variable id="V_Currentdisplay" accessRights="rw" defaultValue="0" index="173">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemCurrentdisplay_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemCurrentdisplay_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_Currentdisplay"/>
+          <Description textId="TI_DescriptionCurrentdisplay"/>
+        </Variable>
+        <Variable id="V_ScreenBrightness" accessRights="rw" defaultValue="2" index="174">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemScreenBrightness_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemScreenBrightness_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemScreenBrightness_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemScreenBrightness_3"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_ScreenBrightness"/>
+          <Description textId="TI_DescriptionScreenBrightness"/>
+        </Variable>
+        <Variable id="V_Language" accessRights="rw" defaultValue="0" index="175">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemLanguage_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemLanguage_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemLanguage_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemLanguage_3"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_Language"/>
+          <Description textId="TI_DescriptionLanguage"/>
+        </Variable>
+        <Variable id="V_Correction" accessRights="rw" defaultValue="1" index="200">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemCorrection_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemCorrection_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemCorrection_2"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_Correction"/>
+          <Description textId="TI_DescriptionCorrection"/>
+        </Variable>
+        <Variable id="V_Unit" accessRights="rw" defaultValue="0" index="205">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemUnit_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemUnit_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_Unit"/>
+          <Description textId="TI_DescriptionUnit"/>
+        </Variable>
+        <Variable id="V_TestMode" accessRights="rw" defaultValue="0" index="222">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemTestMode_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemTestMode_1"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_TestMode"/>
+          <Description textId="TI_DescriptionTestMode"/>
+        </Variable>
+        <Variable id="V_TestModeValue" accessRights="rw" defaultValue="0" index="223">
+          <Datatype xsi:type="IntegerT" bitLength="16">
+            <ValueRange lowerValue="-400" upperValue="3920"/>
+          </Datatype>
+          <Name textId="TI_TestModeValue"/>
+          <Description textId="TI_DescriptionTestModeValue"/>
+        </Variable>
+        <Variable id="V_DisplayIndicatorIlluminationMode" accessRights="rw" defaultValue="0" index="230">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemDisplayIndicatorIlluminationMode_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemDisplayIndicatorIlluminationMode_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemDisplayIndicatorIlluminationMode_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemDisplayIndicatorIlluminationMode_3"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_DisplayIndicatorIlluminationMode"/>
+          <Description textId="TI_DescriptionDisplayIndicatorIlluminationMode"/>
+        </Variable>
+        <Variable id="V_CommandStatus" accessRights="ro" defaultValue="0" index="253">
+          <Datatype xsi:type="UIntegerT" bitLength="8">
+            <SingleValue value="0">
+              <Name textId="TI_ItemCommandStatus_0"/>
+            </SingleValue>
+            <SingleValue value="1">
+              <Name textId="TI_ItemCommandStatus_1"/>
+            </SingleValue>
+            <SingleValue value="2">
+              <Name textId="TI_ItemCommandStatus_2"/>
+            </SingleValue>
+            <SingleValue value="3">
+              <Name textId="TI_ItemCommandStatus_3"/>
+            </SingleValue>
+          </Datatype>
+          <Name textId="TI_CommandStatus"/>
+          <Description textId="TI_DescriptionCommandStatus"/>
+        </Variable>
+      </VariableCollection>
+      <ProcessDataCollection>
+        <ProcessData id="PD_ProcessData1">
+          <ProcessDataIn id="PDInName" bitLength="32">
+            <Datatype xsi:type="RecordT" subindexAccessSupported="false" bitLength="32">
+              <RecordItem bitOffset="0" subindex="1">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInOut1_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInOut1_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInOut1"/>
+              </RecordItem>
+              <RecordItem bitOffset="1" subindex="2">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInOut2_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInOut2_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInOut2"/>
+              </RecordItem>
+              <RecordItem bitOffset="8" subindex="3">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInDataValid_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInDataValid_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInDataValid"/>
+              </RecordItem>
+              <RecordItem bitOffset="9" subindex="4">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInErr0_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInErr0_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInErr0"/>
+              </RecordItem>
+              <RecordItem bitOffset="10" subindex="5">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInErr1_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInErr1_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInErr1"/>
+              </RecordItem>
+              <RecordItem bitOffset="11" subindex="6">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInErr2_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInErr2_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInErr2"/>
+              </RecordItem>
+              <RecordItem bitOffset="12" subindex="7">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInErr3_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInErr3_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInErr3"/>
+              </RecordItem>
+              <RecordItem bitOffset="13" subindex="8">
+                <SimpleDatatype xsi:type="BooleanT">
+                  <SingleValue value="true">
+                    <Name textId="TI_ItemPDInErr4_On"/>
+                  </SingleValue>
+                  <SingleValue value="false">
+                    <Name textId="TI_ItemPDInErr4_Off"/>
+                  </SingleValue>
+                </SimpleDatatype>
+                <Name textId="TI_PDInErr4"/>
+              </RecordItem>
+              <RecordItem bitOffset="16" subindex="9">
+                <SimpleDatatype xsi:type="IntegerT" bitLength="16">
+                  <ValueRange lowerValue="-9999" upperValue="9999"/>
+                </SimpleDatatype>
+                <Name textId="TI_PDInTemperature"/>
+              </RecordItem>
+            </Datatype>
+            <Name textId="TI_PD_ProcessData1"/>
+          </ProcessDataIn>
+        </ProcessData>
+      </ProcessDataCollection>
+      <EventCollection>
+        <StdEventRef code="20480"/>
+        <StdEventRef code="30480"/>
+        <Event code="6147" type="Error">
+          <Name textId="TI_HeadErrorEvent"/>
+          <Description textId="TI_DescriptionHeadErrorEvent"/>
+        </Event>
+        <Event code="6153" type="Error">
+          <Name textId="TI_TemperatureRangeUpperErrorEvent"/>
+          <Description textId="TI_DescriptionTemperatureRangeUpperErrorEvent"/>
+        </Event>
+        <Event code="6154" type="Error">
+          <Name textId="TI_TemperatureRangeLowerErrorEvent"/>
+          <Description textId="TI_DescriptionTemperatureRangeLowerErrorEvent"/>
+        </Event>
+        <Event code="36350" type="Error">
+          <Name textId="TI_TestEvent1"/>
+          <Description textId="TI_DescriptionTestEvent1"/>
+        </Event>
+        <Event code="36351" type="Error">
+          <Name textId="TI_TestEvent2"/>
+          <Description textId="TI_DescriptionTestEvent2"/>
+        </Event>
+      </EventCollection>
+      <UserInterface>
+        <MenuCollection>
+          <Menu id="ME_parameter">
+            <Name textId="TI_SubMenu_parameter"/>
+            <MenuRef menuId="ME_Sensorconfiguration"/>
+            <MenuRef menuId="ME_OutOff">
+              <Condition value="0" variableId="V_IOConfiguration"/>
+            </MenuRef>
+            <MenuRef menuId="ME_Out1Out2">
+              <Condition value="1" variableId="V_IOConfiguration"/>
+            </MenuRef>
+            <MenuRef menuId="ME_OutAnalog">
+              <Condition value="2" variableId="V_IOConfiguration"/>
+            </MenuRef>
+            <MenuRef menuId="ME_Advancedsettings"/>
+            <MenuRef menuId="ME_Applicationsettings"/>
+            <MenuRef menuId="ME_Sensorstatus"/>
+            <MenuRef menuId="ME_Commandrequest"/>
+            <MenuRef menuId="ME_Factoryreset"/>
+          </Menu>
+          <Menu id="ME_identification">
+            <Name textId="TI_SubMenu_identification"/>
+            <VariableRef variableId="V_VendorName"/>
+            <VariableRef variableId="V_VendorText"/>
+            <VariableRef variableId="V_ProductName"/>
+            <VariableRef variableId="V_ProductID"/>
+            <VariableRef variableId="V_ProductText"/>
+            <VariableRef variableId="V_SerialNumber"/>
+            <VariableRef variableId="V_HardwareRevision"/>
+            <VariableRef variableId="V_FirmwareRevision"/>
+            <VariableRef variableId="V_ApplicationSpecificTag"/>
+          </Menu>
+          <Menu id="ME_OR_Observation">
+            <Name textId="TI_SubMenu_OR_Observation"/>
+            <VariableRef variableId="V_ProcessDataInput"/>
+          </Menu>
+          <Menu id="ME_OR_Diagnosis">
+            <Name textId="TI_SubMenu_OR_Diagnosis"/>
+            <VariableRef variableId="V_DetailedDeviceStatus"/>
+          </Menu>
+          <Menu id="ME_Sensorconfiguration">
+            <Name textId="TI_SubMenu_Sensorconfiguration"/>
+            <VariableRef variableId="V_IOConfiguration"/>
+            <VariableRef variableId="V_NPNPNP"/>
+            <VariableRef variableId="V_AverageTime"/>
+          </Menu>
+          <Menu id="ME_OutOff">
+            <Name textId="TI_SubMenu_OutOff"/>
+            <MenuRef menuId="ME_Output1configuration"/>
+          </Menu>
+          <Menu id="ME_Out1Out2">
+            <Name textId="TI_SubMenu_Out1Out2"/>
+            <MenuRef menuId="ME_Output1configuration"/>
+            <MenuRef menuId="ME_Output2configuration"/>
+          </Menu>
+          <Menu id="ME_OutAnalog">
+            <Name textId="TI_SubMenu_OutAnalog"/>
+            <MenuRef menuId="ME_Output1configuration"/>
+            <MenuRef menuId="ME_Analogconfiguration"/>
+          </Menu>
+          <Menu id="ME_Advancedsettings">
+            <Name textId="TI_SubMenu_Advancedsettings"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_HysteresisValue"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_Offset"/>
+            <VariableRef variableId="V_UserTag1"/>
+            <VariableRef variableId="V_UserTag2"/>
+            <VariableRef variableId="V_FlipDisplay"/>
+            <VariableRef variableId="V_Currentdisplay"/>
+            <VariableRef variableId="V_ScreenBrightness"/>
+            <VariableRef variableId="V_Language"/>
+            <VariableRef variableId="V_Correction"/>
+            <VariableRef variableId="V_Unit"/>
+            <VariableRef variableId="V_TestMode"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_TestModeValue"/>
+            <VariableRef variableId="V_DisplayIndicatorIlluminationMode"/>
+          </Menu>
+          <Menu id="ME_Applicationsettings">
+            <Name textId="TI_SubMenu_Applicationsettings"/>
+            <VariableRef variableId="V_KeylockStatus"/>
+            <VariableRef variableId="V_KeylockMethod"/>
+            <VariableRef variableId="V_PINCode"/>
+          </Menu>
+          <Menu id="ME_Sensorstatus">
+            <Name textId="TI_SubMenu_Sensorstatus"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_CurrentTemperatureValue"/>
+            <VariableRef variableId="V_ErrorStatus"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_TemperaturePeakValue"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_TemperatureBottomValue"/>
+            <VariableRef variableId="V_CommandStatus"/>
+          </Menu>
+          <Menu id="ME_Commandrequest">
+            <Name textId="TI_SubMenu_Commandrequest"/>
+            <VariableRef variableId="V_Tuning">
+              <Button buttonValue="0"/>
+            </VariableRef>
+          </Menu>
+          <Menu id="ME_Factoryreset">
+            <Name textId="TI_SubMenu_Factoryreset"/>
+            <VariableRef variableId="V_SystemCommand">
+              <Button buttonValue="130"/>
+            </VariableRef>
+            <VariableRef variableId="V_SystemCommand">
+              <Button buttonValue="240"/>
+            </VariableRef>
+            <VariableRef variableId="V_SystemCommand">
+              <Button buttonValue="241"/>
+            </VariableRef>
+            <VariableRef variableId="V_SystemCommand">
+              <Button buttonValue="242"/>
+            </VariableRef>
+            <VariableRef variableId="V_SystemCommand">
+              <Button buttonValue="243"/>
+            </VariableRef>
+          </Menu>
+          <Menu id="ME_Output1configuration">
+            <Name textId="TI_SubMenu_Output1configuration"/>
+            <VariableRef variableId="V_OutputLogicSetting_Output1"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_SettingValueHigh_Output1"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_SettingValueLow_Output1"/>
+          </Menu>
+          <Menu id="ME_Output2configuration">
+            <Name textId="TI_SubMenu_Output2configuration"/>
+            <VariableRef variableId="V_OutputLogicSetting_Output2"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_SettingValueHigh_Output2"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_SettingValueLow_Output2"/>
+            <VariableRef variableId="V_OutputSelection"/>
+          </Menu>
+          <Menu id="ME_Analogconfiguration">
+            <Name textId="TI_SubMenu_Analogconfiguration"/>
+            <VariableRef variableId="V_AnalogOutputCurrent"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_AnalogLowerLimit"/>
+            <VariableRef displayFormat="Dec" gradient="0.1" variableId="V_AnalogUpperLimit"/>
+          </Menu>
+        </MenuCollection>
+        <ObserverRoleMenuSet>
+          <IdentificationMenu menuId="ME_identification"/>
+          <ParameterMenu menuId="ME_parameter"/>
+          <ObservationMenu menuId="ME_OR_Observation"/>
+          <DiagnosisMenu menuId="ME_OR_Diagnosis"/>
+        </ObserverRoleMenuSet>
+        <MaintenanceRoleMenuSet>
+          <IdentificationMenu menuId="ME_identification"/>
+          <ParameterMenu menuId="ME_parameter"/>
+          <ObservationMenu menuId="ME_OR_Observation"/>
+          <DiagnosisMenu menuId="ME_OR_Diagnosis"/>
+        </MaintenanceRoleMenuSet>
+        <SpecialistRoleMenuSet>
+          <IdentificationMenu menuId="ME_identification"/>
+          <ParameterMenu menuId="ME_parameter"/>
+          <ObservationMenu menuId="ME_OR_Observation"/>
+          <DiagnosisMenu menuId="ME_OR_Diagnosis"/>
+        </SpecialistRoleMenuSet>
+      </UserInterface>
+    </DeviceFunction>
+  </ProfileBody>
+  <CommNetworkProfile xsi:type="IOLinkCommNetworkProfileT" iolinkRevision="V1.1">
+    <TransportLayers>
+      <PhysicalLayer bitrate="COM2" minCycleTime="3200" sioSupported="true" mSequenceCapability="9">
+        <Connection xsi:type="M12-4ConnectionT" connectionSymbol="KEYENCE-FI-T-con-pic.png">
+          <ProductRef productId="FI-T8"/>
+          <ProductRef productId="FI-T15"/>
+          <ProductRef productId="FI-T25"/>
+          <ProductRef productId="FI-T50"/>
+          <ProductRef productId="FI-T100"/>
+          <ProductRef productId="FI-T200"/>
+          <Wire1 color="BN" function="L+"/>
+          <Wire2 color="WH" function="Other"/>
+          <Wire3 color="BU" function="L-"/>
+          <Wire4 color="BK" function="C/Q"/>
+        </Connection>
+      </PhysicalLayer>
+    </TransportLayers>
+    <Test>
+      <Config1 index="141" testValue="0x00,0x00"/>
+      <!-- V_DeviceAccessLocks -->
+      <Config2 index="1024" testValue="0x00"/>
+      <!-- not existent -->
+      <Config3 index="20" testValue="0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"/>
+      <!-- product id -->
+      <Config7 index="2">
+        <EventTrigger appearValue="240" disappearValue="241"/>
+        <EventTrigger appearValue="242" disappearValue="243"/>
+      </Config7>
+    </Test>
+  </CommNetworkProfile>
+  <ExternalTextCollection>
+    <PrimaryLanguage xml:lang="en">
+      <Text id="TI_VendorText" value="www.keyence.com/global.jsp"/>
+      <Text id="TI_VendorUrl" value="https://www.keyence.com/global.jsp"/>
+      <Text id="TI_Device" value="FI-T"/>
+      <Text id="TI_DeviceFamily" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name1" value="FI-T8"/>
+      <Text id="TI_DescriptionProduct_Name1" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name2" value="FI-T15"/>
+      <Text id="TI_DescriptionProduct_Name2" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name3" value="FI-T25"/>
+      <Text id="TI_DescriptionProduct_Name3" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name4" value="FI-T50"/>
+      <Text id="TI_DescriptionProduct_Name4" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name5" value="FI-T100"/>
+      <Text id="TI_DescriptionProduct_Name5" value="Temperature Sensor"/>
+      <Text id="TI_Product_Name6" value="FI-T200"/>
+      <Text id="TI_DescriptionProduct_Name6" value="Temperature Sensor"/>
+      <Text id="TI_PD_ProcessData1" value="Process Data In"/>
+      <Text id="TI_PDInOut1" value="Output 1"/>
+      <Text id="TI_ItemPDInOut1_On" value="ON"/>
+      <Text id="TI_ItemPDInOut1_Off" value="OFF"/>
+      <Text id="TI_PDInOut2" value="Output 2"/>
+      <Text id="TI_ItemPDInOut2_On" value="ON"/>
+      <Text id="TI_ItemPDInOut2_Off" value="OFF"/>
+      <Text id="TI_PDInDataValid" value="DataValid"/>
+      <Text id="TI_ItemPDInDataValid_On" value="ON"/>
+      <Text id="TI_ItemPDInDataValid_Off" value="OFF"/>
+      <Text id="TI_PDInErr0" value="Error : Overcurrent error"/>
+      <Text id="TI_ItemPDInErr0_On" value="ON"/>
+      <Text id="TI_ItemPDInErr0_Off" value="OFF"/>
+      <Text id="TI_PDInErr1" value="Error：Head Error"/>
+      <Text id="TI_ItemPDInErr1_On" value="ON"/>
+      <Text id="TI_ItemPDInErr1_Off" value="OFF"/>
+      <Text id="TI_PDInErr2" value="Error : EEPROM Error"/>
+      <Text id="TI_ItemPDInErr2_On" value="ON"/>
+      <Text id="TI_ItemPDInErr2_Off" value="OFF"/>
+      <Text id="TI_PDInErr3" value="Error：Out of temperature range error (upper limit)"/>
+      <Text id="TI_ItemPDInErr3_On" value="ON"/>
+      <Text id="TI_ItemPDInErr3_Off" value="OFF"/>
+      <Text id="TI_PDInErr4" value="Error : Out of temperature range error (lower limit)"/>
+      <Text id="TI_ItemPDInErr4_On" value="ON"/>
+      <Text id="TI_ItemPDInErr4_Off" value="OFF"/>
+      <Text id="TI_PDInTemperature" value="Current Value"/>
+      <Text id="TI_HeadErrorEvent" value="Head Error"/>
+      <Text id="TI_DescriptionHeadErrorEvent" value="A head error occurred."/>
+      <Text id="TI_TemperatureRangeUpperErrorEvent" value="Exceed Upper Temperature Limit"/>
+      <Text id="TI_DescriptionTemperatureRangeUpperErrorEvent" value="The measured temperature exceeded 200°C."/>
+      <Text id="TI_TemperatureRangeLowerErrorEvent" value="Below Lower Temperature Limit"/>
+      <Text id="TI_DescriptionTemperatureRangeLowerErrorEvent" value="The measured temperature dropped below −40°C."/>
+      <Text id="TI_TestEvent1" value="Test Event 1"/>
+      <Text id="TI_DescriptionTestEvent1" value="Event 8DFE occurs when 240 is written to index 2. This event is deleted when 241 is written to the same index."/>
+      <Text id="TI_TestEvent2" value="Test Event 2"/>
+      <Text id="TI_DescriptionTestEvent2" value="Event 8DFF occurs when 242 is written to index 2. This event is deleted when 243 is written to the same index."/>
+      <Text id="TI_ItemSystemCommand_2" value="Event 8DFE appears"/>
+      <Text id="TI_ItemSystemCommand_3" value="Event 8DFE disappears"/>
+      <Text id="TI_ItemSystemCommand_4" value="Event 8DFF appears"/>
+      <Text id="TI_ItemSystemCommand_5" value="Event 8DFF disappears"/>
+      <Text id="TI_IOConfiguration" value="Output Selection"/>
+      <Text id="TI_DescriptionIOConfiguration" value=""/>
+      <Text id="TI_ItemIOConfiguration_0" value="OUT + OFF"/>
+      <Text id="TI_ItemIOConfiguration_1" value="OUT1 + OUT2"/>
+      <Text id="TI_ItemIOConfiguration_2" value="OUT + ANALOG"/>
+      <Text id="TI_NPNPNP" value="NPN/PNP"/>
+      <Text id="TI_DescriptionNPNPNP" value=""/>
+      <Text id="TI_ItemNPNPNP_0" value="NPN"/>
+      <Text id="TI_ItemNPNPNP_1" value="PNP"/>
+      <Text id="TI_AverageTime" value="Averaging Time"/>
+      <Text id="TI_DescriptionAverageTime" value=""/>
+      <Text id="TI_ItemAverageTime_0" value="0.1s"/>
+      <Text id="TI_ItemAverageTime_1" value="10s"/>
+      <Text id="TI_ItemAverageTime_2" value="20s"/>
+      <Text id="TI_ItemAverageTime_3" value="30s"/>
+      <Text id="TI_ItemAverageTime_4" value="60s"/>
+      <Text id="TI_ItemAverageTime_5" value="120s"/>
+      <Text id="TI_ItemAverageTime_6" value="300s"/>
+      <Text id="TI_AnalogOutputCurrent" value="Analog Output Current"/>
+      <Text id="TI_DescriptionAnalogOutputCurrent" value=""/>
+      <Text id="TI_ItemAnalogOutputCurrent_0" value="4-20mA"/>
+      <Text id="TI_ItemAnalogOutputCurrent_1" value="0-20mA"/>
+      <Text id="TI_Tuning" value="Operation Commands"/>
+      <Text id="TI_DescriptionTuning" value=""/>
+      <Text id="TI_ItemTuning_0" value="Hold value reset"/>
+      <Text id="TI_AnalogLowerLimit" value="Analog Lower Limit"/>
+      <Text id="TI_DescriptionAnalogLowerLimit" value=""/>
+      <Text id="TI_AnalogUpperLimit" value="Analog Upper Limit"/>
+      <Text id="TI_DescriptionAnalogUpperLimit" value=""/>
+      <Text id="TI_OutputLogicSetting_Output1" value="N.O./N.C. OUT1"/>
+      <Text id="TI_DescriptionOutputLogicSetting_Output1" value=""/>
+      <Text id="TI_ItemOutputLogicSetting_Output1_0" value="N.O."/>
+      <Text id="TI_ItemOutputLogicSetting_Output1_1" value="N.C."/>
+      <Text id="TI_SettingValueHigh_Output1" value="Lower Set Value1"/>
+      <Text id="TI_DescriptionSettingValueHigh_Output1" value=""/>
+      <Text id="TI_SettingValueLow_Output1" value="Upper Set Value1"/>
+      <Text id="TI_DescriptionSettingValueLow_Output1" value=""/>
+      <Text id="TI_OutputLogicSetting_Output2" value="N.O./N.C. OUT2"/>
+      <Text id="TI_DescriptionOutputLogicSetting_Output2" value=""/>
+      <Text id="TI_ItemOutputLogicSetting_Output2_0" value="N.O."/>
+      <Text id="TI_ItemOutputLogicSetting_Output2_1" value="N.C."/>
+      <Text id="TI_SettingValueHigh_Output2" value="Lower Set Value2"/>
+      <Text id="TI_DescriptionSettingValueHigh_Output2" value=""/>
+      <Text id="TI_SettingValueLow_Output2" value="Upper Set Value2"/>
+      <Text id="TI_DescriptionSettingValueLow_Output2" value=""/>
+      <Text id="TI_HysteresisValue" value="Hysteresis"/>
+      <Text id="TI_DescriptionHysteresisValue" value=""/>
+      <Text id="TI_Offset" value="Offset"/>
+      <Text id="TI_DescriptionOffset" value=""/>
+      <Text id="TI_KeylockStatus" value="Key Lock Status"/>
+      <Text id="TI_DescriptionKeylockStatus" value=""/>
+      <Text id="TI_ItemKeylockStatus_0" value="Unlock"/>
+      <Text id="TI_ItemKeylockStatus_1" value="Key lock"/>
+      <Text id="TI_ItemKeylockStatus_2" value="Password-protected key lock"/>
+      <Text id="TI_ItemKeylockStatus_3" value="Communication lock"/>
+      <Text id="TI_KeylockMethod" value="Key Lock Method"/>
+      <Text id="TI_DescriptionKeylockMethod" value=""/>
+      <Text id="TI_ItemKeylockMethod_0" value="Standard"/>
+      <Text id="TI_ItemKeylockMethod_1" value="With password"/>
+      <Text id="TI_PINCode" value="PIN Code"/>
+      <Text id="TI_DescriptionPINCode" value=""/>
+      <Text id="TI_UserTag1" value="User Tag1"/>
+      <Text id="TI_DescriptionUserTag1" value=""/>
+      <Text id="TI_UserTag2" value="User Tag2"/>
+      <Text id="TI_DescriptionUserTag2" value=""/>
+      <Text id="TI_CurrentTemperatureValue" value="Current Value (Temperature)"/>
+      <Text id="TI_DescriptionCurrentTemperatureValue" value=""/>
+      <Text id="TI_ErrorStatus" value="Error Information"/>
+      <Text id="TI_DescriptionErrorStatus" value=""/>
+      <Text id="TI_TemperaturePeakValue" value="Peak Value (Temperature)"/>
+      <Text id="TI_DescriptionTemperaturePeakValue" value=""/>
+      <Text id="TI_TemperatureBottomValue" value="Bottom Value (Temperature)"/>
+      <Text id="TI_DescriptionTemperatureBottomValue" value=""/>
+      <Text id="TI_OutputSelection" value="Select Output"/>
+      <Text id="TI_DescriptionOutputSelection" value=""/>
+      <Text id="TI_ItemOutputSelection_0" value="Output 1"/>
+      <Text id="TI_ItemOutputSelection_1" value="Output 2"/>
+      <Text id="TI_FlipDisplay" value="Flip Display"/>
+      <Text id="TI_DescriptionFlipDisplay" value=""/>
+      <Text id="TI_ItemFlipDisplay_0" value="Standard"/>
+      <Text id="TI_ItemFlipDisplay_1" value="Reverse"/>
+      <Text id="TI_Currentdisplay" value="Current Display"/>
+      <Text id="TI_DescriptionCurrentdisplay" value=""/>
+      <Text id="TI_ItemCurrentdisplay_0" value="Normal display"/>
+      <Text id="TI_ItemCurrentdisplay_1" value="Hold display"/>
+      <Text id="TI_ScreenBrightness" value="Brightness"/>
+      <Text id="TI_DescriptionScreenBrightness" value=""/>
+      <Text id="TI_ItemScreenBrightness_0" value="Brightness 1"/>
+      <Text id="TI_ItemScreenBrightness_1" value="Brightness 2"/>
+      <Text id="TI_ItemScreenBrightness_2" value="Brightness 3"/>
+      <Text id="TI_ItemScreenBrightness_3" value="OFF"/>
+      <Text id="TI_Language" value="Language"/>
+      <Text id="TI_DescriptionLanguage" value=""/>
+      <Text id="TI_ItemLanguage_0" value="English"/>
+      <Text id="TI_ItemLanguage_1" value="Japanese"/>
+      <Text id="TI_ItemLanguage_2" value="Chinese"/>
+      <Text id="TI_ItemLanguage_3" value="German"/>
+      <Text id="TI_Correction" value="Ambient Correction"/>
+      <Text id="TI_DescriptionCorrection" value=""/>
+      <Text id="TI_ItemCorrection_0" value="OFF"/>
+      <Text id="TI_ItemCorrection_1" value="ON(Steel)"/>
+      <Text id="TI_ItemCorrection_2" value="ON(SUS)"/>
+      <Text id="TI_Unit" value="Reserved"/>
+      <Text id="TI_DescriptionUnit" value=""/>
+      <Text id="TI_ItemUnit_0" value="0"/>
+      <Text id="TI_ItemUnit_1" value="1"/>
+      <Text id="TI_TestMode" value="Test Mode"/>
+      <Text id="TI_DescriptionTestMode" value=""/>
+      <Text id="TI_ItemTestMode_0" value="OFF"/>
+      <Text id="TI_ItemTestMode_1" value="ON"/>
+      <Text id="TI_TestModeValue" value="Test Value"/>
+      <Text id="TI_DescriptionTestModeValue" value=""/>
+      <Text id="TI_DisplayIndicatorIlluminationMode" value="Indicator Color"/>
+      <Text id="TI_DescriptionDisplayIndicatorIlluminationMode" value=""/>
+      <Text id="TI_ItemDisplayIndicatorIlluminationMode_0" value="Green-Red"/>
+      <Text id="TI_ItemDisplayIndicatorIlluminationMode_1" value="Green-Off"/>
+      <Text id="TI_ItemDisplayIndicatorIlluminationMode_2" value="Off-Red"/>
+      <Text id="TI_ItemDisplayIndicatorIlluminationMode_3" value="Always Off"/>
+      <Text id="TI_CommandStatus" value="Command Status"/>
+      <Text id="TI_DescriptionCommandStatus" value=""/>
+      <Text id="TI_ItemCommandStatus_0" value="Waiting"/>
+      <Text id="TI_ItemCommandStatus_1" value="Executing"/>
+      <Text id="TI_ItemCommandStatus_2" value="Success"/>
+      <Text id="TI_ItemCommandStatus_3" value="Failure"/>
+      <Text id="TI_SubMenu_parameter" value="Parameter Menu"/>
+      <Text id="TI_SubMenu_identification" value="Identification Menu"/>
+      <Text id="TI_SubMenu_OR_Observation" value="Observation Menu"/>
+      <Text id="TI_SubMenu_OR_Diagnosis" value="Diagnosis Menu"/>
+      <Text id="TI_SubMenu_Sensorconfiguration" value="Sensor Configuration"/>
+      <Text id="TI_SubMenu_OutOff" value="Output and off"/>
+      <Text id="TI_SubMenu_Out1Out2" value="Output1 and output2"/>
+      <Text id="TI_SubMenu_OutAnalog" value="Output and analog"/>
+      <Text id="TI_SubMenu_Advancedsettings" value="Advanced Configuration"/>
+      <Text id="TI_SubMenu_Applicationsettings" value="Display Setting"/>
+      <Text id="TI_SubMenu_Sensorstatus" value="Sensor Status"/>
+      <Text id="TI_SubMenu_Commandrequest" value="Command Request"/>
+      <Text id="TI_SubMenu_Factoryreset" value="Factory reset"/>
+      <Text id="TI_SubMenu_Output1configuration" value="Output1 Configuration"/>
+      <Text id="TI_SubMenu_Output2configuration" value="Output2 Configuration"/>
+      <Text id="TI_SubMenu_Analogconfiguration" value="Analog Configuration"/>
+    </PrimaryLanguage>
+  </ExternalTextCollection>
+  <Stamp crc="2667897844"><Checker name="IODD-Checker V1.1.1" version="V1.1.1.0"/></Stamp>
+</IODevice>
