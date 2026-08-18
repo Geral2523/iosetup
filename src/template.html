@@ -59,6 +59,12 @@ const usedMarques=new Set(DB.appareils.map(d=>d.categorie+'|'+d.type+'|'+d.marqu
 const findType=id=>{for(const k in DB.sousTypes){const t=DB.sousTypes[k].find(x=>x.id===id);if(t)return t}return{}};
 const dev=id=>DB.appareils.find(x=>x.id===id);
 
+/* Chaque navigation qui rend une vue pousse une entrée d'historique
+   ({v, S}) — c'est ce qui permet au bouton ← du navigateur de faire
+   exactement la même chose que le bouton ← Retour du site (voir
+   popstate plus bas), au lieu de quitter le site. */
+function pushView(v){history.pushState({v:v,S:{...S}},'',location.pathname);}
+
 function go(v,val){
   if(v==='home')S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
   if(v==='categorie')S.automate=val;
@@ -67,22 +73,29 @@ function go(v,val){
   if(v==='modele')S.marque=val;
   if(v==='mode')S.modele=val;
   if(v==='guide')S.mode=val;
-  window.scrollTo(0,0);render(v);
+  window.scrollTo(0,0);pushView(v);render(v);
 }
 const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
       goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
 
 /* Blocs système : branche parallèle à la catégorie, indépendante de tout
    appareil — accessible juste après le choix de l'automate. */
-function goBlocs(){window.scrollTo(0,0);render('blocsListe')}
-function goBlocGuide(id){S.bloc=id;window.scrollTo(0,0);render('blocGuide')}
+function goBlocs(){window.scrollTo(0,0);pushView('blocsListe');render('blocsListe')}
+function goBlocGuide(id){S.bloc=id;window.scrollTo(0,0);pushView('blocGuide');render('blocGuide')}
 
 /* Retour/breadcrumb : ré-affiche une étape déjà visitée SANS toucher à S.
    go(v,val) sert à avancer (il enregistre val dans le champ d'état
    correspondant à l'étape précédente) — l'appeler sans val pour reculer
-   écrasait ce champ avec undefined et cassait l'étape suivante. */
-function backTo(v){window.scrollTo(0,0);render(v);}
-const back=v=>`<button class="back" onclick="backTo('${v}')">← Retour</button>`;
+   écrasait ce champ avec undefined et cassait l'étape suivante.
+   Utilisé par les liens du fil d'Ariane (sauter plusieurs étapes en
+   arrière d'un coup) : pousse quand même une entrée d'historique, pour
+   que le bouton ← du navigateur reste cohérent avec où on a cliqué. */
+function backTo(v){window.scrollTo(0,0);pushView(v);render(v);}
+
+/* Le bouton ← Retour appelle directement l'historique du navigateur
+   plutôt que backTo(v) : les deux doivent faire exactement la même
+   chose, autant que ce soit littéralement le même mécanisme. */
+const back=v=>`<button class="back" onclick="history.back()">← Retour</button>`;
 
 /* backView : vue vers laquelle pointe le bouton ← Retour, rendu ici
    pour rester dans la barre sticky plutôt que dans le contenu qui
@@ -222,11 +235,29 @@ function search(q){
 function openRef(id){
   const d=dev(id);
   S={automate:'siemens',categorie:d.categorie,type:d.type,marque:d.marque,modele:id,mode:null};
-  hide();$('q').value='';window.scrollTo(0,0);render('mode');
+  hide();$('q').value='';window.scrollTo(0,0);pushView('mode');render('mode');
 }
 function hide(){$('res').innerHTML=''}
 
-go('home');
+/* Bouton ← / → du navigateur : restaure l'état poussé pour cette entrée
+   et rend la même vue — sans repousser, sinon boucle. Une entrée sans
+   state (le tout premier chargement, avant go('home')) n'est pas la
+   nôtre : on laisse le navigateur faire son comportement normal
+   (quitter le site), plutôt que de forcer l'utilisateur à cliquer deux
+   fois pour vraiment partir. */
+window.addEventListener('popstate',e=>{
+  if(!e.state)return;
+  S=e.state.S;
+  window.scrollTo(0,0);
+  render(e.state.v);
+});
+
+/* Premier rendu : replaceState (pas pushView) pour que cette entrée
+   fusionne avec celle déjà créée par le navigateur au chargement de la
+   page, au lieu d'en empiler une deuxième par-dessus. */
+S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null};
+history.replaceState({v:'home',S:{...S}},'',location.pathname);
+render('home');
 </script>
 </body>
 </html>

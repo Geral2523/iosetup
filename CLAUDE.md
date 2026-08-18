@@ -149,6 +149,32 @@ La recherche est **le vrai point d'entrée** : la majorité des visiteurs arrive
 de Google directement sur une page finale, en tapant une référence.
 Chaque page guide doit donc avoir sa propre adresse et son propre titre.
 
+**Le bouton ← du navigateur fait la même chose que le bouton ← Retour du site**
+(demande explicite de l'utilisateur, malgré la mise en garde donnée sur le
+« back button hijacking » — assumé en connaissance de cause). Deux mécanismes
+distincts :
+- **Maquette SPA** (`template.html`) : chaque navigation qui rend une vue pousse une
+  entrée d'historique (`pushView(v)` → `history.pushState({v, S}, ...)`). Le bouton
+  ← Retour appelle directement `history.back()` — c'est littéralement le même
+  mécanisme que le bouton du navigateur, pas juste un comportement similaire. Un
+  `popstate` restaure `S` et rappelle `render(v)`. Le tout premier rendu utilise
+  `replaceState` (pas `pushState`) pour fusionner avec l'entrée déjà créée par le
+  navigateur au chargement — sinon, quitter le site depuis l'accueil demanderait
+  deux clics au lieu d'un.
+- **Pages statiques** (`build.js`, script inline en fin de page) : un capteur de
+  `document.referrer` — si l'origine ne correspond pas au site (arrivée depuis
+  Google, lien externe, URL tapée), on pousse une entrée factice et on intercepte le
+  `popstate` pour rediriger vers `/` via `location.replace()` (surtout pas
+  `location.href`, qui empilerait une entrée en trop et forcerait un troisième
+  retour au lieu de deux). Si on arrive depuis une autre page du site (lien « autres
+  modes », « même famille »), le referrer correspond et on ne touche à rien — le
+  retour natif fonctionne déjà correctement tout seul.
+Testé en conditions réelles dans le navigateur (pas seulement en théorie) : 6 aller
++ 6 retour dans la maquette restituent exactement les mêmes vues dans l'ordre
+inverse, sortie propre au 7ᵉ ; page statique arrivée « de l'extérieur » → 1er retour
+sur l'accueil, 2ᵉ retour quitte le site ; page statique arrivée par un lien interne →
+comportement natif intact.
+
 ---
 
 ## Les cinq leçons de structure

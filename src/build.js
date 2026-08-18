@@ -140,6 +140,22 @@ function showLang(id,btn){
   document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
   document.getElementById('lang-'+id).classList.add('on');btn.classList.add('on');
 }
+/* Bouton ← du navigateur = bouton ← Tous les guides du site, mais
+   seulement quand on arrive d'ailleurs (recherche Google, lien externe,
+   URL tapée directement) : dans ce cas il n'existe pas de page interne
+   précédente vers laquelle revenir nativement, donc sans ça le clic
+   quitte le site plutôt que de proposer la page d'accueil. Si on arrive
+   depuis une autre page du site (lien "autres modes", "même famille"),
+   le bouton natif retourne déjà correctement à cette page — on n'y
+   touche pas. */
+(function(){
+  var sameSite = document.referrer && new URL(document.referrer).origin === location.origin;
+  if (sameSite) return;
+  history.pushState({guard:true}, '', location.href);
+  window.addEventListener('popstate', function(){
+    location.replace('/');
+  });
+})();
 </script>
 </body>
 </html>`;
