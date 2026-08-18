@@ -680,7 +680,9 @@ function buildGuideArticle(DB, d, mode) {
    <p style="margin:0 0 14px;color:var(--ink-2);font-size:13.5px">Procédure « ${esc(proc.nom)} » — commune à tous les appareils raccordés de cette façon.</p>
    <table><tbody>${proc.etapes.map((e, i) => `<tr>
      <th style="width:36%"><span style="color:var(--signal)">${String(i + 1).padStart(2, '0')}</span> ${esc(e.t)}</th>
-     <td>${esc(e.d)}</td></tr>`).join('')}</tbody></table></section>`);
+     <td>${esc(e.d)}</td></tr>`).join('')}</tbody></table>
+   ${proc.avertissement ? `<div class="note warn"><b>${esc(proc.avertissement.t)}</b>${esc(proc.avertissement.d)}</div>` : ''}
+   </section>`);
 
   /* 5 — données selon le mode */
   if (r.commande) P.push(blocCommande(r, num));

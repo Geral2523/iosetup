@@ -9,5 +9,9 @@
     { "t": "Paramétrer en acyclique", "d": "Sous « Parameters », régler le mode de signal, le nombre de niveaux, puis pour chaque segment l’effet lumineux, la couleur par défaut, la luminosité et les quotients RVB." },
     { "t": "Charger dans les appareils", "d": "Clic droit sur le maître → « Charger avec les appareils ». La configuration part vers le maître ET vers l’appareil. Étape distincte du chargement du programme CPU." },
     { "t": "Relever la plage d’adresses de sortie", "d": "S7-PCT indique les sorties numériques attribuées. C’est le mot source des données process optiques à raccorder dans le programme." }
-  ]
+  ],
+  "avertissement": {
+    "t": "S7-PCT ne configure que les maîtres IO-Link Siemens",
+    "d": "Le catalogue d’appareils de S7-PCT ne s’ouvre que sur un maître IO-Link Siemens (CM 4xIO-Link, CM 8xIO-Link…). Avec un maître d’un autre fabricant — Balluff, Turck, etc. — même raccordé et déclaré via son propre GSDML, S7-PCT ne le reconnaît pas et ne permet pas de configurer ses ports. Ce n’est pas documenté noir sur blanc par Siemens ; c’est un point de confusion récurrent, remonté sur le forum de support officiel Siemens sur plusieurs années, avec les mêmes questions revenant régulièrement. Avec un maître tiers, la configuration des ports IO-Link passe par l’outil du fabricant du maître, pas par S7-PCT."
+  }
 }

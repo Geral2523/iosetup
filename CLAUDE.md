@@ -225,7 +225,13 @@ Un actionneur par **fonction** (signalisation, vannes, vérins).
 - **`iolink-profinet`** — maître IO-Link + GSDML **du maître**, configuration dans TIA
 - **`analogique-ai`** — carte d'entrées analogiques, NORM_X / SCALE_X, aucun IO-Link
 - **`iolink-s7pct`** — passe par **S7 Port Configuration Tool**, un logiciel séparé
-  à installer, avec son propre catalogue et son propre « charger dans les appareils »
+  à installer, avec son propre catalogue et son propre « charger dans les appareils ».
+  Porte un champ `avertissement` (nouveau, rendu par `render.js` comme note d'alerte
+  après le tableau d'étapes) : S7-PCT ne configure que les maîtres IO-Link Siemens,
+  pas les maîtres tiers (Balluff, Turck…) même déclarés via leur propre GSDML — point
+  de confusion récurrent sur le forum de support officiel Siemens, jamais écrit noir
+  sur blanc dans un manuel. Ce champ `avertissement` est un mécanisme générique
+  disponible sur n'importe quelle procédure, pas spécifique à celle-ci.
 - **`tor-di`** — sorties de commutation sur carte d'entrées TOR
 - **`profinet-drive`** — pas de maître intermédiaire : GSDML **de l'appareil final**
   lui-même, télégramme PROFIdrive choisi dans ses propriétés, mise en service Startdrive
