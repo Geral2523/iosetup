@@ -226,8 +226,20 @@ Chaîne de déploiement :
 Comptes utilisés : GitHub `Geral2523`, Cloudflare `05.honnete.survol@icloud.com` (créé pour
 ce projet), domaine toujours enregistré chez OVH (seul le DNS a été délégué à Cloudflare).
 
-### Étape 4 — Référencement
-`sitemap.xml` + inscription à la Google Search Console. Sans ça, Google met des mois.
+### Étape 4 — Référencement ✅ sitemap fait, inscription Search Console à finaliser par l'utilisateur
+`sitemap.xml` et `robots.txt` sont générés automatiquement par `build.js`
+(`buildSitemap()`, `buildRobots()`) — une entrée par page réelle (accueil, chaque guide
+appareil × mode, chaque fiche bloc système), reconstruite depuis `Render.guidePath()` /
+`Render.blocSystemePath()`, donc jamais désynchronisée d'une page qui existe vraiment.
+18 URLs au 2026-08-18. Reste à faire par l'utilisateur (nécessite sa connexion Google) :
+créer la propriété iosetup.com sur Google Search Console, vérifier (le plus simple est un
+enregistrement DNS TXT via Cloudflare, pas une balise HTML), puis soumettre
+`https://iosetup.com/sitemap.xml`. Indexation pas instantanée même après ça — plutôt des
+jours que des mois une fois le sitemap soumis.
+
+**Mesure d'audience :** demandée par l'utilisateur, pas encore choisie/mise en place —
+proposé Cloudflare Web Analytics (gratuit, sans cookie, déjà sur Cloudflare) plutôt que
+Google Analytics (cookies → bandeau RGPD requis) mais pas encore confirmé.
 
 ### Étape 5 — Un script de vérification
 Générer toutes les pages hors navigateur et signaler celles qui plantent.

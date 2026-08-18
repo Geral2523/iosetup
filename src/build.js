@@ -246,6 +246,36 @@ function buildGuidePages(db, distDir, assetV) {
   return count;
 }
 
+/* ── sitemap.xml : une entrée par page réelle (accueil, guides, blocs
+   système), reconstruite depuis les mêmes chemins que les pages
+   statiques — jamais de liste maintenue à la main, jamais désynchro. ── */
+function buildSitemap(db, distDir) {
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = [{ loc: SITE_URL + '/', priority: '1.0' }];
+
+  for (const d of db.appareils) {
+    for (const mode in d.raccordements) {
+      urls.push({ loc: SITE_URL + Render.guidePath('siemens', d, mode), priority: '0.8' });
+    }
+  }
+  for (const bs of db.blocsSysteme) {
+    urls.push({ loc: SITE_URL + Render.blocSystemePath(bs), priority: '0.6' });
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(u => `  <url><loc>${u.loc}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')}
+</urlset>
+`;
+  fs.writeFileSync(path.join(distDir, 'sitemap.xml'), xml);
+  return urls.length;
+}
+
+function buildRobots(distDir) {
+  fs.writeFileSync(path.join(distDir, 'robots.txt'),
+    `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+}
+
 function build() {
   const db = buildDB();
   const distDir = path.join(ROOT, 'dist');
@@ -272,11 +302,14 @@ function build() {
   buildMaquette(db, distDir, assetV);
   const pageCount = buildGuidePages(db, distDir, assetV);
   const blocPageCount = buildBlocPages(db, distDir, assetV);
+  const urlCount = buildSitemap(db, distDir);
+  buildRobots(distDir);
 
   console.log(`OK — ${db.appareils.length} appareils, ${Object.keys(db.procedures).length} procédures, ${Object.keys(db.famillesIodd).length} famille(s) IODD, ${Object.keys(db.famillesCommande).length} famille(s) de commande, ${db.blocsSysteme.length} blocs système`);
   console.log(`→ dist/index.html (maquette interactive)`);
   console.log(`→ ${pageCount} pages statiques générées (appareils)`);
   console.log(`→ ${blocPageCount} pages statiques générées (blocs système)`);
+  console.log(`→ dist/sitemap.xml (${urlCount} URLs), dist/robots.txt`);
 }
 
 build();
