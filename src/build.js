@@ -128,6 +128,7 @@ function pageTemplate({ title, description, canonical, image, breadcrumb, articl
     { '@type': 'ListItem', position: 2, name: title, item: canonical }
   ]
 })}</script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f3403a92a17f469b8eb37c263006394d"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
 

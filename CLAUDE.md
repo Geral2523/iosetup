@@ -246,17 +246,48 @@ en auditant le site en production, cinq corrigés dans la foulée.** Vérifié d
    Corrigé en respectant la structure à deux enfants attendue.
 3. **Cloudflare Web Analytics supposé actif ne l'était pas** — vérifié dans le HTML servi
    (aucun script `cloudflareinsights`/`beacon.min.js`), contredisant ce qui était noté en
-   mémoire. Reste à activer manuellement par l'utilisateur dans le dashboard Cloudflare
-   (Analytics → Web Analytics → Setup) — hors de portée de ce qui est généré par le build.
+   mémoire. **Activé depuis, en deux temps** : l'utilisateur a autorisé Claude à agir
+   directement dans son Chrome connecté (`mcp__claude-in-chrome`) pour le dashboard
+   Cloudflare. D'abord tenté « Enable » (injection automatique côté edge) — confirmé
+   sauvegardé côté dashboard, mais toujours absent du HTML servi même après propagation :
+   probablement une limite du edge HTML-rewriting sur les sites **Cloudflare Pages**
+   (contrairement à un site classique derrière le proxy Cloudflare, Pages ne semble pas
+   passer par le même pipeline de réécriture — l'obfuscation d'email `/cdn-cgi/l/
+   email-protection`, elle, fonctionnait bien, donc le rewriting existe mais ce beacon
+   précis n'était pas injecté). Basculé sur installation manuelle : le snippet
+   (`data-cf-beacon` avec un token) est maintenant codé en dur dans `<head>`, à la fois
+   dans `template.html` et dans `pageTemplate()` de `build.js` — présent sur les 31 pages,
+   vérifié après build. **Piège pendant la récupération du token :** une première lecture
+   visuelle (zoom sur capture d'écran) a mal transcrit le token à 33 caractères au lieu de
+   32 (un « 2 » en trop) — jamais faire confiance à l'OCR visuel pour une chaîne aussi
+   longue et sensible ; la valeur exacte a été relue directement depuis le DOM via
+   `javascript_tool` avant de l'utiliser.
+   **Piège distinct découvert en configurant le RUM :** le réglage était sur « Enable,
+   excluding visitor data in the EU » — qui désactive justement le beacon pour les
+   visiteurs européens, soit l'essentiel du public cible francophone de ce site. Changé
+   pour la version sans cette exclusion (Cloudflare Web Analytics est déjà sans cookie/PII,
+   l'exclusion UE n'apportait rien ici).
 4. **Aucune donnée structurée** — ajouté un `BreadcrumbList` JSON-LD (2 niveaux : Accueil +
    page courante) sur chaque page statique via `pageTemplate()`. Volontairement pas de
    niveaux intermédiaires (catégorie/type/marque) : ce sont des étapes de l'entonnoir SPA,
    pas de vraies URLs navigables, les inclure dans le balisage aurait pointé vers des
    ressources qui n'existent pas.
-5. **robots.txt bloque les robots IA** (ClaudeBot, GPTBot, Google-Extended, etc.) — géré par
-   Cloudflare au niveau du edge (bloc « Managed content », pas généré par `buildRobots()`),
-   probablement la fonctionnalité « AI Scrapers and Crawlers » activée sur le compte.
-   Décision utilisateur en attente — pas quelque chose que Claude peut trancher seul.
+5. **robots.txt bloquait les robots IA** (ClaudeBot, GPTBot, Google-Extended, etc.) — géré
+   par Cloudflare au niveau du edge (bloc « Managed content », pas généré par
+   `buildRobots()`). **Résolu** : l'utilisateur a choisi d'autoriser les robots IA et
+   autorisé Claude à agir directement dans son Chrome connecté (`mcp__claude-in-chrome`)
+   pour le faire dans le dashboard. Piège rencontré : le premier réglage modifié — Security
+   → Bot traffic → « Block AI bots Scope », mis sur « Do not block » — n'a rien changé au
+   `robots.txt` réel, malgré une sauvegarde confirmée. La vraie source était ailleurs : AI
+   Crawl Control → Signals → toggle « Managed robots.txt » (« When enabled, Cloudflare
+   creates or updates your robots.txt file to signal that your content should not be used
+   for AI training »), qui était activé. Désactivé — vérifié par `curl .../robots.txt` :
+   ne restent que `User-agent: * / Allow: /` et le sitemap, ce que `buildRobots()` génère
+   lui-même. **Leçon :** l'UI Cloudflare a plusieurs réglages qui se ressemblent pour la
+   gestion des robots IA (Bot traffic rules vs AI Crawl Control Signals) — après un
+   changement dans ce dashboard, toujours revérifier le résultat réel côté site
+   (`curl`/navigateur) plutôt que de faire confiance à la confirmation de sauvegarde de
+   l'UI, qui ne garantit pas que c'était le bon réglage.
 6. **Mise en page desktop trop large** — `.wrap` (utilisé par le header, le fil d'Ariane ET
    le contenu principal) passé de `max-width:1080px` à `860px` dans `styles.css`. Vérifié
    avant/après : le tableau de caractéristiques passe de 982px à 762px de large à une
