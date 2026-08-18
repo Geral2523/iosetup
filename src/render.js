@@ -134,10 +134,18 @@ function blocIolink(r, num) {
      <td class="num">${x.min !== undefined ? x.min + ' … ' + x.max : '—'}</td>
      <td class="num">${x.gradient ? '÷ 10 → ' + x.unite : (x.unite ? esc(x.unite) : 'bits d’état')}</td></tr>`).join('')}</tbody></table>`;
 
+  /* L'exemple de lecture est propre à chaque appareil (quels octets,
+     quelle grandeur) — jamais de texte générique codé en dur ici : sans
+     donnée fournie par l'appareil, on n'affiche rien plutôt qu'un exemple
+     faux (ça s'est produit : le premier appareil du site, le LDH292,
+     avait ce texte figé dans render.js — correct pour lui, faux pour
+     tous les suivants tant que personne ne s'en rendait compte). */
   if (r.sansGradient)
     h += `<div class="note warn"><b>${esc(r.sansGradient.t)}</b>${esc(r.sansGradient.d)}</div>`;
-  else
-    h += `<div class="note info"><b>Exemple de lecture</b>Valeur brute 435 sur les octets 0-1 → <span class="m">43,5 % RH</span>. Valeur brute −85 sur les octets 4-5 → <span class="m">−8,5 °C</span>.</div>`;
+  else if (r.exempleLecture && r.exempleLecture.length)
+    h += `<div class="note info"><b>Exemple de lecture</b>${r.exempleLecture.map(ex =>
+      `Valeur brute ${esc(ex.raw)} sur ${/[-–—]/.test(String(ex.octets)) ? 'les octets' : 'l’octet'} ${esc(ex.octets)} → <span class="m">${esc(ex.valeur)}</span>.`
+    ).join(' ')}</div>`;
 
   if (r.bitsDiag) {
     h += `<h2 data-n="${num()}" style="margin-top:28px">Bits de diagnostic</h2>
@@ -378,6 +386,68 @@ ${spec.map(cmp).join('\n')}
 ──────┤     Byte     ├────┤     Byte     ├──( deviceStatus )
       │IN  statusRaw │    │IN2    16#0F  │
       │N          4  │    └──────────────┘
+      └──────────────┘`;
+}
+/* ── PN7093 : les données process ne sont pas alignées sur les octets —
+   pression sur les bits 15 à 2 (14 bits), état de OUT2 sur le bit 1,
+   état de OUT1 sur le bit 0, dans un seul mot de 16 bits. Un décalage
+   logique (SHR) suffit pour la plage normale (0 à 25 bar) ; il ne
+   restitue pas correctement une lecture légèrement négative — signalé
+   en commentaire plutôt que traité en silence. */
+function codeSclPN7093(d, r) {
+  return `<span class="c">// ${d.ref} — 16 bits de données process, pas alignés sur les octets :
+// bits 15-2 = pression (14 bits) · bit 1 = état OUT2 · bit 0 = état OUT1
+// ⚠ Le décalage logique ci-dessous ne restitue pas correctement une
+// pression légèrement négative (sous 0 bar) — à vérifier sur
+// installation si cette plage doit être couverte.</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref}"</span>
+<span class="k">VAR_INPUT</span>
+    motProcess : WORD;    <span class="c">// les 16 bits du port, tels quels</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    pression   : REAL;    <span class="c">// bar</span>
+    horsPlage  : BOOL;    <span class="c">// OL — au-delà de 26,3 bar</span>
+    out1Actif  : BOOL;
+    out2Actif  : BOOL;
+<span class="k">END_VAR</span>
+<span class="k">VAR_TEMP</span> brut14 : INT; <span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Bits 0 et 1 : états de commutation, lecture directe ----</span>
+    #out1Actif := #motProcess.%X0;
+    #out2Actif := #motProcess.%X1;
+
+    <span class="c">// ---- Bits 2 à 15 : pression, décalage logique de 2 bits ----</span>
+    #brut14 := WORD_TO_INT(SHR(IN := #motProcess, N := 2));
+    #horsPlage := #brut14 &gt; 263;   <span class="c">// OL au-delà de 26,3 bar</span>
+    #pression  := INT_TO_REAL(#brut14) / 10.0;
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadPN7093(d, r) {
+  return `<span class="c">// ${d.ref} — adresse à adapter à la plage attribuée à votre port.</span>
+
+<span class="r">Réseau 1 — États de commutation (bits 0 et 1, lecture directe)</span>
+   motProcess.%X0
+────┤ ├──────────────────────────────( out1Actif )
+
+   motProcess.%X1
+────┤ ├──────────────────────────────( out2Actif )
+
+<span class="r">Réseau 2 — Pression : décalage logique de 2 bits puis mise à l'échelle</span>
+              ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+              │     SHR      │    │     CONV     │    │     DIV      │
+──────────────┤     Word     ├────┤ Int →  Real  ├────┤     Real     ├──( pression )
+   motProcess │IN motProcess │    │  IN brut14   │    │IN2      10.0 │
+              │N           2 │    └──────────────┘    └──────────────┘
+              └──────────────┘
+
+<span class="r">Réseau 3 — Dépassement de plage (OL, au-delà de 26,3 bar)</span>
+      ┌──────────────┐
+      │      &gt;       │
+──────┤     Int      ├──────────( horsPlage )
+      │IN1     brut14│
+      │IN2        263│
       └──────────────┘`;
 }
 function codeSclFRS(d, r) {
@@ -715,9 +785,13 @@ function buildGuideArticle(DB, d, mode, voieId) {
   if (mode === 'profinet' && r.donnees) P.push(blocProfinet(r, num));
 
   /* 6 — programmation */
-  if (mode === 'iolink' && r.donnees && !r.commande) P.push(r.familleIodd === 'keyence-fr'
-    ? blocProg(codeSclFRS(d, r), codeLadFRS(d, r), num)
-    : blocProg(codeSclIolink(d, r), codeLadIolink(d, r), num));
+  if (mode === 'iolink' && r.donnees && !r.commande) {
+    let scl, lad;
+    if (r.familleIodd === 'keyence-fr') { scl = codeSclFRS(d, r); lad = codeLadFRS(d, r); }
+    else if (d.id === 'pn7093') { scl = codeSclPN7093(d, r); lad = codeLadPN7093(d, r); }
+    else { scl = codeSclIolink(d, r); lad = codeLadIolink(d, r); }
+    P.push(blocProg(scl, lad, num));
+  }
   if (mode === 'analogique') P.push(blocProg(codeSclAnalog(d), codeLadAnalog(d), num));
   if (mode === 'profinet' && r.donnees) P.push(blocProg(codeSclProfinet(d, r), codeLadProfinet(d, r), num));
 
@@ -851,7 +925,7 @@ function primaryMode(d) {
 
 const api = {
   esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
-  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclAnalog, codeLadAnalog,
+  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclAnalog, codeLadAnalog,
   codeSclProfinet, codeLadProfinet,
   buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode,
   buildBlocArticle, blocSystemePath, metaForBloc

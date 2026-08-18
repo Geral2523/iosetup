@@ -80,7 +80,7 @@ récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de l
 un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
 dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
 
-Le site couvre **15 pages** sans erreur, pour 7 appareils (dont 4 pages « voie IO-Link »
+Le site couvre **17 pages** sans erreur, pour 8 appareils (dont 4 pages « voie IO-Link »
 supplémentaires pour les capteurs — voir section Navigation) :
 
 | Appareil | Marque | Type | Modes de raccordement |
@@ -89,11 +89,40 @@ supplémentaires pour les capteurs — voir section Navigation) :
 | FR-S01 | KEYENCE | Niveau radar courte portée | IO-Link · analogique · TOR |
 | FR-LM20 | KEYENCE | Niveau radar longue portée | IO-Link |
 | FR-LS20 | KEYENCE | Niveau radar sanitaire | IO-Link |
+| PN7093 | ifm | Pression relative 0…25 bar | IO-Link |
 | SIRIUS 8WD4615-5JH47 | Siemens | Colonne de signalisation, 15 segments | IO-Link · conventionnel 24 V |
 | SIRIUS 8WD4613-5JH47 | Siemens | Colonne de signalisation, 9 segments | IO-Link · conventionnel 24 V |
 | SINAMICS G120C | Siemens | Variateur de vitesse | PROFINET natif |
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
+
+**PN7093 (ifm, pression) — premier appareil hors familles capteur déjà connues, deux bugs
+génériques trouvés et corrigés en le construisant.** Données process sur 16 bits (2 octets)
+seulement, PAS alignées sur les octets — pression sur les bits 15-2 (14 bits, ÷10 → bar),
+état OUT2 sur le bit 1, état OUT1 sur le bit 0 (source : IODD officiel téléchargé depuis
+IODDfinder, `vendors/310/iodds/89`, pas juste la notice — la notice PN70xx elle-même ne
+donne pas cette structure bit à bit). Ce packing bit-level (plusieurs grandeurs dans un
+même octet) est une première sur le site — jusqu'ici chaque grandeur occupait un octet
+entier ou plus. Deux bugs révélés à la construction, tous deux dans `render.js` :
+1. Le texte « Exemple de lecture » de `blocIolink()` était codé en dur avec les valeurs du
+   LDH292 (« 43,5 % RH »/« −8,5 °C ») — correct pour ce premier appareil, faux pour tous
+   les suivants, personne ne s'en était rendu compte. Corrigé : nouveau champ
+   `raccordements.iolink.exempleLecture` (tableau de `{raw, octets, valeur}`) porté par
+   chaque appareil ; le LDH292 a été migré pour préserver son texte existant à l'identique.
+2. Le code SCL/CONT généré par défaut (`codeSclIolink`/`codeLadIolink`) était en réalité
+   le code spécifique du LDH292 (`humRaw`, `tempRaw`, NoData 32764…), présenté comme le
+   cas générique — un deuxième appareil KEYENCE avait déjà nécessité un contournement
+   (`codeSclFRS`/`familleIodd === 'keyence-fr'`), mais aucun troisième cas n'avait encore
+   testé ce chemin par défaut. Résolu avec la même logique que pour KEYENCE : nouvelles
+   fonctions `codeSclPN7093`/`codeLadPN7093`, sélectionnées sur `d.id === 'pn7093'` dans
+   `buildGuideArticle()`. Pas de généralisation abstraite tentée : chaque appareil au
+   packing de données suffisamment différent aura son propre générateur de code, pas une
+   fonction générique paramétrée — cohérent avec le reste du site (une procédure = une
+   vraie forme de complexité, jamais de texte conditionnel générique).
+Catégorie « pression » activée automatiquement dans l'entonnoir (mécanisme dynamique
+`usedTypes` déjà en place, zéro ligne de taxonomie à toucher). La voie IO-Link
+(S7-PCT vs maître générique) s'applique aussi automatiquement à ce capteur, sans code
+supplémentaire — confirmé en testant après ajout.
 
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`

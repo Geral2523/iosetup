@@ -37,6 +37,10 @@
         { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" }
       ],
       "trame": { "octets": 8, "bits": 64 },
+      "exempleLecture": [
+        { "raw": 435, "octets": "0-1", "valeur": "43,5 % RH" },
+        { "raw": -85, "octets": "4-5", "valeur": "−8,5 °C" }
+      ],
       "donnees": [
         { "cle": "hum", "nom": "Humidité", "bitOffset": 48, "bits": 16, "type": "INT", "octets": [0, 1], "min": 0, "max": 1000, "gradient": 0.1, "unite": "% RH", "couleur": "#1668B3" },
         { "cle": "tmp", "nom": "Température", "bitOffset": 16, "bits": 16, "type": "INT", "octets": [4, 5], "min": -400, "max": 850, "gradient": 0.1, "unite": "°C", "couleur": "#E2570F" },

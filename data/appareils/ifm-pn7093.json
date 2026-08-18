@@ -1,0 +1,75 @@
+{
+  "id": "pn7093", "ref": "PN7093", "marque": "ifm", "marqueNom": "ifm electronic",
+  "categorie": "capteur", "type": "pression", "techno": "Céramique-capacitif", "top": true,
+  "nom": "Capteur de pression électronique avec affichage",
+  "resume": "Premier capteur de pression du site — deux sorties de commutation programmables plus la mesure en continu, sur un seul port IO-Link.",
+  "source": "Fiche technique ifm PN7093 (Distrelec, éditée 24.06.2016) · Notice d’exploitation « Pressure sensor PN70xx » 706136/00, 01/2012 · IODD ifm PN7093 rév. 1.1 (000192_V104326821, 09.09.2014)",
+  "specs": [
+    ["Grandeur mesurée", "Pression relative"],
+    ["Plage de mesure", "0 … 25 bar (0 … 2,5 MPa / 0 … 363 psi)"],
+    ["Surpression admissible", "150 bar — éclatement mini. 350 bar"],
+    ["Précision", "Point de commutation < ±0,5 % · linéarité < ±0,25 % (BFSL) · hystérésis < ±0,25 %"],
+    ["Principe de mesure", "Céramique-capacitif — insensible aux surcharges et pics de pression"],
+    ["Raccord process", "G¼ mâle"],
+    ["Alimentation", "18 … 30 V DC — < 35 mA"],
+    ["Sorties", "2 sorties de commutation programmables (NO/NC), OUT1 doublée en IO-Link"],
+    ["Interface", "IO-Link 1.1 — COM2 (38,4 kBaud)"],
+    ["Port maître requis", "Classe A"],
+    ["Temps de cycle mini", "2,3 ms"],
+    ["DeviceID", "402 (0x192)"],
+    ["Affichage", "4 digits alphanumériques + 2 LED d’état de commutation"],
+    ["Protection", "IP65 / IP67"],
+    ["Température ambiante", "−25 … +80 °C"],
+    ["Raccordement", "1 × M12, 4 broches, contacts dorés"],
+    ["Fluides", "Groupe 2 selon la directive équipements sous pression (DESP) — groupe 1 sur demande"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Le réglage se fait avec deux boutons sur la tête du capteur (Set, Mode/Enter) et l’afficheur 4 digits — aucun logiciel n’est nécessaire pour les réglages de base, contrairement au FR-S01 qui impose un assistant au premier démarrage.",
+    "etapes": [
+      ["SP1 / rP1", "Seuil haut / bas de commutation de OUT1"],
+      ["SP2 / rP2", "Seuil haut / bas de commutation de OUT2"],
+      ["OU1 / OU2", "Fonction de sortie : hystérésis [H··] ou fenêtre [F··], contact NO ou NC — OU2 peut aussi devenir une sortie diagnostic [dESI]"],
+      ["Uni", "Unité affichée : bar, psi ou MPa"],
+      ["P-n", "Logique de sortie : PNP ou NPN"],
+      ["dS1/dS2 · dr1/dr2", "Temporisation à l’enclenchement / au déclenchement, par sortie"],
+      ["dAP", "Amortissement (damping) des sorties de commutation"],
+      ["EF", "Accès au niveau 2 du menu (fonctions étendues), protégeable par code"],
+      ["rES", "Retour aux réglages d’usine"]
+    ],
+    "apres": "Mode/Enter plusieurs fois de suite (ou 15 s sans appui) pour revenir à l’affichage de la mesure. Réglages d’usine : aucun code d’accès, appareil déverrouillé."
+  },
+  "pieges": [
+    { "t": "Verrouillage logiciel (SLoc) non déverrouillable aux boutons", "d": "Si l’appareil a été verrouillé via une configuration logicielle (S7-PCT, LR DEVICE, moneo…), toute tentative de modification aux boutons affiche « SLoc » et échoue. Le déverrouillage passe obligatoirement par le même type de logiciel — les boutons seuls ne peuvent pas l’annuler. À ne pas confondre avec le verrouillage local Mode/Enter+Set (10 s), qui lui se lève de la même façon." },
+    { "t": "LO absent sur cette référence", "d": "Le manuel générique PN70xx documente une mémoire de valeur minimale [LO] à côté de la mémoire maximale [HI] — mais [LO] n’existe que sur les PN7004 et PN7009. Sur le PN7093, seul [HI] fonctionne ; chercher [LO] dans le menu ne mène nulle part." },
+    { "t": "OUT1 partagé avec la communication IO-Link", "d": "La broche 4 (fil noir) porte à la fois la sortie de commutation OUT1 et la ligne C/Q en IO-Link — conforme à la convention standard, contrairement à certains capteurs du site (KEYENCE FR-S01) qui la placent ailleurs. En IO-Link actif, c’est l’état logique de OUT1 qui remonte dans la donnée process, pas un signal de commutation câblé séparé." },
+    { "t": "Plage de réglage des seuils plus étroite que la plage de mesure", "d": "La mesure va de 0 à 25 bar, mais les seuils SP/rP ne se règlent qu’entre 0,2 et 25 bar (SP) et 0,1 et 24,9 bar (rP), par pas de 0,1 bar. Un seuil à 0 bar exact n’est pas atteignable." },
+    { "t": "Fluides du groupe 1 non couverts par cette référence", "d": "Cette référence standard est certifiée pour les fluides du groupe 2 selon la directive équipements sous pression (DESP) — les fluides dangereux du groupe 1 nécessitent une variante spécifique, sur demande auprès d’ifm." },
+    { "t": "Le dépassement de plage (OL) est une zone continue, pas un code isolé", "d": "Contrairement à d’autres capteurs du site où une valeur hors plage est un sentinel unique et net, ici le brut continue de varier entre 264 et 750 (soit 26,4 à 75,0 bar équivalent) une fois la plage nominale dépassée — cette zone est signalée « OL » dans l’IODD mais reste une plage, pas une valeur fixe à tester." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 mâle, 4 broches", "maitre": "al1102", "procedure": "iolink-profinet",
+      "cable": "Câble compatible IO-Link, M12 4 broches",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Brun", "fn": "L+ — alimentation 18…30 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "OUT2 — sortie de commutation" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "OUT1 / C/Q — sortie de commutation ou communication IO-Link" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" }
+      ],
+      "trame": { "octets": 2, "bits": 16 },
+      "exempleLecture": [
+        { "raw": 133, "octets": "0-1", "valeur": "13,3 bar" }
+      ],
+      "donnees": [
+        { "cle": "pres", "nom": "Pression", "bitOffset": 2, "bits": 14, "type": "INT", "octets": [0, 1], "min": -10, "max": 750, "gradient": 0.1, "unite": "bar", "couleur": "#1668B3" }
+      ],
+      "bitsDiag": [
+        ["1", "1", "État de commutation OUT2 — actif/inactif selon le réglage [OU2]"],
+        ["1", "0", "État de commutation OUT1 — actif/inactif selon le réglage [OU1]"]
+      ],
+      "valeursSpeciales": [
+        ["264 … 750", "OL — au-dessus de la plage nominale (> 26,3 bar), zone continue et non un code isolé", "Pression"]
+      ]
+    }
+  }
+}
