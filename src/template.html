@@ -44,7 +44,7 @@ const DB = /*__DB_JSON__*/null/*__END_DB_JSON__*/;
 /* ══════════════════════════════════════════════════════════
    NAVIGATION
    ══════════════════════════════════════════════════════════ */
-let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null};
+let S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null,voie:null};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const find=(c,id)=>DB[c].find(x=>x.id===id)||{};
@@ -66,7 +66,7 @@ const dev=id=>DB.appareils.find(x=>x.id===id);
 function pushView(v){history.pushState({v:v,S:{...S}},'',location.pathname);}
 
 function go(v,val){
-  if(v==='home')S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null};
+  if(v==='home')S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,voie:null};
   if(v==='categorie')S.automate=val;
   if(v==='type')S.categorie=val;
   if(v==='marque')S.type=val;
@@ -76,7 +76,25 @@ function go(v,val){
   window.scrollTo(0,0);pushView(v);render(v);
 }
 const goCat=v=>go('categorie',v),goType=v=>go('type',v),goMarque=v=>go('marque',v),
-      goModele=v=>go('modele',v),goMode=v=>go('mode',v),goGuide=v=>go('guide',v);
+      goModele=v=>go('modele',v),goMode=v=>go('mode',v);
+
+/* IO-Link sur un capteur (jamais un actionneur, sens !== 'sortie') : une
+   étape de plus avant le guide, quel maître IO-Link — le brochage ne
+   change pas selon le maître, mais la procédure TIA Portal, si (voir
+   DB.voiesIolink et Render.rac()). Tout autre mode va droit au guide,
+   inchangé. */
+function goGuide(mode){
+  const d=dev(S.modele), r=d.raccordements[mode];
+  if(mode==='iolink'&&r&&r.sens!=='sortie'&&DB.voiesIolink){
+    S.mode=mode;S.voie=null;
+    window.scrollTo(0,0);pushView('voie');render('voie');return;
+  }
+  go('guide',mode);
+}
+function goVoie(voieId){
+  S.voie=voieId;
+  window.scrollTo(0,0);pushView('guide');render('guide');
+}
 
 /* Blocs système : branche parallèle à la catégorie, indépendante de tout
    appareil — accessible juste après le choix de l'automate. */
@@ -180,6 +198,14 @@ function render(v){
       'C\u2019est ce choix qui détermine la procédure. Un même capteur en IO-Link ou en 4-20 mA n\u2019a rien de commun côté TIA Portal.')
       +tiles(dispo,'goGuide',dispo[0]&&dispo[0].id);return;
   }
+  if(v==='voie'){
+    const d=dev(S.modele);
+    crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},
+            {txt:t.nom,vue:'marque'},{txt:m.nom,vue:'modele'},{txt:d.ref,vue:'mode'},{txt:'IO-Link'}],'mode');
+    app.innerHTML=head('Étape 7 sur 7','Quel maître IO-Link ?',
+      'Le brochage du capteur ne change pas selon le maître — mais la procédure à suivre dans TIA Portal, si.')
+      +tiles(DB.voiesIolink,'goVoie',DB.voiesIolink[0]&&DB.voiesIolink[0].id);return;
+  }
   if(v==='guide')guide();
 }
 
@@ -212,8 +238,11 @@ function modelNote(){
 
 function guide(){
   const d=dev(S.modele), md=DB.modes.find(x=>x.id===S.mode);
-  crumbs([{txt:'Automate',vue:'home'},{txt:d.ref,vue:'mode'},{txt:md.nom}],'mode');
-  $('app').innerHTML=Render.buildGuideArticle(DB,d,S.mode)+modelNote();
+  const voie=(S.mode==='iolink'&&S.voie)?DB.voiesIolink.find(x=>x.id===S.voie):null;
+  const fil=[{txt:'Automate',vue:'home'},{txt:d.ref,vue:'mode'},{txt:md.nom,vue:voie?'voie':undefined}];
+  if(voie)fil.push({txt:voie.nom});
+  crumbs(fil,voie?'voie':'mode');
+  $('app').innerHTML=Render.buildGuideArticle(DB,d,S.mode,S.voie)+modelNote();
 }
 function showLang(id,btn){
   document.querySelectorAll('.lang').forEach(e=>e.classList.remove('on'));
@@ -255,7 +284,7 @@ window.addEventListener('popstate',e=>{
 /* Premier rendu : replaceState (pas pushView) pour que cette entrée
    fusionne avec celle déjà créée par le navigateur au chargement de la
    page, au lieu d'en empiler une deuxième par-dessus. */
-S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null};
+S={automate:null,categorie:null,type:null,marque:null,modele:null,mode:null,bloc:null,voie:null};
 history.replaceState({v:'home',S:{...S}},'',location.pathname);
 render('home');
 </script>

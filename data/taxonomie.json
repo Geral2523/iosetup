@@ -54,5 +54,14 @@
   "maitres": [
     { "id": "al1102", "marque": "ifm", "ref": "AL1102", "protocole": "PROFINET", "ports": 8, "classe": "A",
       "ip": "IP65 / IP66 / IP67", "specIolink": "1.0 à 1.1.2", "courantSortie": "300 mA", "courantTotal": "3,6 A" }
+  ],
+
+  "voiesIolink": [
+    { "id": "al1102", "nom": "Maître PROFINET générique (ex. ifm AL1102)",
+      "note": "GSDML installé directement dans TIA Portal — pas de S7-PCT",
+      "procedure": "iolink-profinet", "maitre": "al1102" },
+    { "id": "s7pct", "nom": "Maître Siemens, via S7-PCT",
+      "note": "CM 4xIO-Link / CM 8xIO-Link — configuration dans un outil séparé",
+      "procedure": "iolink-s7pct-capteur", "maitre": null }
   ]
 }

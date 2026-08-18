@@ -80,7 +80,8 @@ récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de l
 un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
 dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
 
-Le site couvre **11 pages** sans erreur, pour 7 appareils :
+Le site couvre **15 pages** sans erreur, pour 7 appareils (dont 4 pages « voie IO-Link »
+supplémentaires pour les capteurs — voir section Navigation) :
 
 | Appareil | Marque | Type | Modes de raccordement |
 |---|---|---|---|
@@ -144,6 +145,39 @@ Entonnoir en 7 étapes, plus une barre de recherche qui court-circuite tout :
 ```
 Accueil → Automate → Catégorie → Sous-type → Marque → Modèle → Mode de raccordement → Guide
 ```
+
+**Étape 7 bis (nouveau) : « Quel maître IO-Link ? »** — insérée entre le mode de
+raccordement et le guide, mais **seulement pour un capteur en IO-Link** (jamais un
+actionneur — `raccordements.iolink.sens !== 'sortie'`, sinon la procédure est déjà
+figée par les besoins de paramétrage acyclique de l'appareil, ex. SIRIUS 8WD46 =
+S7-PCT obligatoire). Catalogue `DB.voiesIolink` dans `taxonomie.json` (2 entrées :
+`al1102` — maître PROFINET générique, GSDML direct dans TIA, sans S7-PCT — et
+`s7pct` — maître Siemens configuré par S7-PCT). Le brochage et le câble ne changent
+pas selon le maître (propriété du capteur) ; seule la procédure TIA Portal affichée
+change, via `Render.rac(DB, d, mode, voieId)` qui substitue `procedure` (et,
+seulement sur la voie non par défaut, `maitre`). **Piège évité pendant le
+développement :** écraser `maitre` inconditionnellement sur la voie par défaut
+aurait affirmé à tort une compatibilité AL1102 vérifiée pour des capteurs d'autres
+marques (KEYENCE, etc.) qui n'ont jamais été testés avec ce maître précis — corrigé
+en ne touchant `maitre` que sur la voie `s7pct` (mise à `null`, maître générique
+sans référence précise), jamais sur la voie par défaut qui garde la valeur déjà
+déclarée par l'appareil (`null` pour la plupart, `al1102` seulement pour le LDH292,
+un capteur ifm réellement testé sur le maître ifm).
+
+URL : la voie par défaut (`al1102`) garde l'URL déjà indexée, sans suffixe — pour
+ne rien casser côté Search Console/sitemap déjà soumis. Seule la voie `s7pct`
+ajoute un segment : `.../<mode>/s7pct/`. Nouvelle procédure dédiée
+`data/procedures/iolink-s7pct-capteur.json`, distincte de `iolink-s7pct`
+(actionneurs) — la procédure actionneur nomme un catalogue S7-PCT précis
+(« SIRIUS signaling columns »), pas réutilisable telle quelle pour un capteur
+générique ; plutôt que du texte conditionnel dans une procédure, une procédure à
+part, cohérente avec le principe déjà en place ailleurs sur le site (une procédure
+= une vraie forme de complexité, pas un bloc générique avec des branches).
+Lien croisé entre voies sur les pages statiques (`otherVoiesHtml()` dans
+`build.js`), même mécanique que « Autres modes »/« Même famille ».
+Étape SPA correspondante (`v==='voie'` dans `template.html`) intégrée à la
+parité bouton retour déjà en place (`pushView`/`popstate`) — testée en conditions
+réelles (aller/retour dans le navigateur) après implémentation.
 
 La recherche est **le vrai point d'entrée** : la majorité des visiteurs arriveront
 de Google directement sur une page finale, en tapant une référence.

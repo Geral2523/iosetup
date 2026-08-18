@@ -1,0 +1,16 @@
+{
+  "nom": "Capteur IO-Link, via un maître Siemens configuré par S7 Port Configuration Tool",
+  "etapes": [
+    { "t": "Insérer le maître Siemens dans le projet", "d": "Module de communication CM 4xIO-Link ou CM 8xIO-Link, dans le rack d’une station ET 200SP (ou intégré à une CPU compacte selon le modèle). Depuis le catalogue matériel : modules de communication → maître IO-Link." },
+    { "t": "Installer S7-PCT", "d": "Le S7 Port Configuration Tool est un logiciel séparé, téléchargeable chez Siemens. Redémarrer TIA Portal après l’installation, sinon l’outil n’apparaît pas." },
+    { "t": "Récupérer et installer l’IODD du capteur", "d": "L’IODD décrit le capteur : paramètres, données process, plages. Source officielle : IODDfinder, ou le site du fabricant. Prendre la version correspondant au firmware." },
+    { "t": "Ouvrir S7-PCT depuis TIA", "d": "Clic droit sur le module maître dans la vue appareil, puis « Démarrer l’outil d’appareil ». S7-PCT s’ouvre avec son propre catalogue." },
+    { "t": "Affecter le capteur à un port", "d": "Dans le catalogue S7-PCT : rechercher le fabricant puis la référence exacte du capteur (l’IODD doit être installée pour qu’il apparaisse). Glisser sur le port voulu." },
+    { "t": "Charger dans les appareils", "d": "Clic droit sur le maître → « Charger avec les appareils ». La configuration part vers le maître ET vers le capteur. Étape distincte du chargement du programme CPU." },
+    { "t": "Relever la plage d’adresses d’entrée", "d": "S7-PCT indique les entrées numériques attribuées au port. C’est l’adresse de base des données process du capteur dans le programme." }
+  ],
+  "avertissement": {
+    "t": "S7-PCT ne configure que les maîtres IO-Link Siemens",
+    "d": "Cette procédure suppose un maître Siemens (CM 4xIO-Link, CM 8xIO-Link…). Avec un maître d’un autre fabricant — ifm, Balluff, Turck… — S7-PCT ne le reconnaît pas, même déclaré via son propre GSDML : voir la voie « maître générique, sans S7-PCT » pour ce cas."
+  }
+}

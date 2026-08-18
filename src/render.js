@@ -14,10 +14,29 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
    (actionneurs) dans le raccordement de l'appareil. C'est ce qui permet
    d'ajouter un appareil de la même gamme en quelques lignes de données,
    sans dupliquer la trame ou le bloc fonction de commande. */
-function rac(DB, d, mode) {
+function rac(DB, d, mode, voieId) {
   const r = d.raccordements[mode];
   if (!r) return r;
   let out = r;
+  /* Voie IO-Link (capteurs seulement, jamais r.sens==='sortie') : le
+     brochage et le câble ne changent pas selon le maître utilisé — c'est
+     une propriété du capteur, pas du maître — mais la procédure à suivre
+     change, oui. Défaut : DB.voiesIolink[0] (« al1102 »), pour ne rien
+     changer aux URL déjà indexées.
+     Le champ « maitre » (compatibilité affichée) n'est PAS pris depuis la
+     voie sur ce chemin par défaut : il reste celui déjà déclaré par
+     l'appareil (souvent null — seul le LDH292 déclare vraiment « al1102 »,
+     parce que c'est un capteur ifm testé sur le maître ifm). L'écraser
+     inconditionnellement affirmerait une compatibilité AL1102 non
+     vérifiée sur des capteurs d'autres marques (ex. KEYENCE FR-S01).
+     Sur la voie S7-PCT en revanche, on l'écrase bien à null : ce n'est
+     plus l'AL1102 qui est utilisé, quel que soit ce que l'appareil
+     déclarait par défaut. */
+  if (mode === 'iolink' && r.sens !== 'sortie' && DB.voiesIolink) {
+    const voie = DB.voiesIolink.find(v => v.id === voieId) || DB.voiesIolink[0];
+    out = Object.assign({}, out, { procedure: voie.procedure, voie: voie.id });
+    if (voie.id !== DB.voiesIolink[0].id) out.maitre = voie.maitre;
+  }
   if (r.familleIodd) {
     const F = DB.famillesIodd[r.familleIodd], v = r.variante || {};
     const sub = t => String(t).replace('@VAL2@', v.val2 || '—').replace('@BIT28@', v.bit28 || '—');
@@ -613,11 +632,14 @@ function codeLadProfinet(d, r) {
    interactive) et par le générateur de pages statiques.
    ══════════════════════════════════════════════════════════ */
 
-/* d, mode → l'article HTML complet d'un guide (sans chrome de page) */
-function buildGuideArticle(DB, d, mode) {
-  const r = rac(DB, d, mode), md = DB.modes.find(x => x.id === mode),
+/* d, mode → l'article HTML complet d'un guide (sans chrome de page).
+   voieId : uniquement pertinent en IO-Link sur un capteur — quel maître
+   IO-Link suivre (voir DB.voiesIolink et rac()). Ignoré sinon. */
+function buildGuideArticle(DB, d, mode, voieId) {
+  const r = rac(DB, d, mode, voieId), md = DB.modes.find(x => x.id === mode),
         proc = DB.procedures[r.procedure], mt = r.maitre ? DB.maitres.find(x => x.id === r.maitre) : null,
-        a = DB.automates.find(x => x.id === 'siemens');
+        a = DB.automates.find(x => x.id === 'siemens'),
+        voie = r.voie ? DB.voiesIolink.find(v => v.id === r.voie) : null;
   let n = 0; const num = () => String(++n).padStart(2, '0');
   const P = [];
 
@@ -632,6 +654,7 @@ function buildGuideArticle(DB, d, mode) {
       <span class="chip mode">${esc(md.nom)}</span>
       <span class="chip alt">${esc(a.nom)}</span>
       <span class="chip alt">${esc(d.techno)}</span>
+      ${voie ? `<span class="chip alt">${esc(voie.nom)}</span>` : ''}
       ${r.sens === 'sortie' ? '<span class="chip alt" style="border-color:var(--signal);color:var(--signal-deep)">Données en sortie</span>' : ''}
     </div></div>
     ${d.photo ? `<img class="guide-head-photo" src="${esc(d.photo)}" alt="${esc(d.ref)}" loading="lazy">` : ''}
@@ -763,21 +786,26 @@ function metaForBloc(bs) {
   return { title, description, path: blocSystemePath(bs) };
 }
 
-/* ── URL canonique d'un guide : /<automate>/<categorie>/<type>/<marque>/<id>/<mode>/ ── */
-function guidePath(automateId, d, mode) {
-  return `/${automateId}/${d.categorie}/${d.type}/${d.marque}/${d.id}/${mode}/`;
+/* ── URL canonique d'un guide : /<automate>/<categorie>/<type>/<marque>/<id>/<mode>/ ──
+   voieId : n'ajoute un segment que pour la voie IO-Link non par défaut
+   (« s7pct ») — la voie par défaut (« al1102 », DB.voiesIolink[0]) garde
+   l'URL déjà indexée, inchangée, pour ne rien casser côté référencement. */
+function guidePath(automateId, d, mode, voieId) {
+  const suffixe = (mode === 'iolink' && voieId && voieId !== 'al1102') ? `${voieId}/` : '';
+  return `/${automateId}/${d.categorie}/${d.type}/${d.marque}/${d.id}/${mode}/${suffixe}`;
 }
 
 /* ── title + meta description, construits depuis les données ──
    Lus dans les résultats de recherche : c'est ce qui décide du clic. */
-function metaFor(DB, d, mode) {
-  const r = rac(DB, d, mode), md = DB.modes.find(x => x.id === mode);
+function metaFor(DB, d, mode, voieId) {
+  const r = rac(DB, d, mode, voieId), md = DB.modes.find(x => x.id === mode);
   const mt = r.maitre ? DB.maitres.find(x => x.id === r.maitre) : null;
   const sortie = r.sens === 'sortie';
+  const voie = r.voie ? DB.voiesIolink.find(v => v.id === r.voie) : null;
 
   let title;
   if (mode === 'iolink') {
-    const via = mt ? `sur ${mt.ref}` : 'en IO-Link';
+    const via = voie && voie.id === 's7pct' ? 'sur maître Siemens (S7-PCT)' : (mt ? `sur ${mt.ref}` : 'en IO-Link');
     title = sortie
       ? `${d.ref} ${via} dans TIA Portal — câblage et pilotage IO-Link`
       : `${d.ref} ${via} dans TIA Portal — câblage, IODD et programmation`;
@@ -799,7 +827,7 @@ function metaFor(DB, d, mode) {
   description += '. Pièges de mise en service inclus.';
   if (description.length > 160) description = description.slice(0, 157).replace(/\s+\S*$/, '') + '…';
 
-  return { title, description, path: guidePath('siemens', d, mode) };
+  return { title, description, path: guidePath('siemens', d, mode, voieId) };
 }
 
 /* ── appareils de la même famille (hors soi-même) — IODD (capteurs)

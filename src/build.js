@@ -72,6 +72,7 @@ function buildDB() {
     marques: taxonomie.marques,
     modes: taxonomie.modes,
     maitres: taxonomie.maitres,
+    voiesIolink: taxonomie.voiesIolink,
     procedures,
     famillesIodd,
     famillesCommande,
@@ -161,16 +162,29 @@ function showLang(id,btn){
 </html>`;
 }
 
-function breadcrumbHtml(DB, d, md) {
+function breadcrumbHtml(DB, d, md, voie) {
   const a = DB.automates.find(x => x.id === 'siemens');
   const c = DB.categories.find(x => x.id === d.categorie);
   const t = DB.sousTypes[d.categorie].find(x => x.id === d.type);
   const m = DB.marques.find(x => x.id === d.marque);
   const seg = (txt) => `<span class="now">${Render.esc(txt)}</span>`;
-  return [
-    `<a href="/">Accueil</a>`,
-    seg(a.nom), seg(c.nom), seg(t.nom), seg(m.nom), seg(d.ref), seg(md.nom)
-  ].join('<span class="sep">›</span>');
+  const segs = [`<a href="/">Accueil</a>`, seg(a.nom), seg(c.nom), seg(t.nom), seg(m.nom), seg(d.ref), seg(md.nom)];
+  if (voie) segs.push(seg(voie.nom));
+  return segs.join('<span class="sep">›</span>');
+}
+
+/* ── capteur IO-Link : lien croisé vers l'autre voie (maître) pour le même appareil ── */
+function otherVoiesHtml(DB, d, voieId) {
+  if (!DB.voiesIolink) return '';
+  const autres = DB.voiesIolink.filter(v => v.id !== voieId);
+  if (!autres.length) return '';
+  const items = autres.map(v => {
+    const href = Render.guidePath('siemens', d, 'iolink', v.id);
+    return `<li><a href="${href}">${Render.esc(d.ref)} via ${Render.esc(v.nom)}</a></li>`;
+  }).join('');
+  return `<div class="note info"><b>Autre maître IO-Link possible pour ${Render.esc(d.ref)}</b>
+    <p style="margin:0 0 8px">Le brochage du capteur ne change pas — seule la procédure TIA Portal diffère selon le maître utilisé.</p>
+    <ul style="margin:0;padding-left:18px">${items}</ul></div>`;
 }
 
 function otherModesHtml(DB, d, currentMode) {
@@ -233,30 +247,39 @@ function buildBlocPages(db, distDir, assetV) {
   return count;
 }
 
-/* ── une page statique par appareil × mode de raccordement ── */
+/* ── une page statique par appareil × mode de raccordement — et, pour un
+   capteur en IO-Link, une page de plus par voie (quel maître) puisque
+   chaque voie a sa propre procédure et donc sa propre page indexable ── */
 function buildGuidePages(db, distDir, assetV) {
   let count = 0;
   for (const d of db.appareils) {
     for (const mode in d.raccordements) {
       const md = db.modes.find(x => x.id === mode);
-      const meta = Render.metaFor(db, d, mode);
-      const articleHtml = Render.buildGuideArticle(db, d, mode);
+      const estCapteurIolink = mode === 'iolink' && d.raccordements[mode].sens !== 'sortie' && db.voiesIolink;
+      const voies = estCapteurIolink ? db.voiesIolink : [null];
 
-      const html = pageTemplate({
-        title: meta.title,
-        description: meta.description,
-        canonical: SITE_URL + meta.path,
-        breadcrumb: breadcrumbHtml(db, d, md),
-        articleHtml,
-        otherModesHtml: otherModesHtml(db, d, mode),
-        familyHtml: familyHtml(db, d),
-        assetV
-      });
+      for (const voie of voies) {
+        const voieId = voie ? voie.id : undefined;
+        const meta = Render.metaFor(db, d, mode, voieId);
+        const articleHtml = Render.buildGuideArticle(db, d, mode, voieId);
+        const extraHtml = estCapteurIolink ? otherVoiesHtml(db, d, voieId) : '';
 
-      const outDir = path.join(distDir, meta.path);
-      fs.mkdirSync(outDir, { recursive: true });
-      fs.writeFileSync(path.join(outDir, 'index.html'), html);
-      count++;
+        const html = pageTemplate({
+          title: meta.title,
+          description: meta.description,
+          canonical: SITE_URL + meta.path,
+          breadcrumb: breadcrumbHtml(db, d, md, voie),
+          articleHtml,
+          otherModesHtml: otherModesHtml(db, d, mode) + extraHtml,
+          familyHtml: familyHtml(db, d),
+          assetV
+        });
+
+        const outDir = path.join(distDir, meta.path);
+        fs.mkdirSync(outDir, { recursive: true });
+        fs.writeFileSync(path.join(outDir, 'index.html'), html);
+        count++;
+      }
     }
   }
   return count;
@@ -271,7 +294,11 @@ function buildSitemap(db, distDir) {
 
   for (const d of db.appareils) {
     for (const mode in d.raccordements) {
-      urls.push({ loc: SITE_URL + Render.guidePath('siemens', d, mode), priority: '0.8' });
+      const estCapteurIolink = mode === 'iolink' && d.raccordements[mode].sens !== 'sortie' && db.voiesIolink;
+      const voies = estCapteurIolink ? db.voiesIolink.map(v => v.id) : [undefined];
+      for (const voieId of voies) {
+        urls.push({ loc: SITE_URL + Render.guidePath('siemens', d, mode, voieId), priority: '0.8' });
+      }
     }
   }
   for (const bs of db.blocsSysteme) {
