@@ -224,6 +224,47 @@ l'affirmer sans relire `taxonomie.json`. Reproductible avec `sick`/`balluff` (en
 `actif:false`, aucun appareil) le jour où un premier appareil de ces marques sera ajouté,
 si ce correctif n'existait pas.
 
+**Revue qualité/SEO du site demandée par l'utilisateur (même session) — six points identifiés
+en auditant le site en production, cinq corrigés dans la foulée.** Vérifié directement sur
+`iosetup.com` (curl + navigateur), pas seulement en théorie :
+
+1. **La page d'accueil n'avait ni meta description, ni Open Graph, ni canonical** —
+   contrairement à chaque page de guide (`metaFor()` en générait déjà). Corrigé : ajoutés en
+   dur dans `template.html` pour l'accueil (contenu fixe, une seule page) ; `pageTemplate()`
+   dans `build.js` génère désormais aussi OG/Twitter Card pour les pages de guides et de
+   blocs système, avec `og:image` = photo de l'appareil si elle existe, sinon le logo.
+2. **Aucune page légale, à propos ou contact nulle part sur le site** — pas de footer du
+   tout. Ajouté : `buildLegalPage()` dans `build.js` génère `/mentions-legales/` (éditeur,
+   hébergeur, à propos, fiabilité du contenu, contact) ; un `<footer class="site-footer">` y
+   renvoie depuis `pageTemplate()` (pages statiques) et `template.html` (maquette SPA).
+   **Piège rencontré en le construisant :** `.guide-head` a une règle CSS mobile
+   (`flex-direction:column-reverse`) pensée pour exactement deux enfants directs
+   (`.guide-head-text` + `.guide-head-photo`, pour afficher la photo au-dessus du titre sur
+   petit écran) — la première version de la page légale mettait step/h1/lede directement
+   dans `.guide-head` sans le wrapper `.guide-head-text`, ce qui inversait leur ordre
+   d'affichage sur mobile (lede, puis titre, puis label, dans cet ordre visuel absurde).
+   Corrigé en respectant la structure à deux enfants attendue.
+3. **Cloudflare Web Analytics supposé actif ne l'était pas** — vérifié dans le HTML servi
+   (aucun script `cloudflareinsights`/`beacon.min.js`), contredisant ce qui était noté en
+   mémoire. Reste à activer manuellement par l'utilisateur dans le dashboard Cloudflare
+   (Analytics → Web Analytics → Setup) — hors de portée de ce qui est généré par le build.
+4. **Aucune donnée structurée** — ajouté un `BreadcrumbList` JSON-LD (2 niveaux : Accueil +
+   page courante) sur chaque page statique via `pageTemplate()`. Volontairement pas de
+   niveaux intermédiaires (catégorie/type/marque) : ce sont des étapes de l'entonnoir SPA,
+   pas de vraies URLs navigables, les inclure dans le balisage aurait pointé vers des
+   ressources qui n'existent pas.
+5. **robots.txt bloque les robots IA** (ClaudeBot, GPTBot, Google-Extended, etc.) — géré par
+   Cloudflare au niveau du edge (bloc « Managed content », pas généré par `buildRobots()`),
+   probablement la fonctionnalité « AI Scrapers and Crawlers » activée sur le compte.
+   Décision utilisateur en attente — pas quelque chose que Claude peut trancher seul.
+6. **Mise en page desktop trop large** — `.wrap` (utilisé par le header, le fil d'Ariane ET
+   le contenu principal) passé de `max-width:1080px` à `860px` dans `styles.css`. Vérifié
+   avant/après : le tableau de caractéristiques passe de 982px à 762px de large à une
+   fenêtre de 1280px, sans rien changer sur mobile (padding latéral fixe, jamais le facteur
+   limitant en dessous de 860px de large). Un septième point (catalogue encore restreint à
+   11 appareils) a été noté mais n'est pas quelque chose à « corriger » — c'est le stade
+   actuel du projet, pas un bug.
+
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`
 dans `build.js` scanne le dossier et pose `d.photo` sur l'objet avant la génération.
@@ -432,9 +473,12 @@ enregistrement DNS TXT via Cloudflare, pas une balise HTML), puis soumettre
 `https://iosetup.com/sitemap.xml`. Indexation pas instantanée même après ça — plutôt des
 jours que des mois une fois le sitemap soumis.
 
-**Mesure d'audience :** demandée par l'utilisateur, pas encore choisie/mise en place —
-proposé Cloudflare Web Analytics (gratuit, sans cookie, déjà sur Cloudflare) plutôt que
-Google Analytics (cookies → bandeau RGPD requis) mais pas encore confirmé.
+**Mesure d'audience :** toujours pas active — confirmé par vérification directe du HTML
+servi en production (aucun script `cloudflareinsights`/`beacon.min.js`), malgré une note de
+mémoire antérieure affirmant à tort que c'était « déjà actif automatiquement ». Cloudflare
+Web Analytics reste la proposition retenue (gratuit, sans cookie, déjà sur Cloudflare) mais
+l'activation elle-même (Analytics → Web Analytics → Setup dans le dashboard) doit être faite
+manuellement par l'utilisateur — ce n'est pas quelque chose que `build.js` peut générer.
 
 ### Étape 5 — Un script de vérification
 Générer toutes les pages hors navigateur et signaler celles qui plantent.

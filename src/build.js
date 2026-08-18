@@ -97,7 +97,7 @@ function buildMaquette(db, distDir, assetV) {
 }
 
 /* ── chrome de page statique autour de l'article de guide ── */
-function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, otherModesHtml, familyHtml, assetV }) {
+function pageTemplate({ title, description, canonical, image, breadcrumb, articleHtml, otherModesHtml, familyHtml, assetV, hideModelNote }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -106,6 +106,13 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 <title>${title}</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="IO Setup">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:url" content="${canonical}">
+<meta property="og:image" content="${image}">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico?v=${assetV}" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=${assetV}">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=${assetV}">
@@ -114,6 +121,13 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css?v=${assetV}">
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL + '/' },
+    { '@type': 'ListItem', position: 2, name: title, item: canonical }
+  ]
+})}</script>
 </head>
 <body>
 
@@ -130,10 +144,15 @@ function pageTemplate({ title, description, canonical, breadcrumb, articleHtml, 
 ${articleHtml}
 ${otherModesHtml}
 ${familyHtml}
-<div class="model-note"><b>À propos de cette page</b>
+${hideModelNote ? '' : `<div class="model-note"><b>À propos de cette page</b>
   Cette page est générée depuis des fiches de données structurées, pas écrite à la main —
-  voir <a href="/" style="color:inherit">la maquette interactive</a> pour naviguer parmi tous les guides.</div>
+  voir <a href="/" style="color:inherit">la maquette interactive</a> pour naviguer parmi tous les guides.</div>`}
 </main>
+
+<footer class="site-footer"><div class="wrap">
+  <a href="${LEGAL_PATH}">Mentions légales · à propos · contact</a>
+  <span>Une erreur sur cette page ? <a href="mailto:georgesalexandre25@gmail.com">Signalez-la</a>.</span>
+</div></footer>
 
 <script>
 function showLang(id,btn){
@@ -232,6 +251,7 @@ function buildBlocPages(db, distDir, assetV) {
       title: meta.title,
       description: meta.description,
       canonical: SITE_URL + meta.path,
+      image: SITE_URL + '/assets/logo.png?v=' + assetV,
       breadcrumb: blocBreadcrumbHtml(db, bs),
       articleHtml,
       otherModesHtml: '',
@@ -268,6 +288,7 @@ function buildGuidePages(db, distDir, assetV) {
           title: meta.title,
           description: meta.description,
           canonical: SITE_URL + meta.path,
+          image: d.photo ? SITE_URL + d.photo : SITE_URL + '/assets/logo.png?v=' + assetV,
           breadcrumb: breadcrumbHtml(db, d, md, voie),
           articleHtml,
           otherModesHtml: otherModesHtml(db, d, mode) + extraHtml,
@@ -283,6 +304,79 @@ function buildGuidePages(db, distDir, assetV) {
     }
   }
   return count;
+}
+
+const LEGAL_PATH = '/mentions-legales/';
+
+/* ── mentions légales, à propos, contact — une page, écrite à la main
+   (contrairement au reste du site) puisqu'il n'y a pas de donnée
+   structurée derrière : c'est le seul endroit qui parle DU site,
+   pas d'un appareil. Passe par pageTemplate() pour garder le même
+   chrome (topbar, footer, styles) que le reste. ── */
+function buildLegalPage(distDir, assetV) {
+  const articleHtml = `
+<div class="guide-head">
+  <div class="guide-head-text">
+    <span class="step">IO Setup</span>
+    <h1 class="title">Mentions légales, à propos et contact</h1>
+    <p class="lede">Qui édite ce site, d'où vient le contenu, et comment signaler une erreur.</p>
+  </div>
+</div>
+<section class="blk">
+<h2 data-n="01">Éditeur du site</h2>
+<p>Alexandre — site personnel, non professionnel.<br>
+Contact : <a href="mailto:georgesalexandre25@gmail.com">georgesalexandre25@gmail.com</a></p>
+</section>
+<section class="blk">
+<h2 data-n="02">Hébergement</h2>
+<p>Cloudflare, Inc. — 101 Townsend St, San Francisco, CA 94107, États-Unis.<br>
+Nom de domaine enregistré chez OVH SAS — 2 rue Kellermann, 59100 Roubaix, France.</p>
+</section>
+<section class="blk">
+<h2 data-n="03">À propos de ce site</h2>
+<p>IO Setup publie des guides d'intégration pour l'IO-Link et le PROFINET, à destination des
+techniciens de maintenance, automaticiens et étudiants. Chaque guide couvre le parcours complet
+d'un appareil : câblage, structure des données process, intégration dans TIA Portal, code en
+CONT et en SCL, et surtout les pièges de mise en service — l'information qui existe mais reste
+éparpillée entre notices constructeur, portails de support et forums.</p>
+<p>Le site n'est affilié à aucun des fabricants cités (KEYENCE, ifm, Siemens, et autres). Les
+marques, noms de produits et logos mentionnés appartiennent à leurs propriétaires respectifs,
+cités à titre de référence technique uniquement.</p>
+</section>
+<section class="blk">
+<h2 data-n="04">Fiabilité du contenu</h2>
+<p>Le contenu de chaque guide est reconstitué à partir de sources publiques et citées en bas de
+page (manuels constructeur, fichiers IODD officiels, fiches techniques) — jamais de matériel,
+code ou capture d'écran appartenant à un tiers ou à un employeur. Le code SCL/CONT présenté est
+généré depuis cette documentation, pas testé sur une installation réelle : chaque page le
+rappelle explicitement. À vérifier avant toute mise en production.</p>
+<p>Une erreur, une imprécision, un brochage qui ne correspond pas à votre référence exacte ?
+<a href="mailto:georgesalexandre25@gmail.com">Écrivez-moi</a> — avec la référence de l'appareil
+et si possible la source qui contredit la page, la correction va plus vite.</p>
+</section>
+<section class="blk">
+<h2 data-n="05">Données personnelles et mesure d'audience</h2>
+<p>Le site ne propose ni compte utilisateur ni formulaire collectant des données personnelles.
+La mesure d'audience, quand elle est active, passe par Cloudflare Web Analytics — sans cookie
+ni identifiant persistant, sans profilage individuel.</p>
+</section>`;
+
+  const html = pageTemplate({
+    title: 'Mentions légales, à propos et contact — IO Setup',
+    description: 'Éditeur du site, hébergement, sources du contenu et contact pour signaler une erreur sur IO Setup, le site de guides d’intégration IO-Link et PROFINET.',
+    canonical: SITE_URL + LEGAL_PATH,
+    image: SITE_URL + '/assets/logo.png?v=' + assetV,
+    breadcrumb: `<a class="now">Mentions légales</a>`,
+    articleHtml,
+    otherModesHtml: '',
+    familyHtml: '',
+    assetV,
+    hideModelNote: true
+  });
+
+  const outDir = path.join(distDir, LEGAL_PATH);
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'index.html'), html);
 }
 
 /* ── sitemap.xml : une entrée par page réelle (accueil, guides, blocs
@@ -304,6 +398,7 @@ function buildSitemap(db, distDir) {
   for (const bs of db.blocsSysteme) {
     urls.push({ loc: SITE_URL + Render.blocSystemePath(bs), priority: '0.6' });
   }
+  urls.push({ loc: SITE_URL + LEGAL_PATH, priority: '0.2' });
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -345,6 +440,7 @@ function build() {
   buildMaquette(db, distDir, assetV);
   const pageCount = buildGuidePages(db, distDir, assetV);
   const blocPageCount = buildBlocPages(db, distDir, assetV);
+  buildLegalPage(distDir, assetV);
   const urlCount = buildSitemap(db, distDir);
   buildRobots(distDir);
 
