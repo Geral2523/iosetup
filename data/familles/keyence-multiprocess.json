@@ -1,0 +1,27 @@
+{
+  "nom": "KEYENCE FD-H / FI-1000 — unités d’affichage multiprocessus",
+  "trame": { "octets": 24, "bits": 192 },
+  "donnees": [
+    { "cle": "flowInst", "nom": "Débit instantané", "bitOffset": 160, "bits": 32, "type": "INT 32", "octets": [0, 1, 2, 3], "min": -9999999, "max": 9999999, "gradient": 0.001, "unite": "L/min", "couleur": "#1668B3" },
+    { "cle": "flowTotal", "nom": "Débit cumulé", "bitOffset": 128, "bits": 32, "type": "UINT 32", "octets": [4, 5, 6, 7], "min": 0, "max": 999999999, "gradient": 0.0001, "unite": "L", "couleur": "#0E7C63" },
+    { "cle": "temp1", "nom": "Température 1", "bitOffset": 112, "bits": 16, "type": "INT 16", "octets": [8, 9], "min": -9999, "max": 9999, "gradient": 0.1, "unite": "°C", "couleur": "#E2570F" },
+    { "cle": "temp2", "nom": "Température 2", "bitOffset": 96, "bits": 16, "type": "INT 16", "octets": [10, 11], "min": -9999, "max": 9999, "gradient": 0.1, "unite": "°C", "couleur": "#6E4FA0" },
+    { "cle": "stab", "nom": "Stabilité du signal débit", "bitOffset": 16, "bits": 4, "type": "UINT 4", "octets": [21], "min": 0, "max": 4, "gradient": null, "unite": "niveau 0 (aucun signal) à 4 (signal élevé)", "couleur": "#A8830B" }
+  ],
+  "bitsDiag": [
+    ["23", "0", "Sortie Ch1 — état actif/inactif selon l’affectation et la logique N.O./N.C."],
+    ["23", "1", "Sortie Ch2 — état actif/inactif"],
+    ["23", "2", "Sortie Ch3 — état actif/inactif"],
+    ["23", "3", "Sortie Ch4 — état actif/inactif"],
+    ["23", "4", "Erreur commune — au moins une erreur active sur l’appareil"],
+    ["23", "5", "Erreur débitmètre"],
+    ["23", "6", "Erreur capteur de concentration (FI-C, si connecté sur le Multiport)"],
+    ["23", "7", "Erreur capteur de température 1"],
+    ["22", "8", "Erreur capteur de température 2 (si connecté sur le Multiport)"],
+    ["22", "9", "Erreur capteur de niveau (FR, si connecté sur le Multiport)"]
+  ],
+  "avertissementIodd": {
+    "t": "Cette trame correspond à la disposition « 0_Flow rate » (celle d’usine)",
+    "d": "Ces appareils partagent la même plate-forme d’affichage/communication IO-Link et peuvent être reconfigurés sur deux autres dispositions de données process (« 1_Multi », « 2_Heat », paramètre IO-Link « IO-Link process data ») avec des offsets totalement différents. Tout ce qui suit décrit uniquement la disposition par défaut."
+  }
+}

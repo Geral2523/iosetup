@@ -1,0 +1,80 @@
+{
+  "id": "fi-t", "ref": "FI-T", "marque": "keyence", "marqueNom": "KEYENCE",
+  "categorie": "capteur", "type": "temperature", "techno": "Pt100 4 fils, sonde à clipser", "top": false,
+  "nom": "Sonde de température à clipser, usage autonome",
+  "resume": "Se clipse sur un tuyau sans le percer — utilisable seule en IO-Link direct, ou en satellite du Multiport d’un FD-H/FI-1000. Cette fiche couvre l’usage autonome, qui a sa propre trame IO-Link, distincte de celle du FD-H.",
+  "source": "Manuel d’utilisation FI-T (référence KEYENCE AS_125055, 17002FR, éd. 2012-2) · IODD KEYENCE FI-T rév. 1.1 (20220301, DeviceID 2026, VendorID 509 — couvre les six tailles FI-T8/15/25/50/100/200)",
+  "specs": [
+    ["Grandeur mesurée", "Température de tuyau"],
+    ["Principe de mesure", "Pt100, 4 fils"],
+    ["Tailles disponibles", "FI-T8 (Ø8-14) · FI-T15 (Ø14-22) · FI-T25 (Ø22-38) · FI-T50 (Ø38-70) · FI-T100 (Ø70-126) · FI-T200 (Ø126-220)"],
+    ["Matériau de tuyau compatible", "Tuyau métallique"],
+    ["Plage de température", "−20 à +180 °C"],
+    ["Résolution d’affichage", "0,1 °C"],
+    ["Précision", "±0,5 °C (tuyau −20 à 80 °C) · ±1,0 °C (tuyau 80 à 180 °C), à 25 °C ambiant"],
+    ["Temps de réponse", "5 s (63 % de réponse) · 15 s (90 % de réponse)"],
+    ["Alimentation", "20 à 30 V DC — 20 mA hors charge, 220 mA max. avec charge incluse en usage autonome"],
+    ["Interface", "IO-Link 1.1 — COM2 (38,4 kBaud), en usage autonome uniquement"],
+    ["Raccordement", "M8 mâle, 4 broches"],
+    ["DeviceID · VendorID", "2026 · 509"],
+    ["Affichage", "OLED + voyant d’état — en usage autonome uniquement"],
+    ["Protection", "IP65 / IP67"],
+    ["Température ambiante (électronique)", "−10 à +60 °C"],
+    ["Poids", "Environ 65 à 120 g selon la taille"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Contrairement au FD-H, le FI-T autonome se règle avec seulement 2 touches (Haut/Bas) et une touche Mode — pas d’écran couleur ni de flèches. L’assistant de démarrage initial ne peut pas être sauté au premier branchement.",
+    "etapes": [
+      ["1 — Langue", "ENGLISH / 日本語 / 中文 / DEUTSCH"],
+      ["2 — Unité de température", "°C ou °F"],
+      ["3 — PNP/NPN", "Logique des sorties de commutation"],
+      ["4 — Configuration E/S", "OUT+OFF (une sortie) · OUT1+OUT2 (deux sorties, mode zone) · OUT+ANALOGIQUE (une sortie + 4-20/0-20 mA) — ce choix fige le câblage, il faut réinitialiser pour en changer"],
+      ["Réglages avancés (Mode + Haut, 3 s)", "Hystérésis, décalage (±20 °C), correction ambiante (acier/inox), luminosité, couleur du voyant, verrouillage par code PIN"]
+    ],
+    "apres": "Écran de base affiché. Le sens d’affichage peut être inversé (montage tête en bas). Les réglages restent modifiables par communication IO-Link même si le verrouillage clavier est actif."
+  },
+  "pieges": [
+    { "t": "Deux appareils dans un seul manuel — usage autonome vs satellite Multiport", "d": "Le FI-T a deux modes de fonctionnement radicalement différents : connecté au Multiport d’une unité FD-H/FI-1000 (il perd alors son IO-Link propre, son écran ne montre plus que la valeur courante, et tous ses réglages se font depuis l’unité d’affichage hôte), ou autonome avec son propre port M8 et sa propre communication IO-Link — c’est cet usage autonome qui est documenté ici. La trame IO-Link, le connecteur et même les réglages disponibles ne sont pas les mêmes selon le mode choisi ; le manuel les couvre dans deux chapitres séparés (3 et 4) sans jamais le dire aussi explicitement." },
+    { "t": "Le connecteur est un M8, pas un M12", "d": "Toute la gamme FD-H/FI-1000 utilise du M12 — le FI-T autonome utilise un M8 4 broches, plus petit. Le câble d’alimentation dédié (OP-87625/87626/87628/87629 selon NPN/PNP et longueur) est spécifique à ce format, pas interchangeable avec les câbles M12 des autres appareils KEYENCE du site." },
+    { "t": "Le choix E/S à l’initialisation fige le câblage possible", "d": "OUT+OFF, OUT1+OUT2 et OUT+ANALOGIQUE ne rebranchent pas les mêmes fonctions sur les mêmes fils — passer de l’un à l’autre après coup impose une réinitialisation complète (Mode + Haut ×5), pas un simple changement de paramètre. À décider avant de câbler, pas après." },
+    { "t": "Pas de valeur brute sentinelle en IO-Link — seuls des bits d’erreur dédiés existent", "d": "En cas de dépassement de plage, l’affichage et la sortie analogique de l’ampli autonome basculent sur des valeurs fixes (−40,1 °C / +200,1 °C) — mais ce sont des comportements d’affichage et de sortie analogique, pas une garantie sur la valeur remontée en IO-Link. Côté trame IO-Link, ce sont les bits dédiés « Out of temperature range » (limite haute / limite basse) qu’il faut lire, pas une comparaison de la valeur brute à un seuil arbitraire." },
+    { "t": "Démarrage et dérive initiale, comme le reste de la gamme", "d": "Même famille de piège que le FD-H : environ 2 secondes de « démarrage » (ne pas exploiter les sorties pendant cette phase), puis une dérive possible pendant les 15 à 30 premières minutes de fonctionnement pour les mesures fines. Facile à oublier sur un capteur aussi simple en apparence." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M8 mâle, 4 broches",
+      "maitre": null, "procedure": "iolink-profinet",
+      "cable": "Câble d’alimentation dédié M8 (OP-87625/87626/87628/87629 selon NPN/PNP)",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "L+ — alimentation +20…30 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Sortie 2 ou sortie analogique selon la configuration E/S choisie à l’initialisation" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "Sortie 1 / C/Q — communication IO-Link" }
+      ],
+      "trame": { "octets": 4, "bits": 32 },
+      "iodd": {
+        "fichier": "KEYENCE-FI-T-20220301-IODD1.1.xml",
+        "version": "1.1", "date": "2022-03-01",
+        "vendorId": "509", "deviceId": "2026",
+        "variantes": "FI-T8, FI-T15, FI-T25, FI-T50, FI-T100, FI-T200 — même électronique et même trame, seul le diamètre de tuyau compatible change",
+        "dataStorage": true
+      },
+      "exempleLecture": [
+        { "raw": 253, "octets": "0-1", "valeur": "25,3 °C (253 × 0,1)" }
+      ],
+      "donnees": [
+        { "cle": "temp", "nom": "Température", "bitOffset": 16, "bits": 16, "type": "INT 16", "octets": [0, 1], "min": -9999, "max": 9999, "gradient": 0.1, "unite": "°C", "couleur": "#E2570F" }
+      ],
+      "bitsDiag": [
+        ["2", "8", "DataValid — mesure exploitable"],
+        ["2", "9", "Erreur de surintensité sur une sortie"],
+        ["2", "10", "Erreur de tête de détection — câble débranché ou tête non connectée"],
+        ["2", "11", "Erreur EEPROM"],
+        ["2", "12", "Hors plage — limite haute (mesure > 200 °C)"],
+        ["2", "13", "Hors plage — limite basse (mesure < −40 °C)"],
+        ["3", "0", "Sortie 1 — état actif/inactif"],
+        ["3", "1", "Sortie 2 — état actif/inactif (configuration OUT1+OUT2 uniquement)"]
+      ]
+    }
+  }
+}

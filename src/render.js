@@ -76,7 +76,7 @@ function connSvg(r) {
   const huit = Math.max(...r.pinout.map(p => p.n)) > 4;
   if (!huit) {
     const c = {}; r.pinout.forEach(p => c[p.n] = p.hex);
-    return `<svg viewBox="0 0 120 120" aria-label="Brochage M12 4 broches"><circle cx="60" cy="60" r="44" fill="none" stroke="#141A20" stroke-width="2.5"/>
+    return `<svg viewBox="0 0 120 120" aria-label="Brochage 4 broches"><circle cx="60" cy="60" r="44" fill="none" stroke="#141A20" stroke-width="2.5"/>
     <circle cx="60" cy="38" r="7" fill="${c[1] || '#fff'}" stroke="#141A20" stroke-width="1.5"/>
     <circle cx="38" cy="60" r="7" fill="${c[2] || '#fff'}" stroke="#141A20" stroke-width="1.5"/>
     <circle cx="82" cy="60" r="7" fill="${c[4] || '#fff'}" stroke="#141A20" stroke-width="1.5"/>
@@ -462,7 +462,7 @@ function codeSclFRS(d, r) {
 // 8   : diagnostics                   9    : erreurs
 // 10  : stabilité + couleur           11   : état des sorties</span>
 
-<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_FR_S01"</span>
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref.replace(/-/g, '_')}"</span>
 <span class="k">VAR_INPUT</span>
     valeurBrute : DINT;   <span class="c">// octets 0-3</span>
     valeur2Brute: DINT;   <span class="c">// octets 4-7 — ${v2}</span>
@@ -564,8 +564,9 @@ function codeLadFRS(d, r) {
               │IN valeurBrute│    │IN2   10.0│
               └──────────────┘    └──────────┘`;
 }
-function codeSclFDH20(d, r) {
+function codeSclMultiprocess(d, r) {
   return `<span class="c">// ${d.ref} en IO-Link — disposition « 0_Flow rate » (celle d'usine)
+// Trame partagée par toute la plate-forme d'affichage KEYENCE FD-H/FI-1000.
 // ⚠ Cette disposition est un PARAMÈTRE (index IO-Link 4009), pas une
 //   constante : si quelqu'un la change pour « 1_Multi » ou « 2_Heat »,
 //   ces offsets ne correspondent plus à rien.
@@ -573,11 +574,11 @@ function codeSclFDH20(d, r) {
 //   (index 4010/4011) pour l'unité L/min — à revérifier si l'unité de
 //   débit de l'appareil a été changée (m3/h, G/min).</span>
 
-<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_FD_H20"</span>
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref.replace(/-/g, '_')}"</span>
 <span class="k">VAR_INPUT</span>
     flowInstBrut  : DINT;  <span class="c">// octets 0-3</span>
     flowTotalBrut : DINT;  <span class="c">// octets 4-7 (positif uniquement, tient dans un DINT)</span>
-    temp1Brut     : INT;   <span class="c">// octets 8-9 — sonde de tuyau intégrée</span>
+    temp1Brut     : INT;   <span class="c">// octets 8-9 — Température 1 (voir le guide pour le capteur physique concerné)</span>
     stabiliteBrut : BYTE;  <span class="c">// octet 21 — nibble de poids faible</span>
     etatOctet22   : BYTE;  <span class="c">// octet 22 — erreurs Temp2 / Level</span>
     etatOctet23   : BYTE;  <span class="c">// octet 23 — sorties Ch1-4 + erreurs communes</span>
@@ -611,7 +612,7 @@ function codeSclFDH20(d, r) {
     #erreurTemp1   := #etatOctet23.%X7;
 <span class="k">END_FUNCTION_BLOCK</span>`;
 }
-function codeLadFDH20(d, r) {
+function codeLadMultiprocess(d, r) {
   return `<span class="c">// ${d.ref} — adresses à adapter à la plage attribuée au port.
 // ⚠ Diviseurs valables pour la disposition « 0_Flow rate » et
 //   les résolutions d'usine (voir pièges de mise en service).</span>
@@ -657,6 +658,73 @@ function codeLadFDH20(d, r) {
 
    etatOctet23.%X7
 ────┤ ├──────────────────────────────( erreurTemp1 )`;
+}
+function codeSclFIT(d, r) {
+  return `<span class="c">// ${d.ref} en IO-Link, usage AUTONOME — 4 octets de données process
+// (trame complètement différente de celle du FD-H/FI-1000 : ce FI-T
+// n'est pas raccordé à leur Multiport, il parle directement au maître).</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref.replace(/-/g, '_')}"</span>
+<span class="k">VAR_INPUT</span>
+    tempBrut  : INT;   <span class="c">// octets 0-1</span>
+    etatOctet2: BYTE;  <span class="c">// octet 2 — validité + erreurs</span>
+    etatOctet3: BYTE;  <span class="c">// octet 3 — sorties 1 et 2</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    temperature   : REAL;  <span class="c">// °C</span>
+    donneeValide  : BOOL;
+    erreurSurint  : BOOL;
+    erreurTete    : BOOL;
+    erreurEeprom  : BOOL;
+    horsPlageHaut : BOOL;  <span class="c">// mesure > 200 °C</span>
+    horsPlageBas  : BOOL;  <span class="c">// mesure < −40 °C</span>
+    sortie1       : BOOL;
+    sortie2       : BOOL;
+<span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Octet 0-1 : température ----</span>
+    #temperature := INT_TO_REAL(#tempBrut) / 10.0;
+
+    <span class="c">// ---- Octet 2 : validité et erreurs, lecture directe des bits ----</span>
+    #donneeValide  := #etatOctet2.%X0;
+    #erreurSurint  := #etatOctet2.%X1;
+    #erreurTete    := #etatOctet2.%X2;
+    #erreurEeprom  := #etatOctet2.%X3;
+    #horsPlageHaut := #etatOctet2.%X4;
+    #horsPlageBas  := #etatOctet2.%X5;
+
+    <span class="c">// ---- Octet 3 : sorties ----</span>
+    #sortie1 := #etatOctet3.%X0;
+    #sortie2 := #etatOctet3.%X1;
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadFIT(d, r) {
+  return `<span class="c">// ${d.ref} — adresses à adapter à la plage attribuée au port.</span>
+
+<span class="r">Réseau 1 — Température (octets 0-1)</span>
+              ┌──────────────┐    ┌──────────┐
+              │     CONV     │    │   DIV    │
+──────────────┤  Int →  Real ├────┤   Real   ├──( temperature )
+     tempBrut │IN     tempBrut│   │IN2   10.0│
+              └──────────────┘    └──────────┘
+
+<span class="r">Réseau 2 — Validité et erreurs (octet 2, lecture directe)</span>
+   etatOctet2.%X0
+────┤ ├──────────────────────────────( donneeValide )
+
+   etatOctet2.%X4
+────┤ ├──────────────────────────────( horsPlageHaut )
+
+   etatOctet2.%X5
+────┤ ├──────────────────────────────( horsPlageBas )
+
+<span class="r">Réseau 3 — Sorties (octet 3)</span>
+   etatOctet3.%X0
+────┤ ├──────────────────────────────( sortie1 )
+
+   etatOctet3.%X1
+────┤ ├──────────────────────────────( sortie2 )`;
 }
 function codeSclAnalog(d) {
   return `<span class="c">// ${d.ref} — boucle 4-20 mA sur carte d'entrées analogiques S7-1500
@@ -888,7 +956,8 @@ function buildGuideArticle(DB, d, mode, voieId) {
     let scl, lad;
     if (r.familleIodd === 'keyence-fr') { scl = codeSclFRS(d, r); lad = codeLadFRS(d, r); }
     else if (d.id === 'pn7093') { scl = codeSclPN7093(d, r); lad = codeLadPN7093(d, r); }
-    else if (d.id === 'fd-h20') { scl = codeSclFDH20(d, r); lad = codeLadFDH20(d, r); }
+    else if (r.familleIodd === 'keyence-multiprocess') { scl = codeSclMultiprocess(d, r); lad = codeLadMultiprocess(d, r); }
+    else if (d.id === 'fi-t') { scl = codeSclFIT(d, r); lad = codeLadFIT(d, r); }
     else { scl = codeSclIolink(d, r); lad = codeLadIolink(d, r); }
     P.push(blocProg(scl, lad, num));
   }
@@ -1025,7 +1094,7 @@ function primaryMode(d) {
 
 const api = {
   esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
-  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclFDH20, codeLadFDH20, codeSclAnalog, codeLadAnalog,
+  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclMultiprocess, codeLadMultiprocess, codeSclFIT, codeLadFIT, codeSclAnalog, codeLadAnalog,
   codeSclProfinet, codeLadProfinet,
   buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode,
   buildBlocArticle, blocSystemePath, metaForBloc

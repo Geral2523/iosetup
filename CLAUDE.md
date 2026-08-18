@@ -80,7 +80,7 @@ récupérée en ligne puis lue directement (pypdf + pymupdf, poppler absent de l
 un standard séparé) — seuls les 4 bits les plus universellement documentés sont repris
 dans le code exemple, avec avertissement explicite plutôt que présentés comme vérifiés.
 
-Le site couvre **25 pages** sans erreur, pour 9 appareils (dont pages « voie IO-Link »
+Le site couvre **30 pages** sans erreur, pour 11 appareils (dont pages « voie IO-Link »
 supplémentaires pour les capteurs — voir section Navigation) :
 
 | Appareil | Marque | Type | Modes de raccordement |
@@ -94,6 +94,8 @@ supplémentaires pour les capteurs — voir section Navigation) :
 | SIRIUS 8WD4613-5JH47 | Siemens | Colonne de signalisation, 9 segments | IO-Link · conventionnel 24 V |
 | SINAMICS G120C | Siemens | Variateur de vitesse | PROFINET natif |
 | FD-H20 | KEYENCE | Débit + température de tuyau (sonde intégrée) | IO-Link |
+| FI-1000 | KEYENCE | Unité d’affichage multiprocessus (+ FI-T sur Multiport) | IO-Link |
+| FI-T | KEYENCE | Température de tuyau, usage autonome | IO-Link |
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
@@ -152,9 +154,56 @@ IO-Link via un adaptateur 4 broches (FD-HCC2/10/0), et le texte décrivant ce fa
 « 8 » sans que le brochage IO-Link documenté en compte 8. Corrigé : le nombre de broches se
 lit désormais sur `Math.max(...r.pinout.map(p => p.n))`, jamais sur une recherche de texte.
 Catégorie « débit » activée automatiquement (mécanisme `usedTypes`, déjà en place).
-Code SCL/CONT dédié (`codeSclFDH20`/`codeLadFDH20`, sélectionné sur `d.id === 'fd-h20'`) —
-même principe que PN7093/FR-S01 : chaque appareil à la structure suffisamment différente
-a son propre générateur, jamais de fonction générique paramétrée.
+Code SCL/CONT dédié à l'origine (`codeSclFDH20`/`codeLadFDH20`, sélectionné sur
+`d.id === 'fd-h20'`) — **renommé `codeSclMultiprocess`/`codeLadMultiprocess` et sélectionné
+sur `r.familleIodd === 'keyence-multiprocess'` dans la même session**, une fois le FI-1000
+confirmé comme un deuxième appareil partageant exactement cette trame (voir plus bas) —
+même principe que PN7093/FR-S01 : chaque *structure* suffisamment différente a son propre
+générateur, mutualisé entre appareils seulement quand un deuxième cas réel le confirme,
+jamais anticipé.
+
+**FI-1000 et FI-T (KEYENCE) — même session, ajoutés à la demande de l'utilisateur qui avait
+aussi déposé leurs manuels/IODD dans `iodd/`/`manuel/` sans le signaler d'emblée.**
+Découverte importante en lisant le manuel FI-1000 : ce n'est **pas** un capteur de
+concentration comme son nom le suggérait au premier abord, mais une **unité d'affichage
+multiprocessus** — littéralement le même boîtier/firmware IO-Link que le FD-H, mais sans
+sonde de débit intégrée ; il faut lui connecter un débitmètre FD-R (port arrière dédié) ou
+un capteur satellite Multiport (FI-T, FI-C, FR) pour qu'il mesure quoi que ce soit. Vérifié
+en diffant les deux IODD (`KEYENCE-FD-H20-...` vs `KEYENCE-FI-1000-...`, script Python
+comparant bitOffset/type de chaque RecordItem) : structure de données process **identique
+bit pour bit** (mêmes 3 dispositions Flow/Multi/Heat, mêmes offsets, `dataStorage=true`
+sur les deux) malgré des DeviceID différents (2016 vs 2025) — première vraie famille IODD
+inter-appareils du site où la ressemblance n'était pas évidente a priori (contrairement à
+`keyence-fr`, où les 3 appareils sont ouvertement la même gamme). Refactorisé en
+conséquence : nouvelle `data/familles/keyence-multiprocess.json` (trame, `donnees`,
+`bitsDiag`, `avertissementIodd` communs), FD-H20 migré pour la référencer via
+`familleIodd` au lieu de dupliquer sa trame inline — exactement le mécanisme déjà en place
+pour `keyence-fr`, appliqué ici a posteriori une fois la famille confirmée par un second
+appareil réel (jamais anticipée).
+Le FI-T, lui, a **deux identités IO-Link complètement séparées** documentées dans le même
+manuel sans que ce soit dit explicitement : connecté au Multiport d'un FD-H/FI-1000 (il
+perd alors son IO-Link propre, ses réglages se pilotent depuis l'unité hôte), ou
+**autonome**, avec son propre port M8 4 broches et sa propre trame IO-Link (32 bits,
+DeviceID 2026 — sans commune mesure avec celle du FD-H/FI-1000). C'est cet usage autonome
+qui est documenté sur le site (`codeSclFIT`/`codeLadFIT`, structure dédiée). La fiche
+FI-1000 construite en parallèle illustre l'*autre* mode : un FI-T câblé sur son Multiport,
+dont la température apparaît dans le champ « Température 1 » de la trame FI-1000/FD-H
+partagée (ordre de priorité documenté : FI-T > sonde intégrée FD-H > FI-C).
+Deux bugs génériques supplémentaires trouvés et corrigés dans `render.js`, tous deux
+révélés par le FI-T (M8) et par FR-LM20/FR-LS20 (famille `keyence-fr` déjà en place) :
+1. `connSvg()` étiquetait tout connecteur rond à 4 broches « Brochage M12 4 broches »,
+   même quand le connecteur réel est un M8 (FI-T) — cosmétique mais factuellement faux.
+   Corrigé : aria-label générique « Brochage 4 broches », sans présumer du diamètre.
+2. `codeSclFRS` (le générateur SCL partagé par toute la famille `keyence-fr`) déclarait
+   un bloc nommé en dur `FUNCTION_BLOCK "FB_FR_S01"` **même sur les pages FR-LM20 et
+   FR-LS20** — un technicien suivant le guide FR-LM20 aurait obtenu du code appelé
+   « FB_FR_S01 ». Personne ne l'avait remarqué car le nom du bloc n'apparaît qu'en usage
+   réel, jamais testé jusqu'ici sur un appareil différent du premier de la famille.
+   Corrigé : nom dynamique `FB_${d.ref.replace(/-/g, '_')}` — appliqué du même coup à
+   `codeSclMultiprocess`/`codeSclFIT`, qui ne reproduisent pas l'erreur.
+Catégorie « température » (déjà active via LDH292) réutilisée pour les deux — choix
+assumé : la grandeur documentée pour le FI-1000 dépend entièrement de l'accessoire
+connecté, « température » correspond à la configuration réellement construite ici.
 
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`

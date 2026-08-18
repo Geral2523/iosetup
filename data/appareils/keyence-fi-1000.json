@@ -1,0 +1,61 @@
+{
+  "id": "fi-1000", "ref": "FI-1000", "marque": "keyence", "marqueNom": "KEYENCE",
+  "categorie": "capteur", "type": "temperature", "techno": "Unité d’affichage multiprocessus (sans capteur intégré)", "top": false,
+  "nom": "Unité d’affichage multiprocessus, avec un capteur de température FI-T sur le Multiport",
+  "resume": "Le même boîtier d’affichage/IO-Link que le FD-H, mais sans sonde intégrée : tout ce qu’il mesure vient d’un débitmètre FD-R ou d’un capteur satellite (FI-T, FI-C, FR) branché sur ses ports. Cette fiche documente la configuration la plus simple : un seul FI-T sur le Multiport, sans débitmètre.",
+  "source": "Manuel d’instructions FI-1000 (référence KEYENCE AS_145524, 17980FR, éd. 2074_1) · IODD KEYENCE FI-1000 rév. 1.1 (20240108, DeviceID 2025, VendorID 509)",
+  "specs": [
+    ["Grandeur mesurée", "Dépend des accessoires connectés — ici : température, via un FI-T sur le Multiport"],
+    ["Port débit (arrière)", "Accepte un débitmètre FD-R (non câblé dans cette configuration)"],
+    ["Port Multiport", "Accepte FI-T (×2), FI-C (×1) ou FR/FL (×1) — ×1 FI-T dans cette configuration"],
+    ["Alimentation", "20 à 30 V DC — 55 mA typique (hors capteurs satellites et charges)"],
+    ["Interface", "IO-Link 1.1 — COM2 (38,4 kBaud)"],
+    ["Raccordement natif", "M12 mâle, 8 broches"],
+    ["DeviceID · VendorID", "2025 · 509"],
+    ["Affichage", "Écran couleur LCD QVGA 2,0\" + voyant d’état + voyants de sortie"],
+    ["Protection", "IP65 / IP67 (perdue pendant une connexion USB)"],
+    ["Température ambiante", "−20 à +50 °C"],
+    ["Poids", "Environ 120 g (sans capteur)"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Même assistant de démarrage et même écran que le FD-H (voir ce guide) — seule la liste des capteurs déclarables sur « Connected Sensors » change : FD-R au port débit à la place d’un débitmètre intégré, plus les mêmes options de Multiport.",
+    "etapes": [
+      ["A à C", "Langue, orientation de l’écran, date/heure"],
+      ["D — Connected Sensors", "Déclarer le FI-T sur « Multi-port 1 » (ou 2) — rien à déclarer sur le port débit si aucun FD-R n’est connecté"],
+      ["F — Réglages initiaux [Unités]", "Unité de température : °C ou °F"],
+      ["H — Réglages initiaux [E/S]", "Affecte chaque canal Ch1-Ch4 — au moins un canal doit cibler « Temp. 1 » pour exploiter la mesure du FI-T ; Ch1 doit rester hors mode « Analog » pour IO-Link"],
+      ["MENU → Settings → 3. System settings → Réglages de communication", "IO-Link process data : 0_Flow rate (par défaut, celle documentée ici), 1_Multi, 2_Heat"]
+    ],
+    "apres": "Une fois l’assistant terminé, l’écran affiche directement la température si un canal lui est affecté. Réglages détaillés du FI-T (moyennage, hystérésis, correction ambiante) accessibles depuis Settings → 2. Detection settings → Temp. sensor, jamais depuis le FI-T lui-même une fois connecté."
+  },
+  "pieges": [
+    { "t": "Sans accessoire connecté, l’appareil ne mesure rien", "d": "Contrairement à un capteur classique, le FI-1000 seul ne produit aucune grandeur physique — il lui faut un débitmètre FD-R sur son port arrière, ou un capteur satellite (FI-T, FI-C, FR) sur son Multiport. Le choisir en pensant qu’il « fait » quelque chose tout seul est une erreur de sélection produit, pas un problème de câblage." },
+    { "t": "Structure de données process identique à celle du FD-H — mais un DeviceID différent", "d": "Le FI-1000 et le FD-H partagent exactement la même plate-forme d’affichage/communication IO-Link : la trame « 0_Flow rate » a les mêmes offsets, les mêmes trois dispositions (Flow/Multi/Heat), le même comportement. Mais leurs IODD sont bien deux fichiers distincts (DeviceID 2025 pour le FI-1000, 2016 pour le FD-H20) — charger l'IODD du FD-H pour un FI-1000 ferait échouer la validation du device dans TIA (DeviceID non reconnu), même si la trame elle-même fonctionnerait presque par coïncidence." },
+    { "t": "« Température 1 » n’est pas garanti être le FI-T si plusieurs capteurs sont connectés", "d": "Ordre de priorité KEYENCE pour Température 1/2 : (1) FI-T, (2) sonde intégrée d’un FD-H (sans objet ici, le FI-1000 n’en a pas), (3) FI-C. Avec un seul FI-T connecté comme dans cette configuration, il occupe sans ambiguïté Température 1 — mais dès qu’un deuxième FI-T ou un FI-C entre en jeu, l’affectation dépend de cet ordre de priorité, pas de l’ordre de branchement." },
+    { "t": "Les réglages fins du FI-T restent accessibles, mais pas depuis le FI-T", "d": "Une fois câblé au Multiport, l’écran et les touches du FI-T deviennent quasi inertes (seule la valeur courante s’affiche, aucun réglage n’est modifiable dessus). Moyennage, hystérésis, décalage et correction de température ambiante se règlent uniquement depuis l’unité d’affichage FI-1000 (Settings → 2. Detection settings → Temp. sensor) — chercher ces réglages sur le FI-T lui-même ne mène nulle part une fois la connexion établie." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 mâle, 4 broches (via l’adaptateur de conversion 8→4 broches FD-HCC2/FD-HCC10/FD-HCC0 — le port natif de l’appareil est un M12 8 broches)",
+      "maitre": null, "procedure": "iolink-profinet",
+      "cable": "Câble d’alimentation dédié FD-H (FD-HCB2/FD-HCB10) + adaptateur de conversion M12 8→4 broches (FD-HCC2, FD-HCC10 ou connecteur FD-HCC0)",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "L+ — alimentation +20…30 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Ch2 — sortie de commande, sortie analogique ou entrée externe selon réglage" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — GND" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "Ch1 / C/Q — communication IO-Link (Ch1 doit rester hors mode « Analog »)" }
+      ],
+      "iodd": {
+        "fichier": "KEYENCE-FI-1000-20240108-IODD1.1.xml",
+        "version": "1.1", "date": "2024-01-08",
+        "vendorId": "509", "deviceId": "2025",
+        "variantes": "FI-1000 uniquement",
+        "dataStorage": true
+      },
+      "familleIodd": "keyence-multiprocess",
+      "exempleLecture": [
+        { "raw": 253, "octets": "8-9", "valeur": "25,3 °C (253 × 0,1) — température du FI-T, assignée à Température 1" }
+      ]
+    }
+  }
+}

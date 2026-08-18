@@ -41,7 +41,8 @@
     { "t": "La disposition des données process est un paramètre, pas une constante de l’appareil", "d": "Contrairement aux autres capteurs du site où l’IODD décrit une trame fixe, le FD-H expose un paramètre IO-Link dédié (« IO-Link process data », menu Réglages de communication) qui bascule entre trois dispositions complètement différentes : 0_Flow rate (par défaut — débit + température tuyau, celle documentée ici), 1_Multi (privilégie les capteurs Multiport connectés) et 2_Heat (quantité de transfert de chaleur). Un programme automate écrit pour la disposition par défaut lira n’importe quoi si quelqu’un change ce paramètre en configuration — à verrouiller ou au minimum à vérifier avant mise en service." },
     { "t": "L’échelle des valeurs de débit est elle-même paramétrable, pas fixée dans l’IODD", "d": "À la différence du LDH292 (gradient toujours ÷10) ou du PN7093, l’IODD du FD-H ne fixe pas de facteur d’échelle unique pour le débit : deux paramètres en lecture seule (résolution débit, résolution débit cumulé) indiquent le facteur réellement appliqué — ×0,001 ou ×0,01 pour le débit instantané, ×0,0001 ou ×0,001 pour le débit cumulé. Les valeurs d’usine (×0,001 et ×0,0001, documentées ici) correspondent à l’unité L/min réglée par défaut ; changer l’unité de débit sur l’appareil (m3/h, G/min) change ce que représente la valeur brute sans changer ces paramètres de résolution." },
     { "t": "Aucune valeur brute sentinelle pour signaler « pas de capteur »", "d": "L’IODD du LDH292 réserve des valeurs hautes (32760-32764) pour signaler dépassement ou capteur absent. Rien de tel ici : quand aucun capteur Multiport n’est connecté, le champ Température 2 ne contient aucun code particulier — il faut lire le bit d’erreur dédié (Temp2Error, Temp1Error, LevelError…) plutôt que de déduire une absence de capteur d’une valeur à 0, qui est une lecture parfaitement valide par ailleurs." },
-    { "t": "Le sens d’écoulement se règle logiciellement et n’est pas visible de l’extérieur", "d": "Le capteur se clipse dans un seul sens mécanique, mais l’assistant de démarrage impose en plus de déclarer si le fluide s’écoule « depuis le côté LED » ou « vers le côté LED » (choix à faire via un pictogramme, pas un texte explicite). Un mauvais réglage ici ne provoque pas d’erreur affichée — il fausse silencieusement le signe et la stabilité de la mesure. À vérifier en écoulement réel avant de figer un seuil de détection." }
+    { "t": "Le sens d’écoulement se règle logiciellement et n’est pas visible de l’extérieur", "d": "Le capteur se clipse dans un seul sens mécanique, mais l’assistant de démarrage impose en plus de déclarer si le fluide s’écoule « depuis le côté LED » ou « vers le côté LED » (choix à faire via un pictogramme, pas un texte explicite). Un mauvais réglage ici ne provoque pas d’erreur affichée — il fausse silencieusement le signe et la stabilité de la mesure. À vérifier en écoulement réel avant de figer un seuil de détection." },
+    { "t": "« Température 1 » n’est pas toujours la sonde de tuyau intégrée", "d": "Sur un FD-H seul, Température 1 correspond à la sonde de température de tuyau intégrée au capteur. Mais l’ordre de priorité documenté par KEYENCE est : (1) capteur FI-T sur le Multiport, (2) sonde intégrée du FD-H, (3) capteur FI-C. Si un FI-T est connecté au Multiport en plus du FD-H, c’est la température du FI-T qui occupe Température 1, et la sonde intégrée du FD-H bascule sur Température 2. Le champ ne dit jamais lui-même quel capteur physique il représente — il faut connaître la configuration réelle de l’installation." }
   ],
   "raccordements": {
     "iolink": {
@@ -54,7 +55,6 @@
         { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — GND" },
         { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "Ch1 / C/Q — communication IO-Link (Ch1 doit rester hors mode « Analog »)" }
       ],
-      "trame": { "octets": 24, "bits": 192 },
       "iodd": {
         "fichier": "KEYENCE-FD-H20-20240108-IODD1.1.xml",
         "version": "1.1", "date": "2024-01-08",
@@ -62,32 +62,10 @@
         "variantes": "FD-H20 uniquement — chaque référence de la gamme (FD-H10, FD-H20, FD-H32, variantes K et F) a son propre fichier IODD",
         "dataStorage": true
       },
-      "avertissementIodd": {
-        "t": "Cette trame correspond à la disposition « 0_Flow rate » (celle d’usine)",
-        "d": "L’appareil peut être reconfiguré sur deux autres dispositions de données process (« 1_Multi », « 2_Heat », paramètre IO-Link « IO-Link process data ») avec des offsets totalement différents. Tout ce qui suit décrit uniquement la disposition par défaut."
-      },
+      "familleIodd": "keyence-multiprocess",
       "exempleLecture": [
         { "raw": 30000, "octets": "0-3", "valeur": "30,000 L/min (30000 × 0,001)" },
-        { "raw": 253, "octets": "8-9", "valeur": "25,3 °C (253 × 0,1)" }
-      ],
-      "donnees": [
-        { "cle": "flowInst", "nom": "Débit instantané", "bitOffset": 160, "bits": 32, "type": "INT 32", "octets": [0, 1, 2, 3], "min": -9999999, "max": 9999999, "gradient": 0.001, "unite": "L/min", "couleur": "#1668B3" },
-        { "cle": "flowTotal", "nom": "Débit cumulé", "bitOffset": 128, "bits": 32, "type": "UINT 32", "octets": [4, 5, 6, 7], "min": 0, "max": 999999999, "gradient": 0.0001, "unite": "L", "couleur": "#0E7C63" },
-        { "cle": "temp1", "nom": "Température (sonde tuyau intégrée)", "bitOffset": 112, "bits": 16, "type": "INT 16", "octets": [8, 9], "min": -9999, "max": 9999, "gradient": 0.1, "unite": "°C", "couleur": "#E2570F" },
-        { "cle": "temp2", "nom": "Température 2 (capteur Multiport, si connecté)", "bitOffset": 96, "bits": 16, "type": "INT 16", "octets": [10, 11], "min": -9999, "max": 9999, "gradient": 0.1, "unite": "°C", "couleur": "#6E4FA0" },
-        { "cle": "stab", "nom": "Stabilité du signal débit", "bitOffset": 16, "bits": 4, "type": "UINT 4", "octets": [21], "min": 0, "max": 4, "gradient": null, "unite": "niveau 0 (aucun signal) à 4 (signal élevé)", "couleur": "#A8830B" }
-      ],
-      "bitsDiag": [
-        ["23", "0", "Sortie Ch1 — état actif/inactif selon l’affectation et la logique N.O./N.C."],
-        ["23", "1", "Sortie Ch2 — état actif/inactif"],
-        ["23", "2", "Sortie Ch3 — état actif/inactif"],
-        ["23", "3", "Sortie Ch4 — état actif/inactif"],
-        ["23", "4", "Erreur commune — au moins une erreur active sur l’appareil"],
-        ["23", "5", "Erreur débitmètre"],
-        ["23", "6", "Erreur capteur de concentration (FI-C, si connecté sur le Multiport)"],
-        ["23", "7", "Erreur capteur de température 1"],
-        ["22", "8", "Erreur capteur de température 2 (si connecté sur le Multiport)"],
-        ["22", "9", "Erreur capteur de niveau (FR, si connecté sur le Multiport)"]
+        { "raw": 253, "octets": "8-9", "valeur": "25,3 °C (253 × 0,1) — sonde de tuyau intégrée, assignée à Température 1" }
       ]
     }
   }
