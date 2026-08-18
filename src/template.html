@@ -151,7 +151,7 @@ function render(v){
   if(v==='categorie'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom}],'home');
     app.innerHTML=head('Étape 2 sur 7',a.nom+' — quel matériel ?','')
-      +tiles(DB.categories.filter(x=>usedCategories.has(x.id)),'goType')
+      +tiles(DB.categories.filter(x=>usedCategories.has(x.id)).map(x=>({...x,actif:true})),'goType')
       +blocsSystemeTile();return;
   }
   if(v==='blocsListe'){
@@ -174,12 +174,12 @@ function render(v){
       estCapteur
         ?'On classe par ce qui est mesuré, pas par la technologie — un niveau se mesure au radar, à l\u2019ultrason ou en capacitif.'
         :'Un actionneur ne mesure rien : on le classe par ce qu\u2019il fait.')
-      +tiles(sousTypes(S.categorie).filter(x=>usedTypes.has(S.categorie+'|'+x.id)),'goMarque');return;
+      +tiles(sousTypes(S.categorie).filter(x=>usedTypes.has(S.categorie+'|'+x.id)).map(x=>({...x,actif:true})),'goMarque');return;
   }
   if(v==='marque'){
     crumbs([{txt:'Automate',vue:'home'},{txt:a.nom,vue:'categorie'},{txt:c.nom,vue:'type'},{txt:t.nom}],'type');
     const top={niveau:'keyence',temperature:'ifm',signalisation:'siemens-c',vitesse:'siemens-c'}[S.type];
-    const marques=DB.marques.filter(x=>usedMarques.has(S.categorie+'|'+S.type+'|'+x.id));
+    const marques=DB.marques.filter(x=>usedMarques.has(S.categorie+'|'+S.type+'|'+x.id)).map(x=>({...x,actif:true}));
     app.innerHTML=head('Étape 4 sur 7','Quelle marque ?','')+tiles(marques,'goModele',top);return;
   }
   if(v==='modele'){

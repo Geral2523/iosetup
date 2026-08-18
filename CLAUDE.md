@@ -205,6 +205,25 @@ Catégorie « température » (déjà active via LDH292) réutilisée pour les d
 assumé : la grandeur documentée pour le FI-1000 dépend entièrement de l'accessoire
 connecté, « température » correspond à la configuration réellement construite ici.
 
+**Bug utilisateur signalé et corrigé (même session) : badge « Bientôt » affiché à tort
+sur des sous-types qui ont pourtant un appareil réel (Débit, Pression), repéré par
+l'utilisateur directement sur le site en production après le push.** Cause : dans
+`template.html`, la fonction `tiles()` calcule le badge Disponible/Bientôt depuis
+`x.actif` — le champ **statique** de `taxonomie.json` — alors que les étapes « catégorie »,
+« grandeur mesurée » et « marque » filtrent déjà dynamiquement leur liste via
+`usedCategories`/`usedTypes`/`usedMarques` (calculés depuis `DB.appareils`). Une entrée
+comme `pression`/`debit` garde `actif:false` dans `taxonomie.json` (elle n'a jamais besoin
+d'être mise à `true` à la main, c'est tout l'intérêt du mécanisme dynamique) — mais
+`tiles()` relisait ce `false` pour le badge, après que le filtre dynamique avait déjà
+laissé passer la tuile parce qu'un appareil existe. La correction déjà en place pour
+l'étape « modèle » (ligne `l.map(d=>({...,actif:true}))`) n'avait jamais été répliquée sur
+les trois autres étapes filtrées dynamiquement. Corrigé aux trois endroits
+(`categorie`, `type`, `marque`) : `.map(x=>({...x,actif:true}))` après le filtre — tout
+élément qui passe un filtre `usedXxx` a par construction un appareil réel, le badge peut
+l'affirmer sans relire `taxonomie.json`. Reproductible avec `sick`/`balluff` (encore
+`actif:false`, aucun appareil) le jour où un premier appareil de ces marques sera ajouté,
+si ce correctif n'existait pas.
+
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`
 dans `build.js` scanne le dossier et pose `d.photo` sur l'objet avant la génération.
