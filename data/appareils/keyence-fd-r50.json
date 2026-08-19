@@ -1,0 +1,85 @@
+{
+  "id": "fd-r50", "ref": "FD-R50", "marque": "keyence", "marqueNom": "KEYENCE",
+  "categorie": "capteur", "type": "debit", "techno": "Ultrasons à pince (temps de propagation, non intrusif)", "top": false,
+  "nom": "Débitmètre à pince (clamp-on), sans percer le tuyau",
+  "resume": "Contrairement au FD-H (qui se clipse en coupant le tuyau), le FD-R se pince entièrement à l’extérieur d’un tuyau existant — unité principale + unité secondaire reliées par un câble, à fixer avec un collier métallique. Raccordement IO-Link natif en M12 4 broches, sans adaptateur.",
+  "source": "Manuel d’instructions FD-R Series (référence KEYENCE 96M18188, éd. 2094_2) · Manuel d’instructions IO-Link FD-R Series (référence KEYENCE 691GB, éd. 1097_1) · IODD KEYENCE FD-R rév. 1.1 (20220301, DeviceID 2004, VendorID 509)",
+  "specs": [
+    ["Grandeur mesurée", "Débit volumétrique + température de tuyau"],
+    ["Principe de détection", "Ultrasons, temps de propagation — capteurs pincés à l’extérieur du tuyau (aucun contact avec le fluide)"],
+    ["Diamètre de tuyau compatible (FD-R50)", "1 1/2\" (40A) ou 2\" (50A) — diamètre extérieur ø44 à ø64 mm"],
+    ["Autres tailles de la gamme", "FD-R80 (2 1/2\"–3\"), FD-R125 (4\"–5\"), FD-R200 (6\"–8\") — même IODD, même trame, réglage de taille de tuyau différent"],
+    ["Matériaux de tuyau compatibles", "Métal, résine"],
+    ["Fluides compatibles", "Liquides divers (eau, huiles, produits chimiques) — doivent laisser passer l’onde ultrasonore"],
+    ["Température de fluide", "−20 à +120 °C"],
+    ["Vitesse d’écoulement nominale", "5,0 m/s — plage typique FD-R50 : 0 à 400 L/min"],
+    ["Précision", "±2,0 % de la valeur lue (20-100 % pleine échelle) · ±0,4 % pleine échelle (6-20 %), à 25 °C"],
+    ["Alimentation", "20 à 30 V DC (connecteur M12) ou 100-240 V AC (bornier à vis, sans IO-Link) — 200 mA DC typique"],
+    ["Interface", "IO-Link 1.1 — COM2 (38,4 kBaud)"],
+    ["Raccordement natif", "M12 mâle, 4 broches — natif, aucun adaptateur (à la différence du FD-H)"],
+    ["DeviceID · VendorID", "2004 · 509"],
+    ["Affichage", "Écran LED 14 segments, 2 lignes, 5 chiffres + voyant de stabilité + voyants de sortie"],
+    ["Protection", "IP65 / IP67 / IP69K"],
+    ["Température ambiante", "−20 à +60 °C (alimentation DC)"],
+    ["Poids", "Unité principale : environ 1 kg · support + unité secondaire : environ 1,5 kg (FD-R50)"]
+  ],
+  "reglagesAppareil": {
+    "intro": "Réglage aux boutons ▲/▼ et M (Mode/Enter) sur l’unité principale, avec un assistant de démarrage imposé au premier branchement (ou après une réinitialisation) — comparable au PN7093 pour la logique des boutons, mais avec beaucoup plus d’étapes imposées.",
+    "etapes": [
+      ["A — Date et heure", "Année, date, heure — nécessaire pour l’horodatage de l’enregistrement continu (fonction « Full-time Recording »)"],
+      ["B — Fonction ch.1", "« Out » (sortie de commande — à choisir pour IO-Link) ou « Anlg » (sortie analogique, incompatible avec IO-Link)"],
+      ["C — Fonction ch.2", "« Off » (non utilisé, par défaut), « Out » (2ᵉ sortie), « input » (entrée externe) ou « Anlg » (sortie analogique)"],
+      ["D — NPN/PNP", "Logique des sorties à transistor"],
+      ["E — Sens d’écoulement", "Depuis la gauche ou depuis la droite, selon le sens réel du fluide dans le tuyau"],
+      ["F — Unité de débit", "L/min (valeur d’usine), m3/h ou gal/min"],
+      ["H — Taille de tuyau", "Modèle-dépendant : pour un FD-R50, « 1 1/2 » ou « 2 » selon le diamètre réel du tuyau"],
+      ["I — Extension des unités de mesure", "OFF par défaut — à activer uniquement pour accéder à gal/min ou °F"]
+    ],
+    "apres": "Une fois l’assistant terminé, l’écran affiche le débit courant. Réglages détaillés (résolution d’affichage, moyennage, seuils de sortie…) accessibles ensuite via Settings → réglages détaillés, sans repasser par l’assistant."
+  },
+  "pieges": [
+    { "t": "Deux façons de câbler ce capteur — une seule permet l’IO-Link", "d": "Le FD-R accepte soit une alimentation 24 V DC via son connecteur M12 4 broches natif, soit une alimentation secteur 100-240 V AC via un bornier à vis (avec conduit). Seule la variante DC/M12 documentée ici permet l’IO-Link — la variante secteur ne porte aucune ligne de communication. Un FD-R câblé en 100-240 V AC ne peut pas remonter en IO-Link, quel que soit le paramétrage logiciel." },
+    { "t": "Ch.1 doit rester sur « Out » pour l’IO-Link, sous peine de dégâts", "d": "Le manuel IO-Link du FD-R est explicite : « When connecting with IO-Link, do so with control output assigned. Failing to do so may lead to damage to the master or to the FD-R Series unit. » La broche 4 (fil noir) porte à la fois la sortie de commande Ch.1 câblée et la ligne C/Q en IO-Link — si Ch.1 est réglé sur « Anlg » (sortie analogique) au lieu de « Out », le comportement électrique de la broche change et peut endommager le maître ou l’appareil." },
+    { "t": "La température (9 bits) n’est pas alignée sur les octets — elle partage l’octet 3 avec les sorties et la stabilité", "d": "Dans la disposition d’usine, le débit occupe proprement les octets 0-1, mais la température (9 bits signés, plage −40 à 140 °C) commence au bit 7 de la trame et déborde sur l’octet 2 complet plus 1 bit de l’octet 3 — l’octet 3 (LSB) contient donc à la fois ce bit de température, l’état de sortie 1, l’état de sortie 2 et le niveau de stabilité (3 bits). Lire les octets 2-3 comme un simple INT 16 donne une valeur fausse d’un facteur ~128 ; il faut décaler de 7 bits avant toute mise à l’échelle (voir le code fourni)." },
+    { "t": "Le codage négatif de la température n’est pas un INT 16 classique", "d": "KEYENCE documente l’encodage négatif comme « soustrait de 512 » plutôt que comme un complément à 2 standard sur 16 bits — c’est en réalité un complément à 2 sur 9 bits (2⁹ = 512), cohérent avec la largeur réelle du champ dans l’IODD. Une conversion WORD_TO_INT directe sur les 9 bits extraits ne restitue pas correctement le signe : il faut soustraire 512 explicitement quand la valeur brute dépasse 255 (voir le code fourni)." },
+    { "t": "La résolution du débit est elle-même un paramètre, comme sur le FD-H", "d": "Comme pour le FD-H, l’IODD ne fixe pas de facteur d’échelle unique pour le débit : le paramètre en lecture seule « Flow resolution » (index 233) indique le facteur réellement appliqué — 0,01, 0,1 ou 1, selon la résolution d’affichage choisie (index 232). La valeur d’usine (résolution 1, documentée ici) correspond à l’unité L/min réglée par défaut ; changer l’unité de débit (m3/h, gal/min) ou la résolution d’affichage change ce que représente la valeur brute." },
+    { "t": "Cinq dispositions de données process sélectionnables, pas trois comme sur le FD-H", "d": "Le paramètre IO-Link « Process data structure » (index 146) bascule entre 5 dispositions : 0 = débit + température + stabilité + sorties (celle documentée ici, par défaut), 1 = débit + température plus précise (0,1 °C) + sorties, 2 = débit seul (32 bits, propre, sans empaquetage de bits), 3 = débit cumulé (dixièmes) + sorties, 4 = débit cumulé seul. La disposition 2 évite entièrement le problème d’alignement de bits de la disposition 0 — à envisager si seul le débit instantané est utile à l’application." },
+    { "t": "Un capteur « clamp-on » à deux unités, pas un capteur en ligne", "d": "Contrairement au FD-H (qui s’insère directement dans le tuyau, coupe comprise), le FD-R se compose d’une unité principale et d’une unité secondaire reliées par un câble, à pincer sur l’extérieur d’un tuyau existant avec un collier métallique — aucune coupure de tuyauterie n’est nécessaire, mais l’installation mécanique (alignement des capteurs, choix du diamètre exact) conditionne directement la précision de mesure, bien plus que sur un capteur en ligne." },
+    { "t": "Existe aussi en satellite du FI-1000 — une trame totalement différente", "d": "Le FD-R peut aussi se raccorder au port débit (arrière) d’une unité d’affichage FI-1000 plutôt qu’en IO-Link autonome — dans ce cas, c’est l’IODD et la trame du FI-1000 (plate-forme « keyence-multiprocess », DeviceID 2025) qui s’appliquent, pas celles documentées ici. Cette fiche documente uniquement l’usage autonome du FD-R, avec son propre DeviceID 2004 et sa propre trame 32 bits." }
+  ],
+  "raccordements": {
+    "iolink": {
+      "connecteur": "M12 mâle, 4 broches — natif, aucun adaptateur",
+      "maitre": null, "procedure": "iolink-profinet",
+      "cable": "Câble compatible IO-Link, M12 4 broches",
+      "pinout": [
+        { "n": 1, "coul": "BN", "hex": "#6B4326", "nom": "Marron", "fn": "L+ — alimentation +20…30 V DC" },
+        { "n": 2, "coul": "WH", "hex": "#FFFFFF", "nom": "Blanc", "fn": "Ch2 — non utilisé, sortie, entrée ou sortie analogique selon réglage" },
+        { "n": 3, "coul": "BU", "hex": "#1668B3", "nom": "Bleu", "fn": "L− — 0 V" },
+        { "n": 4, "coul": "BK", "hex": "#1A1A1A", "nom": "Noir", "fn": "Ch1 / C/Q — communication IO-Link (Ch1 doit rester sur « Out », pas « Anlg »)" }
+      ],
+      "trame": { "octets": 4, "bits": 32 },
+      "exempleLecture": [
+        { "raw": 250, "octets": "0-1", "valeur": "250 L/min (gradient ×1 par défaut)" },
+        { "raw": 3216, "octets": "2-3", "valeur": "25 °C (3216 décalé de 7 bits → 25, positif, pas de correction de signe) — les bits bas du même mot portent les sorties et la stabilité" }
+      ],
+      "donnees": [
+        { "cle": "flowInst", "nom": "Débit instantané", "bitOffset": 16, "bits": 16, "type": "UINT 16", "octets": [0, 1], "min": 0, "max": 50000, "gradient": 1, "unite": "L/min", "couleur": "#1668B3" },
+        { "cle": "temp", "nom": "Température", "bitOffset": 7, "bits": 9, "type": "INT 9 (non aligné — voir pièges)", "octets": [2, 3], "min": -40, "max": 140, "gradient": 1, "unite": "°C", "couleur": "#E2570F" }
+      ],
+      "bitsDiag": [
+        ["3", "0", "Sortie 1 (Ch.1) — état actif/inactif"],
+        ["3", "1", "Sortie 2 (Ch.2) — état actif/inactif, seulement si Ch.2 = sortie de commande"],
+        ["3", "2-4", "Niveau de stabilité de la détection ultrasonique — 0 (détection impossible) à 4 (signal élevé)"],
+        ["3", "7", "Bit de poids faible de la température (voir pièges — ne pas confondre avec un flag)"]
+      ],
+      "iodd": {
+        "fichier": "KEYENCE-FD-R-20220301-IODD1.1.xml",
+        "version": "1.1", "date": "2022-03-01",
+        "vendorId": "509", "deviceId": "2004",
+        "variantes": "Un seul IODD pour toute la gamme — FD-R50, FD-R80, FD-R125, FD-R200 (choix du modèle par réglage de taille de tuyau sur l’appareil)",
+        "dataStorage": true
+      }
+    }
+  }
+}

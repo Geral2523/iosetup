@@ -96,6 +96,7 @@ supplémentaires pour les capteurs — voir section Navigation) :
 | FD-H20 | KEYENCE | Débit + température de tuyau (sonde intégrée) | IO-Link |
 | FI-1000 | KEYENCE | Unité d’affichage multiprocessus (+ FI-T sur Multiport) | IO-Link |
 | FI-T | KEYENCE | Température de tuyau, usage autonome | IO-Link |
+| FD-R50 | KEYENCE | Débitmètre à pince (clamp-on), usage autonome | IO-Link |
 
 **G120X pas encore couvert** — gamme différente, son propre GSDML serait nécessaire.
 
@@ -356,6 +357,51 @@ par une tuile « Blocs système » ajoutée sous la grille de catégories à l'�
 après le choix de l'automate) — branche parallèle à Capteurs/Actionneurs/Variateurs, pas
 un sous-type de matériel. Ajouter une septième fiche = un fichier JSON de plus dans
 `data/blocs-systeme/`, aucune ligne de code à toucher.
+
+**FD-R50 (KEYENCE, débitmètre à pince) — nouveau, sourcé entièrement seul cette fois-ci.**
+L'utilisateur a demandé le FD-R (« le capteur qui se branche à l'arrière du FI-1000 ») sans
+fournir les fichiers cette fois : consigne explicite d'utiliser le Chrome déjà connecté à un
+compte My KEYENCE (`mcp__claude-in-chrome`) pour les trouver seul. IODDfinder ne l'a pas —
+KEYENCE distribue ses IODD depuis son propre site (fait déjà noté plus haut). Trouvés sous
+l'onglet Software (`?mode=so`) de la fiche produit keyence.com, téléchargés après le flux de
+confirmation « Software License Agreement » habituel du site (déjà connecté, aucun compte
+créé). Manuel général (96M18188) + manuel IO-Link dédié (691GB) + IODD
+(`KEYENCE-FD-R-20220301-IODD1.1.xml`, DeviceID 2004, VendorID 509, un seul fichier pour les
+quatre tailles FD-R50/80/125/200).
+**Découverte qui corrige une hypothèse fausse notée dans une fiche précédente :** la fiche
+FI-1000 dit que son port arrière « accepte un débitmètre FD-R » — d'où l'hypothèse initiale
+que le FD-R n'existait qu'en satellite du FI-1000, sans IO-Link propre. Faux : le FD-R est un
+**débitmètre à pince (clamp-on) complet et autonome**, avec son propre afficheur, ses propres
+boutons de réglage, et surtout son propre connecteur M12 4 broches IO-Link natif (aucun
+adaptateur, contrairement au FD-H) et son propre DeviceID (2004, distinct du FD-H/FI-1000).
+Il *peut* aussi se raccorder au port arrière d'un FI-1000 — mais c'est un second mode
+d'emploi, pas le seul, et cette fiche documente l'usage autonome (même logique que la fiche
+FI-T, qui documente son propre mode autonome plutôt que le mode satellite Multiport). Piège
+noté en conséquence dans la fiche FD-R : ne pas confondre les deux trames.
+**Complexité technique nouvelle sur ce site : un champ de mesure non aligné sur les octets à
+l'intérieur d'une trame par ailleurs normale.** La disposition d'usine (« Process data
+structure » = 0, sur 5 disponibles, index 146) place le débit proprement sur les octets 0-1,
+mais la température (9 bits signés, IODD : `bitOffset="7"` `bitLength="9"`) commence au bit 7
+et déborde sur l'octet 2 entier plus 1 bit de l'octet 3 — qui contient par ailleurs l'état de
+sortie 1, l'état de sortie 2 et le niveau de stabilité (3 bits). Précédent déjà en place pour
+ce genre de cas : le PN7093 (bits de sortie tassés dans le même octet qu'une grandeur
+mesurée) — même mécanisme réutilisé ici (`donnees[].octets` peut désigner un octet qui
+contient *aussi* des bits documentés séparément dans `bitsDiag`, le rendu du tableau HTML ne
+l'empêche pas, déjà vérifié en relisant le rendu du PN7093 avant de répliquer le motif).
+Différence assumée avec le PN7093 : là où le PN7093 documentait un bug de signe connu et non
+corrigé en commentaire (température négative rare pour une pression), le code SCL/CONT du
+FD-R (`codeSclFDR`/`codeLadFDR`, sélection sur `d.id.startsWith('fd-r')`) fait l'extension de
+signe complète (comparaison à 255, soustraction de 512 si dépassée) — un fluide froid en
+dessous de 0 °C est un cas réaliste ici, contrairement à une pression négative sur le PN7093.
+Modèle documenté : FD-R50 (le plus petit de la gamme, 1 1/2"-2"/40-50A) — choisi par
+cohérence avec l'ordre systématiquement utilisé par KEYENCE dans ses propres tableaux de
+spécifications (FD-R50 toujours en première colonne), les trois autres tailles
+(FD-R80/125/200) partagent le même IODD/la même trame, seul le réglage de taille de tuyau
+change. Catégorie « débit » déjà active (FD-H20) — le FD-R lui redonne un membre
+véritablement autonome dans cette famille aux côtés du FD-H, répondant à la remarque de
+l'utilisateur sur le fait que le FI-1000/FI-T n'apparaissaient pas sous « Débit » (ils
+restent sous « Température », par design — voir plus haut ; le FD-R est la vraie réponse à ce
+manque, pas un changement de catégorie du FI-1000/FI-T).
 
 ---
 

@@ -659,6 +659,96 @@ function codeLadMultiprocess(d, r) {
    etatOctet23.%X7
 ────┤ ├──────────────────────────────( erreurTemp1 )`;
 }
+/* ── FD-R : la température (9 bits, octets 2-3) n'est pas alignée sur les
+   octets — elle partage l'octet 3 (LSB) avec les sorties et la stabilité.
+   Contrairement au PN7093, les températures négatives sont un cas courant
+   ici (fluides froids) : le décalage est donc suivi d'une extension de
+   signe complète plutôt que d'être signalé comme limitation connue. */
+function codeSclFDR(d, r) {
+  return `<span class="c">// ${d.ref} en IO-Link — 4 octets de données process (disposition « 0 »,
+// celle d'usine) : débit sur les octets 0-1, température + sorties +
+// stabilité empaquetées sur les octets 2-3 (température non alignée
+// sur les octets — voir le guide).</span>
+
+<span class="k">FUNCTION_BLOCK</span> <span class="n">"FB_${d.ref.replace(/-/g, '_')}"</span>
+<span class="k">VAR_INPUT</span>
+    motFlow : WORD;   <span class="c">// octets 0-1</span>
+    motTemp : WORD;   <span class="c">// octets 2-3</span>
+<span class="k">END_VAR</span>
+<span class="k">VAR_OUTPUT</span>
+    debit       : REAL;  <span class="c">// L/min, gradient ×1 par défaut</span>
+    temperature : REAL;  <span class="c">// °C</span>
+    stabilite   : INT;   <span class="c">// 0 (aucun signal) à 4 (signal élevé)</span>
+    sortie1     : BOOL;
+    sortie2     : BOOL;
+<span class="k">END_VAR</span>
+<span class="k">VAR_TEMP</span> brut9 : INT; <span class="k">END_VAR</span>
+
+<span class="k">BEGIN</span>
+    <span class="c">// ---- Octets 0-1 : débit instantané, lecture directe ----</span>
+    #debit := WORD_TO_REAL(#motFlow);
+
+    <span class="c">// ---- Octets 2-3 : température, 9 bits non alignés (bits 7 à 15) ----</span>
+    #brut9 := WORD_TO_INT(SHR(IN := #motTemp, N := 7));
+    <span class="k">IF</span> #brut9 &gt; 255 <span class="k">THEN</span>
+        #brut9 := #brut9 - 512;  <span class="c">// négatif : complément à 2 sur 9 bits (KEYENCE : « soustrait de 512 »)</span>
+    <span class="k">END_IF</span>;
+    #temperature := INT_TO_REAL(#brut9);
+
+    <span class="c">// ---- Octet 3 (LSB) : sorties + stabilité, partagent le même octet que le bit 0 de la température ----</span>
+    #sortie1   := #motTemp.%X0;
+    #sortie2   := #motTemp.%X1;
+    #stabilite := WORD_TO_INT(SHR(IN := #motTemp, N := 2) AND 16#0007);
+<span class="k">END_FUNCTION_BLOCK</span>`;
+}
+function codeLadFDR(d, r) {
+  return `<span class="c">// ${d.ref} — adresses à adapter à la plage attribuée au port.</span>
+
+<span class="r">Réseau 1 — Débit instantané (octets 0-1, lecture directe)</span>
+              ┌──────────────┐
+              │     CONV     │
+──────────────┤ Word →  Real ├──────────────( débit )
+     motFlow  │IN    motFlow │
+              └──────────────┘
+
+<span class="r">Réseau 2 — Température : isoler les 9 bits (décalage de 7 bits)</span>
+              ┌──────────────┐    ┌──────────────┐
+              │     SHR      │    │     CONV     │
+──────────────┤     Word     ├────┤ Word →   Int ├──( brut9 )
+     motTemp  │IN    motTemp │    │  IN          │
+              │N           7 │    └──────────────┘
+              └──────────────┘
+
+<span class="r">Réseau 3 — Extension de signe (négatif = complément à 2 sur 9 bits)</span>
+      ┌──────────────┐    ┌──────────────┐
+      │      &gt;       │    │     SUB      │
+──────┤     Int      ├────┤     Int      ├──( brut9 )
+      │IN1     brut9 │    │IN1     brut9 │
+      │IN2       255 │    │IN2       512 │
+      └──────────────┘    └──────────────┘
+      (SUB exécuté seulement si la comparaison ci-dessus est vraie)
+
+<span class="r">Réseau 4 — Mise à l'échelle finale</span>
+              ┌──────────────┐
+              │     CONV     │
+──────────────┤  Int →  Real ├──────────────( température )
+     brut9    │IN      brut9 │
+              └──────────────┘
+
+<span class="r">Réseau 5 — Sorties et stabilité (octet 3, partagé avec la température)</span>
+   motTemp.%X0
+────┤ ├──────────────────────────────( sortie1 )
+
+   motTemp.%X1
+────┤ ├──────────────────────────────( sortie2 )
+
+              ┌──────────────┐    ┌──────────────┐
+              │     SHR      │    │     AND      │
+──────────────┤     Word     ├────┤     Word     ├──( stabilite )
+     motTemp  │IN    motTemp │    │IN2    16#0007│
+              │N           2 │    └──────────────┘
+              └──────────────┘`;
+}
 function codeSclFIT(d, r) {
   return `<span class="c">// ${d.ref} en IO-Link, usage AUTONOME — 4 octets de données process
 // (trame complètement différente de celle du FD-H/FI-1000 : ce FI-T
@@ -958,6 +1048,7 @@ function buildGuideArticle(DB, d, mode, voieId) {
     else if (d.id === 'pn7093') { scl = codeSclPN7093(d, r); lad = codeLadPN7093(d, r); }
     else if (r.familleIodd === 'keyence-multiprocess') { scl = codeSclMultiprocess(d, r); lad = codeLadMultiprocess(d, r); }
     else if (d.id === 'fi-t') { scl = codeSclFIT(d, r); lad = codeLadFIT(d, r); }
+    else if (d.id && d.id.startsWith('fd-r')) { scl = codeSclFDR(d, r); lad = codeLadFDR(d, r); }
     else { scl = codeSclIolink(d, r); lad = codeLadIolink(d, r); }
     P.push(blocProg(scl, lad, num));
   }
@@ -1094,7 +1185,7 @@ function primaryMode(d) {
 
 const api = {
   esc, rac, connSvg, blocIolink, blocCommande, blocAnalog, blocTor, blocProfinet, blocProg,
-  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclMultiprocess, codeLadMultiprocess, codeSclFIT, codeLadFIT, codeSclAnalog, codeLadAnalog,
+  codeSclIolink, codeLadIolink, codeSclFRS, codeLadFRS, codeSclPN7093, codeLadPN7093, codeSclMultiprocess, codeLadMultiprocess, codeSclFIT, codeLadFIT, codeSclFDR, codeLadFDR, codeSclAnalog, codeLadAnalog,
   codeSclProfinet, codeLadProfinet,
   buildGuideArticle, guidePath, metaFor, familySiblings, primaryMode,
   buildBlocArticle, blocSystemePath, metaForBloc
