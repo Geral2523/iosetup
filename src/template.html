@@ -161,7 +161,7 @@ function render(v){
     crumbs([]);
     app.innerHTML=head('Étape 1 sur 7','Quel automate ?',
       'Le guide descend jusqu\u2019au matériel exact et jusqu\u2019à son mode de raccordement : câblage, réglages sur l\u2019appareil, intégration TIA Portal, programmation.')
-      +'<div class="demo-video"><video src="/assets/demo.mp4?v=__ASSET_V__" controls muted loop playsinline preload="metadata"></video></div>'
+      +'<div class="demo-video"><video src="/assets/demo.mp4?v=__ASSET_V__" controls autoplay muted loop playsinline preload="auto"></video></div>'
       +tiles(DB.automates.filter(x=>x.actif),'goCat')+modelNote();return;
   }
   if(v==='categorie'){
