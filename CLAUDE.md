@@ -577,10 +577,20 @@ Web Analytics reste la proposition retenue (gratuit, sans cookie, déjà sur Clo
 l'activation elle-même (Analytics → Web Analytics → Setup dans le dashboard) doit être faite
 manuellement par l'utilisateur — ce n'est pas quelque chose que `build.js` peut générer.
 
-### Étape 5 — Un script de vérification
-Générer toutes les pages hors navigateur et signaler celles qui plantent.
-À 4 appareils on trouve à l'œil, à 300 non.
-*(Un bug de routage a déjà été trouvé exactement comme ça.)*
+### Étape 5 — Un script de vérification ✅ fait
+`src/verify.js` (`node src/verify.js`) reconstruit `dist/` à neuf puis relit chaque page
+statique générée. Un crash de `build.js` est déjà en soi un échec, remonté tel quel
+(capturé via `execSync`/try-catch). Ce qu'un crash ne détecte PAS, et que ce script
+vérifie en plus : présence d'`undefined`/`NaN` dans le rendu (hors `<script>`, où ce sont
+des mots JS normaux) ; `<title>`/`<meta description>`/`<link canonical>`/`<h1>` manquants
+ou vides ; liens internes (`href`/`src`) qui pointent vers un chemin qui n'existe pas
+réellement dans `dist/` ; deux pages différentes avec un `<title>` strictement identique
+(signe quasi certain d'un copier-coller pas terminé — déjà arrivé une fois avec la fiche
+SIRIUS 15 segments). Testé en conditions réelles : un lien cassé injecté volontairement
+dans `build.js` a été détecté sur les 32 pages qui le référençaient, puis le fichier a été
+restauré et une nouvelle exécution confirme « Aucun problème détecté ». Pas branché sur un
+hook Git ni sur CI pour l'instant — à lancer manuellement avant un push qui touche
+`render.js`/`build.js`/un fichier `data/`.
 
 ---
 
