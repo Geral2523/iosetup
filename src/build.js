@@ -17,7 +17,7 @@ function computeAssetVersion(assetsDir) {
   const hash = crypto.createHash('md5');
   hash.update(fs.readFileSync(path.join(__dirname, 'styles.css')));
   hash.update(fs.readFileSync(path.join(__dirname, 'render.js')));
-  for (const f of ['logo.png', 'favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
+  for (const f of ['logo.png', 'demo.mp4', 'favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
     hash.update(fs.readFileSync(path.join(assetsDir, f)));
   }
   return hash.digest('hex').slice(0, 10);
@@ -427,6 +427,7 @@ function build() {
   const assetsDir = path.join(__dirname, 'assets');
   fs.mkdirSync(path.join(distDir, 'assets'), { recursive: true });
   fs.copyFileSync(path.join(assetsDir, 'logo.png'), path.join(distDir, 'assets', 'logo.png'));
+  fs.copyFileSync(path.join(assetsDir, 'demo.mp4'), path.join(distDir, 'assets', 'demo.mp4'));
   for (const f of ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
     fs.copyFileSync(path.join(assetsDir, f), path.join(distDir, f));
   }

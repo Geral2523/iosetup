@@ -296,6 +296,26 @@ en auditant le site en production, cinq corrigés dans la foulée.** Vérifié d
    11 appareils) a été noté mais n'est pas quelque chose à « corriger » — c'est le stade
    actuel du projet, pas un bug.
 
+**Vidéo de démo sur la page d'accueil (nouveau, même session).** L'utilisateur voulait une
+vidéo explicative « comment ça marche » avec titres et transitions entre les pages —
+demande d'abord posée comme un prompt Gemini/Veo, mais un modèle de génération vidéo par IA
+ne reproduit pas fidèlement une vraie interface ni du texte lisible (déjà observé sur un
+essai précédent : un code hexadécimal donné dans un prompt s'était retrouvé littéralement
+affiché à l'écran). Construite à la place directement depuis le vrai site : Playwright
+(installé via pip, pas de Node local) pilote Chromium headless pour naviguer tout
+l'entonnoir (Siemens → Capteurs → Débit → KEYENCE → FD-H20 → IO-Link → maître) puis scroller
+jusqu'à 4 sections du guide final (câblage, structure des données process, code SCL/CONT,
+pièges), capturant 12 vraies captures d'écran à `device_scale_factor=2` (rendu net). Titres
+ajoutés par-dessus avec Pillow (bandeau dégradé + accent orange, polices Arial Black/Courier
+New déjà présentes sur macOS), assemblées avec `ffmpeg` (récupéré via le paquet pip
+`imageio-ffmpeg`, aucun binaire système nécessaire) en fondus enchaînés (`xfade`), ~31 s,
+1920×1080, sans son. Le fichier vit dans `src/assets/demo.mp4`, copié vers `dist/assets/`
+par `build.js` et inclus dans `computeAssetVersion()` pour le cache-busting `?v=` — même
+traitement que `logo.png`, pour ne pas répéter le bug de cache déjà rencontré une fois sur
+ce site. Affichée en haut de la page d'accueil (`template.html`, vue `home`), juste avant le
+choix de l'automate, avec `controls muted loop playsinline` (nouvelle classe CSS
+`.demo-video`).
+
 **Photos produit (nouveau).** Un fichier `src/assets/appareils/<id>.<ext>` s'attache
 automatiquement à l'appareil du même `id` — zéro ligne de JSON à toucher, `attachPhotos()`
 dans `build.js` scanne le dossier et pose `d.photo` sur l'objet avant la génération.
